@@ -42,6 +42,12 @@ abstract class Room implements Listenable {
   /// Mutes or un-mutes the local video stream.
   void setVideoMuted(bool muted);
 
+  /// Starts presenting the provided display stream.
+  Future<void> startPresenting(MediaStream displayStream);
+
+  /// Stops presenting the display stream.
+  Future<void> stopPresenting();
+
   /// Leaves the room and discards any resources used.
   ///
   /// After this is called, the object is not in a usable state and should be discarded.
@@ -63,6 +69,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
   MediaStream? _localStream;
+  int? _localTrackId;
 
   KurentoRoom(this._env, this._client, this._mq, this._serviceRequest, this._roomHandler) {
     // Asynchronously subscribe to the room-related topics.
@@ -105,8 +112,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId);
     _log.info('created outgoing track id=${track.id}');
 
+    _localTrackId = track.id;
+
     // Start the WebRTC signaling process.
-    await _connectTrack(track.id, _localStream);
+    await _connectTrack(_localTrackId!, _localStream);
   }
 
   @override
@@ -127,6 +136,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     _localStream!.getVideoTracks()[0].enabled = !muted;
     _updateParticipantStatus();
+  }
+
+  @override
+  Future<void> startPresenting(MediaStream displayStream) async {
+    // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
+    // so for now, we start presenting by replacing the Explorer's video track with the display video track.
+    await _connectionByTrackId[_localTrackId]!.replaceTrack(displayStream.getVideoTracks()[0]);
+    _log.info('started presenting track=${displayStream.getVideoTracks()[0].label}');
+  }
+
+  @override
+  Future<void> stopPresenting() async {
+    // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
+    // track.
+    await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
+    _log.info('stopped presenting');
   }
 
   @override

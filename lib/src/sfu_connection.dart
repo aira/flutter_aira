@@ -59,6 +59,17 @@ class SfuConnection {
     onSdpOffer.call(trackId, offer);
   }
 
+  Future<void> replaceTrack(MediaStreamTrack track) async {
+    if (_localStream == null) {
+      throw StateError('Cannot replace track on incoming connection');
+    }
+
+    // Find the right kind of sender and replace its track.
+    RTCRtpSender sender =
+        (await _peerConnection.senders).firstWhere((RTCRtpSender sender) => sender.track?.kind == track.kind);
+    await sender.replaceTrack(track);
+  }
+
   /// Handles an ICE candidate from the SFU.
   Future<void> handleIceCandidate(RTCIceCandidate candidate) => _peerConnection.addCandidate(candidate);
 
