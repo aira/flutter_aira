@@ -31,22 +31,15 @@ abstract class Room implements Listenable {
   String? get agentName;
 
   /// Joins the room with the provided local audio and video stream.
+  ///
+  /// If the room should be joined with the audio and/or video muted, disable the corresponding track(s) before calling
+  /// [join].
   Future<void> join(MediaStream localStream);
 
-  /// Returns whether the local audio stream is muted.
-  bool get isAudioMuted;
-
   /// Mutes or un-mutes the local audio stream.
-  ///
-  /// This can be called prior to joining the room to set the initial audio mute state.
   void setAudioMuted(bool muted);
 
-  /// Returns whether the local video stream is muted.
-  bool get isVideoMuted;
-
   /// Mutes or un-mutes the local video stream.
-  ///
-  /// This can be called prior to joining the room to set the initial video mute state.
   void setVideoMuted(bool muted);
 
   /// Leaves the room and discards any resources used.
@@ -66,8 +59,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
 
-  bool _isAudioMuted = false;
-  bool _isVideoMuted = false;
   bool _disposed = false;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
@@ -90,26 +81,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
   @override
   String? get agentName => _agentName;
 
-  @override
-  bool get isAudioMuted => _isAudioMuted;
+  // The audio is muted if there is no audio track or if the first audio track is disabled.
+  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
 
-  @override
-  bool get isVideoMuted => _isVideoMuted;
+  // The video is muted if there is no video track or if the first video track is disabled.
+  bool get _isVideoMuted => _localStream!.getVideoTracks().isEmpty ? true : !_localStream!.getVideoTracks()[0].enabled;
 
-  get _participantTopic =>
+  String get _participantTopic =>
       '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}';
 
-  get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
+  String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
-  get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
+  String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
 
   @override
   Future<void> join(MediaStream localStream) async {
     _localStream = localStream;
-
-    // Synchronize the mute states, as it's possible the app is joining the room with audio and/or video muted.
-    _localStream!.getAudioTracks()[0].enabled = !_isAudioMuted;
-    _localStream!.getVideoTracks()[0].enabled = !_isVideoMuted;
 
     // Create a track for the Explorer audio and video.
     // REVIEW: Instead of connecting the real stream now, we could connect a dummy stream and then replace the tracks
@@ -124,14 +111,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   void setAudioMuted(bool muted) {
-    _isAudioMuted = muted;
-    _localStream?.getAudioTracks()[0].enabled = !muted;
+    if (_localStream == null) {
+      throw StateError('Cannot mute audio before joining the room');
+    }
+
+    _localStream!.getAudioTracks()[0].enabled = !muted;
+    _updateParticipantStatus();
   }
 
   @override
   void setVideoMuted(bool muted) {
-    _isVideoMuted = muted;
-    _localStream?.getVideoTracks()[0].enabled = !muted;
+    if (_localStream == null) {
+      throw StateError('Cannot mute video before joining the room');
+    }
+
+    _localStream!.getVideoTracks()[0].enabled = !muted;
+    _updateParticipantStatus();
   }
 
   @override
@@ -290,6 +285,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     try {
       await _client.updateParticipantStatus(_serviceRequest.roomId, _serviceRequest.participantId, status);
+      _log.info('updated participant status=${status.name}');
     } catch (e) {
       _log.shout('failed to update participant status=${status.name}', e);
     }
