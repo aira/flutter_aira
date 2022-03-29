@@ -187,7 +187,7 @@ class PlatformClient {
 
     String body = jsonEncode({
       'context': jsonEncode(context),
-      'requestSource': 'explorer-ui', // TODO: What source(s) should we use?
+      'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
       'useWebrtcRoom': true,
     });

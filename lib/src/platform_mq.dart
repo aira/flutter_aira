@@ -61,7 +61,7 @@ class PlatformMQImpl implements PlatformMQ {
     // across sessions. But, is there a use case where persisting state would be useful? For instance, what if the
     // Explorer had to shut down the mobile app (or reload the web app) because of an error and we wanted to resume
     // the session on launch? If so, maybe we should use a device ID instead of a random suffix.
-    return 'explorer-ui_${_session.userId}_${Random().nextInt(10000)}';
+    return '${_session.userId}_${Random().nextInt(10000)}';
   }
 
   void _handleData(MqttPublishMessage message) {
