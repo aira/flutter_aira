@@ -277,14 +277,16 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   Future<void> _hangUp() async {
-    await _room?.dispose();
-    setState(() => _room = null);
-
-    await _remoteRenderer.srcObject?.dispose();
+    _remoteRenderer.srcObject?.getTracks().forEach((MediaStreamTrack track) => track.stop());
+    _remoteRenderer.srcObject?.dispose();
     _remoteRenderer.srcObject = null;
 
-    await _localStream?.dispose();
+    _localStream?.getTracks().forEach((MediaStreamTrack track) => track.stop());
+    _localStream?.dispose();
     _localStream = null;
+
+    await _room?.dispose();
+    setState(() => _room = null);
 
     _platformClient?.dispose();
     _platformClient = null;
