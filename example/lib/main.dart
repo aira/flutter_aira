@@ -77,95 +77,108 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       appBar: AppBar(
         title: const Text('Aira Demo'),
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: TextFormField(
-                controller: _clientIdController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  helperText: ' ', // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                  labelText: 'Client ID',
-                ),
-                enabled: !_isInCall,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'A client ID is required';
-                  }
-                  return null;
-                },
-              ),
+      body: LayoutBuilder(builder: (BuildContext context, BoxConstraints viewportConstraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: viewportConstraints.maxHeight,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: TextFormField(
-                controller: _apiKeyController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  helperText: ' ', // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                  labelText: 'API Key',
-                ),
-                enabled: !_isInCall,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'An API key is required';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: TextFormField(
-                  controller: _userIdController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    helperText: ' ', // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                    labelText: 'User ID',
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: TextFormField(
+                      controller: _clientIdController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                        helperText: ' ',
+                        labelText: 'Client ID',
+                      ),
+                      enabled: !_isInCall,
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'A client ID is required';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  enabled: !_isInCall,
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return 'A user ID is required';
-                    }
-                    return null;
-                  }),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: TextFormField(
-                controller: _tokenController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  helperText: ' ', // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                  labelText: 'Token',
-                ),
-                enabled: !_isInCall,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return 'A token is required';
-                  }
-                  return null;
-                },
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: TextFormField(
+                      controller: _apiKeyController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                        helperText: ' ',
+                        labelText: 'API Key',
+                      ),
+                      enabled: !_isInCall,
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'An API key is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: TextFormField(
+                        controller: _userIdController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                          helperText: ' ',
+                          labelText: 'User ID',
+                        ),
+                        enabled: !_isInCall,
+                        validator: (String? value) {
+                          if (value == null || value.isEmpty) {
+                            return 'A user ID is required';
+                          }
+                          return null;
+                        }),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: TextFormField(
+                      controller: _tokenController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                        helperText: ' ',
+                        labelText: 'Token',
+                      ),
+                      enabled: !_isInCall,
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'A token is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _isInCall ? _hangUp : _callAira,
+                    style: ElevatedButton.styleFrom(
+                      primary: _isInCall ? Theme.of(context).errorColor : Theme.of(context).primaryColor,
+                    ),
+                    child: Text(_isInCall ? 'End Call' : 'Call an Aira Agent'),
+                  ),
+                  Visibility(
+                    visible: false,
+                    child: RTCVideoView(_remoteRenderer),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: _isInCall ? _hangUp : _callAira,
-              style: ElevatedButton.styleFrom(
-                primary: _isInCall ? Theme.of(context).errorColor : Theme.of(context).primaryColor,
-              ),
-              child: Text(_isInCall ? 'End Call' : 'Call an Aira Agent'),
-            ),
-            Visibility(
-              visible: false,
-              child: RTCVideoView(_remoteRenderer),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }),
     );
   }
 
