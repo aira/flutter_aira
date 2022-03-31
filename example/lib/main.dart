@@ -157,7 +157,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
               style: ElevatedButton.styleFrom(
                 primary: _isInCall ? Theme.of(context).errorColor : Theme.of(context).primaryColor,
               ),
-              child: Text(_isInCall ? 'End Call' : 'Call Aira'),
+              child: Text(_isInCall ? 'End Call' : 'Call an Aira Agent'),
             ),
             Visibility(
               visible: false,
@@ -181,7 +181,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     }
 
     try {
-      String progressText = 'Calling Aira...';
+      String progressText = 'Calling...';
       StateSetter? progressSetState; // Idea from https://stackoverflow.com/a/62129750.
 
       // Show the call progress dialog.
