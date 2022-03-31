@@ -67,7 +67,7 @@ class PlatformMQImpl implements PlatformMQ {
   void _handleData(MqttPublishMessage message) {
     String topic = message.variableHeader!.topicName;
     String decoded = utf8.decode(message.payload.message);
-    _log.finest('received message topic=$topic message=$decoded');
+    _log.finest('received message client_id=${_client.clientIdentifier} topic=$topic message=$decoded');
 
     for (final MessageCallback callback in _callbacksByTopic[topic] ?? []) {
       callback(decoded);
@@ -107,7 +107,7 @@ class PlatformMQImpl implements PlatformMQ {
   Future<int> publish(String topic, MqttQos qosLevel, String message) async {
     await isConnected;
 
-    _log.finest('publishing message topic=$topic message=$message');
+    _log.finest('publishing message client_id=${_client.clientIdentifier} topic=$topic message=$message');
 
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
