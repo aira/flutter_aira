@@ -83,7 +83,10 @@ class PlatformMQImpl implements PlatformMQ {
 
     _log.info('subscribe client_id=${_client.clientIdentifier} topic=$topic qosLevel=$qosLevel');
 
-    _client.subscribe(topic, qosLevel);
+    Subscription? subscription = _client.subscribe(topic, qosLevel);
+    if (subscription == null) {
+      _handleSubscribeFail(topic);
+    }
 
     List<MessageCallback> callbacks = _callbacksByTopic.putIfAbsent(topic, () => []);
     callbacks.add(onMessage);
