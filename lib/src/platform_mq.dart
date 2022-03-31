@@ -65,11 +65,11 @@ class PlatformMQImpl implements PlatformMQ {
   }
 
   void _handleData(MqttPublishMessage message) {
-    var topic = message.variableHeader!.topicName;
-    var decoded = utf8.decode(message.payload.message);
+    String topic = message.variableHeader!.topicName;
+    String decoded = utf8.decode(message.payload.message);
     _log.finest('received message topic=$topic message=$decoded');
 
-    for (final callback in _callbacksByTopic[topic] ?? []) {
+    for (final MessageCallback callback in _callbacksByTopic[topic] ?? []) {
       callback(decoded);
     }
   }
@@ -85,7 +85,7 @@ class PlatformMQImpl implements PlatformMQ {
 
     _client.subscribe(topic, qosLevel);
 
-    var callbacks = _callbacksByTopic.putIfAbsent(topic, () => []);
+    List<MessageCallback> callbacks = _callbacksByTopic.putIfAbsent(topic, () => []);
     callbacks.add(onMessage);
 
     // REVIEW: If the subscription fails, the caller will not know. That's probably okay for now (we'll have the logs)
@@ -109,7 +109,7 @@ class PlatformMQImpl implements PlatformMQ {
 
     _log.finest('publishing message topic=$topic message=$message');
 
-    var builder = MqttClientPayloadBuilder();
+    MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
 
     return _client.publishMessage(topic, qosLevel, builder.payload!);
