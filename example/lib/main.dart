@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_aira/flutter_aira.dart';
@@ -94,7 +95,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: ' ',
+                        helperText: kIsWeb ? ' ' : null,
                         labelText: 'Client ID',
                       ),
                       enabled: !_isInCall,
@@ -113,7 +114,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: ' ',
+                        helperText: kIsWeb ? ' ' : null,
                         labelText: 'API Key',
                       ),
                       enabled: !_isInCall,
@@ -132,7 +133,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                          helperText: ' ',
+                          helperText: kIsWeb ? ' ' : null,
                           labelText: 'User ID',
                         ),
                         enabled: !_isInCall,
@@ -150,7 +151,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: ' ',
+                        helperText: kIsWeb ? ' ' : null,
                         labelText: 'Token',
                       ),
                       enabled: !_isInCall,
