@@ -4,12 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:pubnub/pubnub.dart' as pn;
 
+import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
 import 'models/service_request.dart';
 import 'models/track.dart';
 import 'platform_client.dart';
+import 'platform_exceptions.dart';
 import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
@@ -19,16 +22,21 @@ abstract class RoomHandler {
 }
 
 abstract class Room implements Listenable {
-  /// Returns the ID of the service request.
+  /// The ID of the service request.
   int get serviceRequestId;
 
-  /// Returns the state of the service request.
+  /// The state of the service request.
   ServiceRequestState get serviceRequestState;
 
-  /// Returns the name of the Agent assigned to the service request.
+  /// The name of the Agent assigned to the service request.
   ///
   /// If the service request has not yet been assigned, this will return `null`.
   String? get agentName;
+
+  /// The messages sent and received.
+  ///
+  /// If the application does not support messaging, this will throw an exception.
+  Stream<Message> get messageStream;
 
   /// Joins the room with the provided local audio and video stream.
   ///
@@ -48,6 +56,11 @@ abstract class Room implements Listenable {
   /// Stops presenting the display stream.
   Future<void> stopPresenting();
 
+  /// Sends the provided message to the Agent.
+  ///
+  /// If the application does not support messaging, this will throw an exception.
+  Future<void> sendMessage(String text);
+
   /// Leaves the room and discards any resources used.
   ///
   /// After this is called, the object is not in a usable state and should be discarded.
@@ -60,6 +73,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformEnvironment _env;
   final PlatformClient _client;
   final PlatformMQ _mq;
+  final pn.PubNub? _pubnub;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
 
@@ -70,13 +84,34 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String? _agentName;
   MediaStream? _localStream;
   int? _localTrackId;
+  pn.Subscription? _messageSubscription;
 
-  KurentoRoom(this._env, this._client, this._mq, this._serviceRequest, this._roomHandler) {
+  // Private constructor.
+  KurentoRoom._(this._env, this._client, this._mq, this._pubnub, this._serviceRequest, this._roomHandler);
+
+  Future<void> _init() async {
     // Asynchronously subscribe to the room-related topics.
-    // REVIEW: If these subscriptions fail, we're not going to get anywhere. How should we handle errors? Could we
-    // add a "error" room state and notify listeners that something's wrong?
-    _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
-    _mq.subscribe(_participantTopic, MqttQos.atLeastOnce, _handleParticipantMessage);
+    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
+    await _mq.subscribe(_participantTopic, MqttQos.atLeastOnce, _handleParticipantMessage);
+
+    // If messaging is supported, subscribe to the message channel.
+    if (_pubnub != null) {
+      _messageSubscription = _pubnub!.subscribe(channels: {_messageChannel});
+    }
+  }
+
+  // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
+  static Future<Room> create(PlatformEnvironment env, PlatformClient client, PlatformMQ mq, pn.PubNub? pubnub,
+      ServiceRequest serviceRequest, RoomHandler roomHandler) async {
+    KurentoRoom room = KurentoRoom._(env, client, mq, pubnub, serviceRequest, roomHandler);
+    try {
+      await room._init();
+      return room;
+    } catch (e) {
+      // If something went wrong, trash the room.
+      await room.dispose();
+      rethrow;
+    }
   }
 
   @override
@@ -87,6 +122,25 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   String? get agentName => _agentName;
+
+  @override
+  Stream<Message> get messageStream {
+    if (_messageSubscription == null) {
+      throw UnsupportedError('The application does not support messaging');
+    }
+
+    return _messageSubscription!.messages.map((pn.Envelope envelope) {
+      _log.finest('received message content=${envelope.content}');
+
+      return Message(
+        envelope.content['text'],
+        envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
+        // TODO: When Dash is updated to set the serviceId, remove the -1.
+        envelope.content['serviceId'] ?? -1,
+        envelope.content['senderId'],
+      );
+    });
+  }
 
   // The audio is muted if there is no audio track or if the first audio track is disabled.
   bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
@@ -100,6 +154,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
+
+  String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
   @override
   Future<void> join(MediaStream localStream) async {
@@ -155,6 +211,26 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   @override
+  Future<void> sendMessage(String text) async {
+    if (_pubnub == null) {
+      throw UnsupportedError('The application does not support messaging');
+    }
+
+    Map<String, dynamic> content = {
+      'senderId': _serviceRequest.userId,
+      'serviceId': serviceRequestId,
+      'text': text,
+    };
+
+    pn.PublishResult result = await _pubnub!.publish(_messageChannel, content);
+    if (result.isError) {
+      throw PlatformUnknownException(result.description);
+    }
+
+    _log.finest('sent message content=$content');
+  }
+
+  @override
   void notifyListeners() {
     if (!_disposed) {
       super.notifyListeners();
@@ -164,6 +240,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   @override
   Future<void> dispose() async {
     _disposed = true;
+
+    _messageSubscription?.dispose();
 
     _mq.unsubscribe(_serviceRequestPresenceTopic);
     _mq.unsubscribe(_participantTopic);

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:pubnub/pubnub.dart' as pn;
 
 import 'models/feedback.dart';
 import 'models/participant.dart';
@@ -30,6 +31,7 @@ class PlatformClient {
   final PlatformClientConfig _config;
   Session? _session;
   PlatformMQ? _mq;
+  pn.PubNub? _pubnub;
 
   int get _userId => _session!.userId;
 
@@ -89,8 +91,7 @@ class PlatformClient {
 
       _session = Session(token, userId);
 
-      _mq?.dispose();
-      _mq = PlatformMQImpl(_config.environment, _session!);
+      _initSession();
 
       return _session!;
     } on PlatformLocalizedException catch (e) {
@@ -129,8 +130,7 @@ class PlatformClient {
     });
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
 
-    _mq?.dispose();
-    _mq = PlatformMQImpl(_config.environment, _session!);
+    _initSession();
 
     return _session!;
   }
@@ -160,8 +160,7 @@ class PlatformClient {
     });
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
 
-    _mq?.dispose();
-    _mq = PlatformMQImpl(_config.environment, _session!);
+    _initSession();
 
     return _session!;
   }
@@ -195,7 +194,7 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
 
-    return KurentoRoom(_config.environment, this, _mq!, serviceRequest, roomHandler);
+    return KurentoRoom.create(_config.environment, this, _mq!, _pubnub, serviceRequest, roomHandler);
   }
 
   /// Cancels a service request.
@@ -407,6 +406,26 @@ class PlatformClient {
       throw PlatformUnknownException('Platform returned unexpected body: $jsonBody');
     }
   }
+
+  void _initSession() {
+    // Initialize the RabbitMQ client.
+    _mq?.dispose();
+    _mq = PlatformMQImpl(_config.environment, _session!);
+
+    if (_config.messagingKeys != null) {
+      // Initialize the PubNub client.
+      _pubnub = pn.PubNub(
+        defaultKeyset: pn.Keyset(
+          authKey: _session!.token,
+          // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
+          // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
+          publishKey: _config.messagingKeys!.sendKey,
+          subscribeKey: _config.messagingKeys!.receiveKey,
+          uuid: pn.UUID(_session!.userId.toString()),
+        ),
+      );
+    }
+  }
 }
 
 /// The Platform environment.
@@ -424,6 +443,15 @@ class PlatformClientConfig {
   final PlatformEnvironment environment;
   final String apiKey;
   final String clientId;
+  final PlatformMessagingKeys? messagingKeys;
 
-  PlatformClientConfig(this.environment, this.apiKey, this.clientId);
+  PlatformClientConfig(this.environment, this.apiKey, this.clientId, [this.messagingKeys]);
+}
+
+/// The keys used to send and receive messages if the application supports messaging.
+class PlatformMessagingKeys {
+  final String sendKey;
+  final String receiveKey;
+
+  PlatformMessagingKeys(this.sendKey, this.receiveKey);
 }
