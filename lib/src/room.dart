@@ -33,7 +33,7 @@ abstract class Room implements Listenable {
   /// If the service request has not yet been assigned, this will return `null`.
   String? get agentName;
 
-  /// The messages sent and received.
+  /// A broadcast stream of messages sent and received.
   ///
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
@@ -135,8 +135,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return Message(
         envelope.content['text'],
         envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
-        // TODO: When Dash is updated to set the serviceId, remove the -1.
-        envelope.content['serviceId'] ?? -1,
+        envelope.content['senderId'] != _serviceRequest.userId,
         envelope.content['senderId'],
       );
     });

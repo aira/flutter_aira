@@ -39,10 +39,13 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> implements RoomHandler {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final FocusNode _messageFocusNode = FocusNode();
+
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _clientIdController = TextEditingController();
-  final TextEditingController _messageReceiveKeyController = TextEditingController();
-  final TextEditingController _messageSendKeyController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _messagingReceiveKeyController = TextEditingController();
+  final TextEditingController _messagingSendKeyController = TextEditingController();
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
 
@@ -55,6 +58,9 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
   bool get _isInCall => _room != null;
 
+  bool get _isMessagingEnabled =>
+      _messagingSendKeyController.text.isNotEmpty && _messagingReceiveKeyController.text.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -66,10 +72,13 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   void dispose() {
     _remoteRenderer.dispose();
 
+    _messageFocusNode.dispose();
+
     _apiKeyController.dispose();
     _clientIdController.dispose();
-    _messageReceiveKeyController.dispose();
-    _messageSendKeyController.dispose();
+    _messageController.dispose();
+    _messagingReceiveKeyController.dispose();
+    _messagingSendKeyController.dispose();
     _tokenController.dispose();
     _userIdController.dispose();
 
@@ -106,17 +115,56 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   Widget get _inCallWidget {
     return Column(
       children: <Widget>[
+        Visibility(
+          visible: false,
+          child: RTCVideoView(_remoteRenderer),
+        ),
+        Visibility(
+          visible: _isMessagingEnabled,
+          child: _messagingWidget,
+        ),
+        const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _hangUp,
           style: ElevatedButton.styleFrom(primary: Theme.of(context).errorColor),
           child: const Text('End Call'),
         ),
-        Visibility(
-          visible: false,
-          child: RTCVideoView(_remoteRenderer),
+      ],
+    );
+  }
+
+  Widget get _messagingWidget {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: TextFormField(
+            controller: _messageController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Message',
+            ),
+            // Enable/disable the send button on change.
+            onChanged: (_) => setState(() {}),
+            onFieldSubmitted: (_) => _sendMessage(),
+            textInputAction: TextInputAction.send,
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.send),
+          onPressed: _messageController.text.isEmpty ? null : _sendMessage,
+          tooltip: 'Send',
         ),
       ],
     );
+  }
+
+  void _sendMessage() async {
+    _room!.sendMessage(_messageController.text);
+
+    setState(() => _messageController.clear());
+
+    _messageFocusNode.requestFocus();
   }
 
   Widget get _callSetupWidget {
@@ -189,22 +237,22 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           ),
           const SizedBox(height: 8),
           TextFormField(
-            controller: _messageSendKeyController,
+            controller: _messagingSendKeyController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Message Send Key (Optional)',
+              labelText: 'Messaging Send Key (Optional)',
             ),
           ),
           const SizedBox(height: 8),
           TextFormField(
-            controller: _messageReceiveKeyController,
+            controller: _messagingReceiveKeyController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Message Receive Key (Optional)',
+              labelText: 'Messaging Receive Key (Optional)',
             ),
             enabled: !_isInCall,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _callAira,
             style: ElevatedButton.styleFrom(primary: Theme.of(context).primaryColor),
@@ -269,8 +317,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
       // Create the [PlatformClient]. Normally, you would do this at startup and expose the client using a [Provider].
       PlatformMessagingKeys? messagingKeys;
-      if (_messageSendKeyController.text.isNotEmpty && _messageReceiveKeyController.text.isNotEmpty) {
-        messagingKeys = PlatformMessagingKeys(_messageSendKeyController.text, _messageReceiveKeyController.text);
+      if (_isMessagingEnabled) {
+        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
       }
       _platformClient = PlatformClient(PlatformClientConfig(
         PlatformEnvironment.dev,
@@ -312,11 +360,13 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           ));
         }
       });
-      if (messagingKeys != null) {
+      if (_isMessagingEnabled) {
         _room!.messageStream.listen((Message message) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(message.text),
-          ));
+          if (message.sentByAgent) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Agent: ${message.text}'),
+            ));
+          }
         });
       }
 
