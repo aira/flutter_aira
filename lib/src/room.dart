@@ -240,21 +240,21 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> dispose() async {
     _disposed = true;
 
-    _messageSubscription?.dispose();
+    await _messageSubscription?.dispose();
 
-    _mq.unsubscribe(_serviceRequestPresenceTopic);
-    _mq.unsubscribe(_participantTopic);
+    await _mq.unsubscribe(_serviceRequestPresenceTopic);
+    await _mq.unsubscribe(_participantTopic);
 
     if (_serviceRequestState != ServiceRequestState.ended) {
       if (_serviceRequestState == ServiceRequestState.queued) {
-        _client.cancelServiceRequest(_serviceRequest.id);
+        await _client.cancelServiceRequest(_serviceRequest.id);
       } else {
-        _client.endServiceRequest(_serviceRequest.id);
+        await _client.endServiceRequest(_serviceRequest.id);
       }
     }
 
     for (SfuConnection connection in _connectionByTrackId.values) {
-      connection.dispose();
+      await connection.dispose();
     }
 
     super.dispose();
