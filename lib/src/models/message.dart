@@ -1,0 +1,23 @@
+class Message {
+  /// Whether the message was sent by the Explorer.
+  final bool isLocal;
+
+  /// The time at which the message was sent, in milliseconds since the Unix epoch.
+  final int sentAt;
+
+  /// The text of the message.
+  final String text;
+
+  /// The ID of the user who sent the message.
+  final int userId;
+
+  /// Whether the message was sent by the Agent.
+  bool get isRemote => !isLocal;
+
+  Message({
+    required this.isLocal,
+    required this.sentAt,
+    required this.text,
+    required this.userId,
+  });
+}

@@ -39,8 +39,13 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> implements RoomHandler {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final FocusNode _messageFocusNode = FocusNode();
+
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _clientIdController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _messagingReceiveKeyController = TextEditingController();
+  final TextEditingController _messagingSendKeyController = TextEditingController();
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
 
@@ -53,9 +58,20 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
   bool get _isInCall => _room != null;
 
+  bool get _isMessagingEnabled =>
+      _messagingSendKeyController.text.isNotEmpty && _messagingReceiveKeyController.text.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
+
+    // During development, you can set these here instead of through the UI to iterate faster.
+    _apiKeyController.text = '';
+    _clientIdController.text = '';
+    _messagingReceiveKeyController.text = '';
+    _messagingSendKeyController.text = '';
+    _tokenController.text = '';
+    _userIdController.text = '';
 
     _rendererInitialized = _remoteRenderer.initialize();
   }
@@ -64,8 +80,13 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   void dispose() {
     _remoteRenderer.dispose();
 
+    _messageFocusNode.dispose();
+
     _apiKeyController.dispose();
     _clientIdController.dispose();
+    _messageController.dispose();
+    _messagingReceiveKeyController.dispose();
+    _messagingSendKeyController.dispose();
     _tokenController.dispose();
     _userIdController.dispose();
 
@@ -78,108 +99,175 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       appBar: AppBar(
         title: const Text('Aira Demo'),
       ),
-      body: LayoutBuilder(builder: (BuildContext context, BoxConstraints viewportConstraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: viewportConstraints.maxHeight,
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: TextFormField(
-                      controller: _clientIdController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: kIsWeb ? ' ' : null,
-                        labelText: 'Client ID',
-                      ),
-                      enabled: !_isInCall,
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'A client ID is required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: TextFormField(
-                      controller: _apiKeyController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: kIsWeb ? ' ' : null,
-                        labelText: 'API Key',
-                      ),
-                      enabled: !_isInCall,
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'An API key is required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: TextFormField(
-                        controller: _userIdController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                          helperText: kIsWeb ? ' ' : null,
-                          labelText: 'User ID',
-                        ),
-                        enabled: !_isInCall,
-                        validator: (String? value) {
-                          if (value == null || value.isEmpty) {
-                            return 'A user ID is required';
-                          }
-                          return null;
-                        }),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: TextFormField(
-                      controller: _tokenController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-                        helperText: kIsWeb ? ' ' : null,
-                        labelText: 'Token',
-                      ),
-                      enabled: !_isInCall,
-                      validator: (String? value) {
-                        if (value == null || value.isEmpty) {
-                          return 'A token is required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _isInCall ? _hangUp : _callAira,
-                    style: ElevatedButton.styleFrom(
-                      primary: _isInCall ? Theme.of(context).errorColor : Theme.of(context).primaryColor,
-                    ),
-                    child: Text(_isInCall ? 'End Call' : 'Call an Aira Agent'),
-                  ),
-                  Visibility(
-                    visible: false,
-                    child: RTCVideoView(_remoteRenderer),
-                  ),
-                ],
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: LayoutBuilder(builder: (BuildContext context, BoxConstraints viewportConstraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 640 - 32,
+                  minHeight: viewportConstraints.maxHeight - 32,
+                ),
+                child: IntrinsicHeight(
+                  child: _isInCall ? _inCallWidget : _callSetupWidget,
+                ),
               ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget get _inCallWidget {
+    return Column(
+      children: <Widget>[
+        Visibility(
+          visible: false,
+          child: RTCVideoView(_remoteRenderer),
+        ),
+        Visibility(
+          visible: _isMessagingEnabled,
+          child: _messagingWidget,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _hangUp,
+          style: ElevatedButton.styleFrom(primary: Theme.of(context).errorColor),
+          child: const Text('End Call'),
+        ),
+      ],
+    );
+  }
+
+  Widget get _messagingWidget {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: TextFormField(
+            controller: _messageController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Message',
+            ),
+            // Enable/disable the send button on change.
+            onChanged: (_) => setState(() {}),
+            onFieldSubmitted: (_) => _sendMessage(),
+            textInputAction: TextInputAction.send,
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.send),
+          onPressed: _messageController.text.isEmpty ? null : _sendMessage,
+          tooltip: 'Send',
+        ),
+      ],
+    );
+  }
+
+  void _sendMessage() async {
+    _room!.sendMessage(_messageController.text);
+
+    setState(() => _messageController.clear());
+
+    _messageFocusNode.requestFocus();
+  }
+
+  Widget get _callSetupWidget {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: <Widget>[
+          TextFormField(
+            controller: _clientIdController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+              helperText: kIsWeb ? ' ' : null,
+              labelText: 'Client ID',
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'A client ID is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _apiKeyController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+              helperText: kIsWeb ? ' ' : null,
+              labelText: 'API Key',
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'An API key is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _userIdController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+              helperText: kIsWeb ? ' ' : null,
+              labelText: 'User ID',
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'A user ID is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _tokenController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+              helperText: kIsWeb ? ' ' : null,
+              labelText: 'Token',
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'A token is required';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _messagingSendKeyController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Messaging Send Key (Optional)',
             ),
           ),
-        );
-      }),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _messagingReceiveKeyController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Messaging Receive Key (Optional)',
+            ),
+            enabled: !_isInCall,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _callAira,
+            style: ElevatedButton.styleFrom(primary: Theme.of(context).primaryColor),
+            child: const Text('Call an Aira Agent'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -210,10 +298,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: CircularProgressIndicator(),
-                  ),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
                   Semantics(
                     liveRegion: true,
                     child: Text(progressText),
@@ -238,10 +324,15 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       );
 
       // Create the [PlatformClient]. Normally, you would do this at startup and expose the client using a [Provider].
+      PlatformMessagingKeys? messagingKeys;
+      if (_isMessagingEnabled) {
+        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
+      }
       _platformClient = PlatformClient(PlatformClientConfig(
         PlatformEnvironment.dev,
         _apiKeyController.text,
         _clientIdController.text,
+        messagingKeys,
       ));
 
       // Log in.
@@ -277,6 +368,15 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           ));
         }
       });
+      if (_isMessagingEnabled) {
+        _room!.messageStream.listen((Message message) {
+          if (message.isRemote) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Agent: ${message.text}'),
+            ));
+          }
+        });
+      }
 
       // Join the room.
       _room!.join(_localStream!);
