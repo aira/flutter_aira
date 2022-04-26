@@ -133,10 +133,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
       _log.finest('received message content=${envelope.content}');
 
       return Message(
-        envelope.content['text'],
-        envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
-        envelope.content['senderId'] != _serviceRequest.userId,
-        envelope.content['senderId'],
+        isLocal: envelope.content['senderId'] == _serviceRequest.userId,
+        sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
+        text: envelope.content['text'],
+        userId: envelope.content['senderId'],
       );
     });
   }

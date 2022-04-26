@@ -65,6 +65,14 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   void initState() {
     super.initState();
 
+    // During development, you can set these here instead of through the UI to iterate faster.
+    _apiKeyController.text = '';
+    _clientIdController.text = '';
+    _messagingReceiveKeyController.text = '';
+    _messagingSendKeyController.text = '';
+    _tokenController.text = '';
+    _userIdController.text = '';
+
     _rendererInitialized = _remoteRenderer.initialize();
   }
 
@@ -362,7 +370,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       });
       if (_isMessagingEnabled) {
         _room!.messageStream.listen((Message message) {
-          if (message.sentByAgent) {
+          if (message.isRemote) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text('Agent: ${message.text}'),
             ));
