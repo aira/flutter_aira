@@ -91,8 +91,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   Future<void> _init() async {
     // Asynchronously subscribe to the room-related topics.
-    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
-    await _mq.subscribe(_participantTopic, MqttQos.atLeastOnce, _handleParticipantMessage);
+    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
+    await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
 
     // If messaging is supported, subscribe to the message channel.
     if (_pubnub != null) {
@@ -357,13 +357,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
         trackId,
         _serviceRequest.participantId,
         {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex});
-    _mq.publish(_roomTopic, MqttQos.atLeastOnce, jsonEncode(message.toJson()));
+    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
   void _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) {
     ParticipantMessage message = ParticipantMessage(ParticipantMessageType.SDP_OFFER, trackId,
         _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp});
-    _mq.publish(_roomTopic, MqttQos.atLeastOnce, jsonEncode(message.toJson()));
+    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
   void _handleTrack(int trackId, RTCTrackEvent event) {
