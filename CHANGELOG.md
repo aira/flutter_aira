@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2022-04-29
+### Changed
+- MQTT keep alive and QoS (#4).
+
 ## [0.0.2] - 2022-04-26
 ### Added
 - Messaging support (#3).
