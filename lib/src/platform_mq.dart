@@ -39,7 +39,7 @@ class PlatformMQImpl implements PlatformMQ {
     // action in Dash or Platform.
     _client
       ..autoReconnect = true
-      ..keepAlivePeriod = 60
+      ..keepAlivePeriod = 30
       ..setProtocolV311()
       ..websocketProtocols = ['mqttv3.1.1']
       ..onAutoReconnect = _handleAutoReconnect
