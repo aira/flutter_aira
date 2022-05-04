@@ -160,7 +160,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
   // If the MQTT client disconnects ungracefully, the last-will message will cancel the service request if it is still
-  // queued (see https://github.com/aira/platform/blob/1ae4c68f2cb0d66ad5851c50765316b666f0ebb8/core/server/AiraPlatform/src/main/java/io/aira/amqp/ServiceRequestsListener.java#L135-L139).
+  // queued using Platform's (deprecated but functional) ServiceRequestsListener.
   String get _lastWillMessage => jsonEncode({
         'action': 'CANCEL',
         'requestType': 'AIRA',
