@@ -15,7 +15,6 @@ import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
 import 'platform_exceptions.dart';
-import 'platform_mq.dart';
 import 'room.dart';
 
 /// The Platform client.
@@ -30,7 +29,6 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  PlatformMQ? _mq;
   pn.PubNub? _pubnub;
 
   int get _userId => _session!.userId;
@@ -48,9 +46,6 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
-
-    _mq?.dispose();
-    _mq = null;
   }
 
   /// Sends a verification code to a phone number.
@@ -169,8 +164,6 @@ class PlatformClient {
   Future<void> logout() async {
     // TODO: Actually log out. For now, we're copying the legacy apps and just removing the token.
     _session = null;
-    _mq?.dispose();
-    _mq = null;
   }
 
   /// Creates a service request for the logged-in user.
@@ -194,7 +187,7 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
 
-    return KurentoRoom.create(_config.environment, this, _mq!, _pubnub, serviceRequest, roomHandler);
+    return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
   }
 
   /// Cancels a service request.
@@ -397,8 +390,6 @@ class PlatformClient {
       return body;
     } else if (body['response']?['errorCode'] == 'SEC-001') {
       _session = null;
-      _mq?.dispose();
-      _mq = null;
       throw const PlatformInvalidTokenException();
     } else if (body['response']?['errorMessage'] != null) {
       throw PlatformLocalizedException(body['response']?['errorCode'], body['response']['errorMessage']);
@@ -408,10 +399,6 @@ class PlatformClient {
   }
 
   void _initSession() {
-    // Initialize the RabbitMQ client.
-    _mq?.dispose();
-    _mq = PlatformMQImpl(_config.environment, _session!);
-
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
       _pubnub = pn.PubNub(
