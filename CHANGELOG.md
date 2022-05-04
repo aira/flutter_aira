@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2022-05-04
+### Fixed
+- Service request is not cancelled when disconnecting ungracefully (#5).
+
 ## [0.0.3] - 2022-04-29
 ### Changed
 - MQTT keep alive and QoS (#4).
