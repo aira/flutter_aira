@@ -10,6 +10,7 @@ import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
 import 'models/service_request.dart';
+import 'models/session.dart';
 import 'models/track.dart';
 import 'platform_client.dart';
 import 'platform_exceptions.dart';
@@ -72,7 +73,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final PlatformEnvironment _env;
   final PlatformClient _client;
-  final PlatformMQ _mq;
+  late final PlatformMQ _mq;
   final pn.PubNub? _pubnub;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
@@ -87,7 +88,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   pn.Subscription? _messageSubscription;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, this._mq, this._pubnub, this._serviceRequest, this._roomHandler);
+  KurentoRoom._(this._env, this._client, Session session, this._pubnub, this._serviceRequest, this._roomHandler) {
+    _mq = PlatformMQImpl(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
+  }
 
   Future<void> _init() async {
     // Asynchronously subscribe to the room-related topics.
@@ -101,9 +104,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
-  static Future<Room> create(PlatformEnvironment env, PlatformClient client, PlatformMQ mq, pn.PubNub? pubnub,
+  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
       ServiceRequest serviceRequest, RoomHandler roomHandler) async {
-    KurentoRoom room = KurentoRoom._(env, client, mq, pubnub, serviceRequest, roomHandler);
+    KurentoRoom room = KurentoRoom._(env, client, session, pubnub, serviceRequest, roomHandler);
     try {
       await room._init();
       return room;
@@ -155,6 +158,17 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
 
   String get _messageChannel => 'user-room-${_serviceRequest.userId}';
+
+  // If the MQTT client disconnects ungracefully, the last-will message will cancel the service request if it is still
+  // queued using Platform's (deprecated but functional) ServiceRequestsListener.
+  String get _lastWillMessage => jsonEncode({
+        'action': 'CANCEL',
+        'requestType': 'AIRA',
+        'serviceid': _serviceRequest.id,
+        'userid': _serviceRequest.userId,
+      });
+
+  String get _lastWillTopic => '${_env.name}/sr/req';
 
   @override
   Future<void> join(MediaStream localStream) async {
@@ -242,8 +256,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     await _messageSubscription?.dispose();
 
-    await _mq.unsubscribe(_serviceRequestPresenceTopic);
-    await _mq.unsubscribe(_participantTopic);
+    _mq.dispose();
 
     if (_serviceRequestState != ServiceRequestState.ended) {
       if (_serviceRequestState == ServiceRequestState.queued) {
@@ -282,6 +295,17 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
         // Start the WebRTC signaling process.
         _connectTrack(track.id);
+
+        if (serviceRequestState == ServiceRequestState.queued) {
+          // HACK: If the Agent is sending audio and we still think we're queued, we're not receiving messages on the
+          // service request presence topic. Until we can figure out why this is happening, pretend we received a
+          // message and transition the service request status to started.
+          _log.shout('missed service request status message topic=$_serviceRequestPresenceTopic');
+          _agentName = '';
+          _serviceRequestState = ServiceRequestState.started;
+          _updateParticipantStatus();
+          notifyListeners();
+        }
         break;
 
       case ParticipantMessageType.SDP_ANSWER:

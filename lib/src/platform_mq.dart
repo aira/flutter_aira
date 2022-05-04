@@ -7,6 +7,7 @@ import 'package:mqtt_client/mqtt_client.dart';
 
 import 'models/session.dart';
 import 'platform_client.dart';
+import 'platform_exceptions.dart';
 import 'platform_mq_server_client.dart' if (dart.library.html) 'platform_mq_browser_client.dart' as mqttsetup;
 
 typedef MessageCallback = void Function(String message);
@@ -31,13 +32,8 @@ class PlatformMQImpl implements PlatformMQ {
   final Map<String, List<MessageCallback>> _callbacksByTopic = {};
   Completer<bool> _isConnected = Completer<bool>();
 
-  PlatformMQImpl(PlatformEnvironment env, this._session) {
-    _client = mqttsetup.setup('wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws', _clientId);
-
-    // Should we configure a last will message (https://github.com/shamblett/mqtt_client/blob/3a9278b62e390d891ac0b6e83bee9953c94c17c1/example/mqtt_browser_client.dart#L60-L70)?
-    // This will get published if the client disconnects ungracefully, and could potentially be used to trigger some
-    // action in Dash or Platform.
-    _client
+  PlatformMQImpl(PlatformEnvironment env, this._session, {String? lastWillMessage, String? lastWillTopic}) {
+    _client = mqttsetup.setup('wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws', _clientId)
       ..autoReconnect = true
       ..keepAlivePeriod = 30
       ..setProtocolV311()
@@ -47,6 +43,14 @@ class PlatformMQImpl implements PlatformMQ {
       ..onSubscribed = _handleSubscribed
       ..onSubscribeFail = _handleSubscribeFail
       ..onUnsubscribed = _handleUnsubscribed;
+
+    if (lastWillMessage != null && lastWillTopic != null) {
+      _client.connectionMessage = MqttConnectMessage()
+        ..startClean()
+        ..withWillMessage(lastWillMessage)
+        ..withWillQos(MqttQos.atMostOnce)
+        ..withWillTopic(lastWillTopic);
+    }
 
     // Connect to the server (the connect happens asynchronously, so we'll complete _isConnected in _onConnected)
     // TODO: How should we handle connection errors?
@@ -85,7 +89,7 @@ class PlatformMQImpl implements PlatformMQ {
 
     Subscription? subscription = _client.subscribe(topic, qosLevel);
     if (subscription == null) {
-      _handleSubscribeFail(topic);
+      throw const PlatformUnknownException('Topic subscription failed');
     }
 
     List<MessageCallback> callbacks = _callbacksByTopic.putIfAbsent(topic, () => []);
