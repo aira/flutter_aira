@@ -94,8 +94,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   Future<void> _init() async {
     // Asynchronously subscribe to the room-related topics.
-    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
+    await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
+    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
 
     // If messaging is supported, subscribe to the message channel.
     if (_pubnub != null) {
@@ -149,6 +150,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   // The video is muted if there is no video track or if the first video track is disabled.
   bool get _isVideoMuted => _localStream!.getVideoTracks().isEmpty ? true : !_localStream!.getVideoTracks()[0].enabled;
+
+  String get _participantEventTopic =>
+      '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}/event';
 
   String get _participantTopic =>
       '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}';
@@ -271,6 +275,15 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     super.dispose();
+  }
+
+  Future<void> _handleParticipantEventMessage(String message) async {
+    Map<String, dynamic> json = jsonDecode(message);
+    if (json['type'] == 'PHOTO') {
+      await _client.uploadPhoto(_serviceRequest.id, await _localStream!.getVideoTracks()[0].captureFrame());
+    } else {
+      _log.warning('ignoring participant event message type=${json['type']}');
+    }
   }
 
   Future<void> _handleParticipantMessage(String message) async {
