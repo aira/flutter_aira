@@ -10,10 +10,10 @@ import 'platform_client.dart';
 import 'platform_exceptions.dart';
 import 'platform_mq_server_client.dart' if (dart.library.html) 'platform_mq_browser_client.dart' as mqttsetup;
 
-typedef MessageCallback = void Function(String message);
+typedef MessageCallback = Future<void> Function(String message);
 
 abstract class PlatformMQ {
-  Future<bool> get isConnected;
+  bool get isConnected;
 
   Future<void> subscribe(String topic, MqttQos qosLevel, MessageCallback onMessage);
 
@@ -30,7 +30,7 @@ class PlatformMQImpl implements PlatformMQ {
   final Session _session;
   late final MqttClient _client;
   final Map<String, List<MessageCallback>> _callbacksByTopic = {};
-  Completer<bool> _isConnected = Completer<bool>();
+  Completer<void> _connectCompleter = Completer<void>();
 
   PlatformMQImpl(PlatformEnvironment env, this._session, {String? lastWillMessage, String? lastWillTopic}) {
     _client = mqttsetup.setup('wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws', _clientId)
@@ -74,16 +74,16 @@ class PlatformMQImpl implements PlatformMQ {
     _log.finest('received message client_id=${_client.clientIdentifier} topic=$topic message=$decoded');
 
     for (final MessageCallback callback in _callbacksByTopic[topic] ?? []) {
-      callback(decoded);
+      callback(decoded).catchError((e) => _log.shout('failed to handle message topic=$topic', e));
     }
   }
 
   @override
-  Future<bool> get isConnected => _isConnected.future;
+  bool get isConnected => _connectCompleter.isCompleted;
 
   @override
   Future<void> subscribe(String topic, MqttQos qosLevel, MessageCallback onMessage) async {
-    await isConnected;
+    await _connectCompleter.future;
 
     _log.info('subscribe client_id=${_client.clientIdentifier} topic=$topic qosLevel=$qosLevel');
 
@@ -102,7 +102,7 @@ class PlatformMQImpl implements PlatformMQ {
 
   @override
   Future<void> unsubscribe(String topic) async {
-    await isConnected;
+    await _connectCompleter.future;
 
     _log.info('unsubscribe client_id=${_client.clientIdentifier} topic=$topic');
 
@@ -112,7 +112,7 @@ class PlatformMQImpl implements PlatformMQ {
 
   @override
   Future<int> publish(String topic, MqttQos qosLevel, String message) async {
-    await isConnected;
+    await _connectCompleter.future;
 
     _log.finest('publishing message client_id=${_client.clientIdentifier} topic=$topic message=$message');
 
@@ -124,12 +124,12 @@ class PlatformMQImpl implements PlatformMQ {
 
   void _handleAutoReconnect() {
     _log.warning('reconnecting client_id=${_client.clientIdentifier}');
-    _isConnected = Completer<bool>();
+    _connectCompleter = Completer<void>();
   }
 
   void _handleConnected() {
     _log.info('connected client_id=${_client.clientIdentifier}');
-    _isConnected.complete(true);
+    _connectCompleter.complete();
   }
 
   void _handleSubscribed(String topic) {

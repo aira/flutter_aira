@@ -273,14 +273,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
     super.dispose();
   }
 
-  void _handleParticipantMessage(String message) async {
+  Future<void> _handleParticipantMessage(String message) async {
     ParticipantMessage participantMessage = ParticipantMessage.fromJson(jsonDecode(message));
     switch (participantMessage.type) {
       case ParticipantMessageType.ICE_CANDIDATE:
         RTCIceCandidate candidate = RTCIceCandidate(participantMessage.payload['candidate']!,
             participantMessage.payload['sdpMid']!, participantMessage.payload['sdpMLineIndex']);
         if (_connectionByTrackId.containsKey(participantMessage.trackId)) {
-          _connectionByTrackId[participantMessage.trackId]!.handleIceCandidate(candidate);
+          await _connectionByTrackId[participantMessage.trackId]!.handleIceCandidate(candidate);
         } else {
           _log.warning('ignoring participant message for unknown track '
               'type=${participantMessage.type} track_id=${participantMessage.trackId}');
@@ -294,7 +294,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _log.info('created incoming track id=${track.id} outgoing_track_id=${participantMessage.trackId}');
 
         // Start the WebRTC signaling process.
-        _connectTrack(track.id);
+        await _connectTrack(track.id);
 
         if (serviceRequestState == ServiceRequestState.queued) {
           // HACK: If the Agent is sending audio and we still think we're queued, we're not receiving messages on the
@@ -303,7 +303,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
           _log.shout('missed service request status message topic=$_serviceRequestPresenceTopic');
           _agentName = '';
           _serviceRequestState = ServiceRequestState.started;
-          _updateParticipantStatus();
+          await _updateParticipantStatus();
           notifyListeners();
         }
         break;
@@ -312,7 +312,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         RTCSessionDescription answer =
             RTCSessionDescription(participantMessage.payload['sdp'], participantMessage.payload['type']);
         if (_connectionByTrackId.containsKey(participantMessage.trackId)) {
-          _connectionByTrackId[participantMessage.trackId]!.handleSdpAnswer(answer);
+          await _connectionByTrackId[participantMessage.trackId]!.handleSdpAnswer(answer);
         } else {
           _log.warning('ignoring participant message for unknown track '
               'type=${participantMessage.type} track_id=${participantMessage.trackId}');
@@ -324,7 +324,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  void _handleServiceRequestPresenceMessage(String message) async {
+  Future<void> _handleServiceRequestPresenceMessage(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
     if (json['id'] != _serviceRequest.id) {
       // Ignore status updates for other service requests (right now, Platform enforces that an Explorer can only be in
@@ -344,7 +344,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _serviceRequestState = ServiceRequestState.started;
 
         // Now that the Agent has joined the room, publish our participant status.
-        _updateParticipantStatus();
+        await _updateParticipantStatus();
 
         break;
 
