@@ -81,6 +81,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final Map<int, SfuConnection> _connectionByTrackId = {};
 
   bool _disposed = false;
+  bool _presenting = false;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
   MediaStream? _localStream;
@@ -216,6 +217,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
     // so for now, we start presenting by replacing the Explorer's video track with the display video track.
     await _connectionByTrackId[_localTrackId]!.replaceTrack(displayStream.getVideoTracks()[0]);
+    _presenting = true;
     _log.info('started presenting track=${displayStream.getVideoTracks()[0].label}');
   }
 
@@ -224,6 +226,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
     // track.
     await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
+    _presenting = false;
     _log.info('stopped presenting');
   }
 
@@ -280,6 +283,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> _handleParticipantEventMessage(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
     if (json['type'] == 'PHOTO') {
+      if (_isVideoMuted) {
+        _log.warning('cannot take photo when video is muted');
+        return;
+      } else if (_presenting) {
+        _log.warning('cannot take photo when presenting');
+        return;
+      }
       await _client.uploadPhoto(_serviceRequest.id, await _localStream!.getVideoTracks()[0].captureFrame());
     } else {
       _log.warning('ignoring participant event message type=${json['type']}');
