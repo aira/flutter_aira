@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -253,22 +254,60 @@ class PlatformClient {
     await _httpPost('/api/smartapp/feedback', body);
   }
 
+  /// Uploads a photo for a service request.
+  Future<void> uploadPhoto(int serviceRequestId, ByteBuffer photo) async {
+    _verifyIsLoggedIn();
+
+    try {
+      Uri uri = Uri.https(_platformHost, '/api/files/upload');
+      int traceId = _nextTraceId();
+      Map<String, String> headers = await _getHeaders(traceId);
+
+      Map<String, String> fields = {
+        'category': 'sr_trigger',
+        'entityid': _userId.toString(),
+        'entitytype': 'user',
+        'serviceid': serviceRequestId.toString(),
+      };
+      http.MultipartFile file = http.MultipartFile.fromBytes(
+        'file',
+        photo.asUint8List(),
+        filename: 'photo', // Unused but required.
+      );
+
+      _log.finest('trace_id=$traceId method=POST uri=$uri fields=$fields');
+
+      http.MultipartRequest request = http.MultipartRequest('POST', uri)
+        ..fields.addAll(fields)
+        ..files.add(file)
+        ..headers.addAll(headers);
+
+      http.StreamedResponse response = await _httpClient.send(request);
+      _parseResponse(response.statusCode, await response.stream.bytesToString());
+    } on SocketException catch (e) {
+      throw PlatformUnknownException(e.message);
+    }
+  }
+
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
     try {
-      final uri = Uri.https(_platformHost, unencodedPath, queryParameters);
-      final traceId = _nextTraceId();
-      final headers = await _getHeaders(traceId, additionalHeaders);
+      Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
+      int traceId = _nextTraceId();
+      Map<String, String> headers = await _getHeaders(traceId, additionalHeaders: additionalHeaders);
 
       _log.finest('trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}');
 
       switch (method) {
         case 'GET':
-          return _parseResponse(await _httpClient.get(uri, headers: headers));
+          http.Response response = await _httpClient.get(uri, headers: headers);
+          return _parseResponse(response.statusCode, response.body);
         case 'POST':
-          return _parseResponse(await _httpClient.post(uri, headers: headers, body: body));
+          http.Response response = await _httpClient.post(uri, headers: headers, body: body);
+          return _parseResponse(response.statusCode, response.body);
         case 'PUT':
-          return _parseResponse(await _httpClient.put(uri, headers: headers, body: body));
+          http.Response response = await _httpClient.put(uri, headers: headers, body: body);
+          return _parseResponse(response.statusCode, response.body);
         default:
           throw UnsupportedError(method);
       }
@@ -306,7 +345,7 @@ class PlatformClient {
     }
   }
 
-  Future<Map<String, String>> _getHeaders(int traceId, Map<String, String>? additionalHeaders) async {
+  Future<Map<String, String>> _getHeaders(int traceId, {Map<String, String>? additionalHeaders}) async {
     final headers = {
       'Content-Type': 'application/json',
       'X-API-Key': _config.apiKey,
@@ -373,28 +412,27 @@ class PlatformClient {
     }
   }
 
-  Map<String, dynamic> _parseResponse(http.Response response) {
-    final jsonBody = response.body;
-    if (jsonBody.isEmpty) {
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+  Map<String, dynamic> _parseResponse(int statusCode, String body) {
+    if (body.isEmpty) {
+      if (statusCode >= 200 && statusCode < 300) {
         // Successful but empty response.
         return {};
       } else {
         // This should not be common. If the error comes from Platform, the error message will be included in the body.
-        throw PlatformUnknownException('Platform request failed with HTTP ${response.statusCode}');
+        throw PlatformUnknownException('Platform request failed with HTTP $statusCode');
       }
     }
 
-    final body = jsonDecode(jsonBody);
-    if (body['response']?['status'] == 'SUCCESS') {
-      return body;
-    } else if (body['response']?['errorCode'] == 'SEC-001') {
+    Map<String, dynamic> json = jsonDecode(body);
+    if (json['response']?['status'] == 'SUCCESS') {
+      return json;
+    } else if (json['response']?['errorCode'] == 'SEC-001') {
       _session = null;
       throw const PlatformInvalidTokenException();
-    } else if (body['response']?['errorMessage'] != null) {
-      throw PlatformLocalizedException(body['response']?['errorCode'], body['response']['errorMessage']);
+    } else if (json['response']?['errorMessage'] != null) {
+      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
     } else {
-      throw PlatformUnknownException('Platform returned unexpected body: $jsonBody');
+      throw PlatformUnknownException('Platform returned unexpected body: $body');
     }
   }
 
@@ -403,12 +441,12 @@ class PlatformClient {
       // Initialize the PubNub client.
       _pubnub = pn.PubNub(
         defaultKeyset: pn.Keyset(
-          authKey: _session!.token,
+          authKey: _token,
           // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
           // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
           publishKey: _config.messagingKeys!.sendKey,
           subscribeKey: _config.messagingKeys!.receiveKey,
-          uuid: pn.UUID(_session!.userId.toString()),
+          uuid: pn.UUID(_userId.toString()),
         ),
       );
     }
