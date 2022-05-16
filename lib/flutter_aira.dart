@@ -1,4 +1,4 @@
-export 'src/models/feedback.dart' show Feedback, Rating;
+export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;
 export 'src/models/participant.dart' show Participant, ParticipantStatus;
 export 'src/models/service_request.dart' show ServiceRequest, ServiceRequestState;
