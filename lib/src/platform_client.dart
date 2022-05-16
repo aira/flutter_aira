@@ -238,13 +238,13 @@ class PlatformClient {
 
   /// Saves feedback for a service request.
   Future<void> saveFeedback(int serviceRequestId,
-      {Feedback? agentFeedback, Feedback? appFeedback, Feedback? offerFeedback}) async {
+      {AgentFeedback? agentFeedback, Feedback? appFeedback, Feedback? offerFeedback}) async {
     _verifyIsLoggedIn();
 
     String body = jsonEncode({
       'serviceId': serviceRequestId,
       'comment': jsonEncode({
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'agent': agentFeedback?.toJson(),
         'app': appFeedback?.toJson(),
         'offer': offerFeedback?.toJson(),
