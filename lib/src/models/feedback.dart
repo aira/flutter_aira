@@ -23,14 +23,26 @@ class Feedback {
   String? comment;
   Rating? rating;
   final Set<String> tags = {};
-  bool shareable = false;
 
   Map<String, dynamic> toJson() {
     return {
       'comment': comment,
       'rating': rating?.value,
       'tags': tags.toList(growable: false),
-      'shareable': shareable,
+    };
+  }
+}
+
+class AgentFeedback extends Feedback {
+  bool requestReview = false;
+  bool shareKudos = false;
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      ...super.toJson(),
+      'requestReview': requestReview,
+      'shareKudos': shareKudos,
     };
   }
 }

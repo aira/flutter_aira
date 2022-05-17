@@ -12,7 +12,7 @@ void main() {
 
   // Auto-enable accessibility for our Blind and Low Vision customers (see
   // https://docs.flutter.dev/development/accessibility-and-localization/accessibility#screen-readers).
-  RendererBinding.instance!.setSemanticsEnabled(true);
+  RendererBinding.instance.setSemanticsEnabled(true);
 
   // Configure logging.
   Logger.root.level = Level.INFO;
