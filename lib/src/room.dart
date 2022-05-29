@@ -62,6 +62,9 @@ abstract class Room implements Listenable {
   /// If the application does not support messaging, this will throw an exception.
   Future<void> sendMessage(String text);
 
+  /// Replaces the local audio and video stream with the provided one.
+  Future<void> replaceStream(MediaStream localStream);
+
   /// Leaves the room and discards any resources used.
   ///
   /// After this is called, the object is not in a usable state and should be discarded.
@@ -248,6 +251,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     _log.finest('sent message content=$content');
+  }
+
+  @override
+  Future<void> replaceStream(MediaStream mediaStream) async {
+    // Sync the mute states with the previous local stream.
+    mediaStream.getAudioTracks()[0].enabled = _localStream!.getAudioTracks()[0].enabled;
+    mediaStream.getVideoTracks()[0].enabled = _localStream!.getVideoTracks()[0].enabled;
+
+    // Replace the stored local stream.
+    _localStream = mediaStream;
+
+    // Replace the tracks.
+    await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getAudioTracks()[0]);
+    if (!_presenting) {
+      await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
+    }
   }
 
   @override
