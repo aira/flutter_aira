@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -56,6 +57,9 @@ abstract class Room implements Listenable {
 
   /// Stops presenting the display stream.
   Future<void> stopPresenting();
+
+  /// Replaces local Stream's tracks with those found in [localStream]
+  Future<void> replaceStream(MediaStream localStream);
 
   /// Sends the provided message to the Agent.
   ///
@@ -228,6 +232,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
     _presenting = false;
     _log.info('stopped presenting');
+  }
+
+  @override
+  Future<void> replaceStream(MediaStream localStream) async {
+    await _connectionByTrackId[_localTrackId]!.replaceTrack(localStream.getAudioTracks()[0]);
+    await _connectionByTrackId[_localTrackId]!.replaceTrack(localStream.getVideoTracks()[0]);
+    // We don't want to dispose of the previous MediaStream here as we don't know what the user may want to do with it.
+    _localStream = localStream;
   }
 
   @override
