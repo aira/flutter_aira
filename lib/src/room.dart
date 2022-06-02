@@ -255,18 +255,19 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> replaceStream(MediaStream mediaStream) async {
-    // Sync the mute states with the previous local stream.
-    mediaStream.getAudioTracks()[0].enabled = _localStream!.getAudioTracks()[0].enabled;
-    mediaStream.getVideoTracks()[0].enabled = _localStream!.getVideoTracks()[0].enabled;
-
     // Replace the stored local stream.
     _localStream = mediaStream;
 
     // Replace the tracks.
-    await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getAudioTracks()[0]);
-    if (!_presenting) {
-      await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
+    if (mediaStream.getAudioTracks().isNotEmpty) {
+      await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getAudioTracks()[0]);
     }
+    if (mediaStream.getVideoTracks().isNotEmpty && !_presenting) {
+      await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getVideoTracks()[0]);
+    }
+
+    // Publish our participant status using the mute states of the new local stream.
+    await _updateParticipantStatus();
   }
 
   @override
