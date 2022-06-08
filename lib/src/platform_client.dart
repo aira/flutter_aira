@@ -13,6 +13,7 @@ import 'package:pubnub/pubnub.dart' as pn;
 import 'models/credentials.dart';
 import 'models/feedback.dart';
 import 'models/participant.dart';
+import 'models/profile.dart';
 import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
@@ -155,18 +156,19 @@ class PlatformClient {
     _session = null;
   }
 
-  Future<void> createAccount() async {
-    /*
-                return "/order/guest/basic"
+  /// Creates an account.
+  Future<Session> createAccount(Credentials credentials, {List<Language>? preferredLanguages}) async {
+    String body = jsonEncode({
+      'authProvider': credentials.provider,
+      'login': credentials.login,
+      'preferredLang': preferredLanguages,
+      'tosAccepted': true,
+      'verificationCode': credentials.password,
+    });
 
+    await _httpPost('/api/order/guest/basic', body);
 
-            let payload: [String: Any] = [
-            "login": phone,
-            "verificationCode": verificationCode,
-            "referralCode": referralCode ?? ""
-        ]
-
-     */
+    return loginWithCredentials(credentials);
   }
 
   /// Creates a service request for the logged-in user.
