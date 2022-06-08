@@ -161,7 +161,7 @@ class PlatformClient {
     String body = jsonEncode({
       'authProvider': credentials.provider,
       'login': credentials.login,
-      'preferredLang': preferredLanguages,
+      'preferredLang': preferredLanguages?.map((language) => language.name),
       'tosAccepted': true,
       'verificationCode': credentials.password,
     });

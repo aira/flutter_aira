@@ -5,3 +5,7 @@ enum Language {
   French,
   Spanish,
 }
+
+extension LanguageExtension on Language {
+  get name => toString().split('.').last;
+}
