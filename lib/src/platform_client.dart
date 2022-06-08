@@ -67,7 +67,7 @@ class PlatformClient {
   /// Confirms a verification code that was sent to a phone number by [sendPhoneVerificationCode].
   ///
   /// [phoneNumber] is the phone number in E.164 format and [verificationCode] is the verification code. If successful,
-  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) and to
+  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) or to
   /// [loginWithCredentials].
   Future<Credentials> confirmPhoneVerificationCode(String phoneNumber, String verificationCode) async {
     String body = jsonEncode({
@@ -94,7 +94,7 @@ class PlatformClient {
   /// Confirms a verification code that was sent to an email address by [sendEmailVerificationCode].
   ///
   /// [email] is the email address and [verificationCode] is the verification code. If successful,
-  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) and to
+  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) or to
   /// [loginWithCredentials].
   Future<Credentials> confirmEmailVerificationCode(String email, String verificationCode) async {
     String body = jsonEncode({
