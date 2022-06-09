@@ -10,8 +10,10 @@ import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
+import 'models/credentials.dart';
 import 'models/feedback.dart';
 import 'models/participant.dart';
+import 'models/profile.dart';
 import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
@@ -62,6 +64,22 @@ class PlatformClient {
     await _httpPost('/api/smartapp/verify', body);
   }
 
+  /// Confirms a verification code that was sent to a phone number by [sendPhoneVerificationCode].
+  ///
+  /// [phoneNumber] is the phone number in E.164 format and [verificationCode] is the verification code. If successful,
+  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) or to
+  /// [loginWithCredentials].
+  Future<Credentials> confirmPhoneVerificationCode(String phoneNumber, String verificationCode) async {
+    String body = jsonEncode({
+      'authCode': verificationCode,
+      'phoneNumber': phoneNumber,
+    });
+
+    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/confirm', body);
+
+    return Credentials('PHONE_VERIFICATION', phoneNumber, response['verificationCode'], response['newUser']);
+  }
+
   /// Sends a verification code to an email address.
   ///
   /// [email] is the email address and [recaptchaToken] is the optional reCAPTCHA Enterprise token.
@@ -71,6 +89,22 @@ class PlatformClient {
       'recaptchaToken': recaptchaToken ?? '',
     });
     await _httpPost('/api/smartapp/verify/email', body);
+  }
+
+  /// Confirms a verification code that was sent to an email address by [sendEmailVerificationCode].
+  ///
+  /// [email] is the email address and [verificationCode] is the verification code. If successful,
+  /// the returned [Credentials] can be used to [createAccount] (if [Credentials.isNewUser] is `true`) or to
+  /// [loginWithCredentials].
+  Future<Credentials> confirmEmailVerificationCode(String email, String verificationCode) async {
+    String body = jsonEncode({
+      'authCode': verificationCode,
+      'email': email,
+    });
+
+    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/email/confirm', body);
+
+    return Credentials('EMAIL_VERIFICATION', email, response['verificationCode'], response['newUser']);
   }
 
   /// Logs in with a token.
@@ -100,60 +134,15 @@ class PlatformClient {
     }
   }
 
-  /// Logs in with a phone number.
-  ///
-  /// [phoneNumber] is the phone number in E.164 format, and [verificationCode] is the verification code sent to the
-  /// phone by [sendPhoneVerificationCode].
-  Future<Session> loginWithPhone(String phoneNumber, String verificationCode) async {
-    // Exchange the phone verification code for a password.
-    var body = jsonEncode({
-      'authCode': verificationCode,
-      'phoneNumber': phoneNumber,
-    });
-    var response = await _httpPost('/api/smartapp/verify/confirm', body);
-    if (response['newUser']) {
-      // TODO: If this is a new user, they need to sign up before logging in.
-      throw PlatformLocalizedException(
-          '', 'The mobile number $phoneNumber is not on file. Please log in with your email or call customer care.');
-    }
-
-    // Login with the phone number and password.
-    body = jsonEncode({
-      'authProvider': 'PHONE_VERIFICATION',
-      'login': phoneNumber,
-      'loginfrom': 'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
-      'password': response['verificationCode'],
-    });
-    _session = Session.fromJson(await _httpPost('/api/user/login', body));
-
-    _initSession();
-
-    return _session!;
-  }
-
-  /// Logs in with an email address.
-  ///
-  /// [email] is the email address and [verificationCode] is the verification code sent to the email address by
-  /// [sendEmailVerificationCode].
-  Future<Session> loginWithEmail(String email, String verificationCode) async {
-    // Exchange the email verification code for a password.
+  /// Logs in with [Credentials].
+  Future<Session> loginWithCredentials(Credentials credentials) async {
     String body = jsonEncode({
-      'authCode': verificationCode,
-      'email': email,
-    });
-    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/email/confirm', body);
-
-    if (response['newUser']) {
-      // TODO: If this is a new user, they need to sign up before logging in.
-    }
-
-    // Login with the email address and password.
-    body = jsonEncode({
-      'authProvider': 'EMAIL_VERIFICATION',
-      'login': email,
+      'authProvider': credentials.provider,
+      'login': credentials.login,
       'loginfrom': 'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
-      'password': response['verificationCode'],
+      'password': credentials.password,
     });
+
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
 
     _initSession();
@@ -165,6 +154,21 @@ class PlatformClient {
   Future<void> logout() async {
     // TODO: Actually log out. For now, we're copying the legacy apps and just removing the token.
     _session = null;
+  }
+
+  /// Creates an account.
+  Future<Session> createAccount(Credentials credentials, {List<Language>? preferredLanguages}) async {
+    String body = jsonEncode({
+      'authProvider': credentials.provider,
+      'login': credentials.login,
+      'preferredLang': preferredLanguages?.map((language) => language.name).toList(growable: false),
+      'tosAccepted': true,
+      'verificationCode': credentials.password,
+    });
+
+    await _httpPost('/api/order/guest/basic', body);
+
+    return loginWithCredentials(credentials);
   }
 
   /// Creates a service request for the logged-in user.
