@@ -62,6 +62,11 @@ abstract class Room implements Listenable {
   /// If the application does not support messaging, this will throw an exception.
   Future<void> sendMessage(String text);
 
+  /// Sends the provided message to the Agent.
+  ///
+  /// If the application does not support messaging, this will throw an exception.
+  Future<void> sendFile(String fileName, List<int> file, {String? text});
+
   /// Replaces the local audio and video stream with the provided one.
   Future<void> replaceStream(MediaStream localStream);
 
@@ -137,14 +142,37 @@ class KurentoRoom extends ChangeNotifier implements Room {
       throw UnsupportedError('The application does not support messaging');
     }
 
+    /* the Envelope is not filled the same way for both types of messages...
+content={senderId: 6187, serviceId: 88697, text: with one picture} 16549118932702816 1654911893270
+content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, file: {id: f548dd3e-4c15-41dd-85da-0e4a27254252, name: crab.jpg}} 16549116914626095
+   */
     return _messageSubscription!.messages.map((pn.Envelope envelope) {
+      Map<String, dynamic> content;
+      if(envelope.messageType == pn.MessageType.file) {
+        content = envelope.content['message'];
+        var fileInfo = envelope.content['file'];
+
+        String displayedFileInfo = '${fileInfo['name']} >> ${fileInfo['id']}';
+        if (content['text']?.toString().isEmpty ?? true) {
+          content['text'] = displayedFileInfo;
+        } else {
+          content['text'] += '\n$displayedFileInfo';
+        }
+        // This is only a starting point here.
+        // TODO here we need to query PubNub to get the URL the user can click to download the file and add it to the
+        // message which will be displayed: https://www.pubnub.com/docs/files#receiving-files
+        // This is also the right time to add Message Types.
+        // I think it could be nice to have a FileMessage which could extend Message and return those in the returned Stream.
+      } else {
+        content = envelope.content;
+      }
       _log.finest('received message content=${envelope.content}');
 
       return Message(
-        isLocal: envelope.content['senderId'] == _serviceRequest.userId,
+        isLocal: content['senderId'] == _serviceRequest.userId,
         sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
-        text: envelope.content['text'],
-        userId: envelope.content['senderId'],
+        text: content['text'] ?? '',
+        userId: content['senderId'],
       );
     });
   }
@@ -254,15 +282,39 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   @override
+  Future<void> sendFile(String fileName, List<int> file, {String? text}) async {
+    if (_pubnub == null) {
+      throw UnsupportedError('The application does not support messaging');
+    }
+
+    Map<String, dynamic> content = {
+      'senderId': _serviceRequest.userId,
+      'serviceId': serviceRequestId,
+      'text': text,
+    };
+
+    pn.PublishFileMessageResult result = await _pubnub!.files.sendFile(_messageChannel, fileName, file, fileMessage: content);
+    if (true == result.isError) {
+      throw PlatformUnknownException(result.description ?? 'No provided error detail');
+    }
+
+    _log.finest('sent file $fileName with message: $content');
+  }
+
+  @override
   Future<void> replaceStream(MediaStream mediaStream) async {
     // Replace the stored local stream.
     _localStream = mediaStream;
 
     // Replace the tracks.
-    if (mediaStream.getAudioTracks().isNotEmpty) {
+    if (mediaStream
+        .getAudioTracks()
+        .isNotEmpty) {
       await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getAudioTracks()[0]);
     }
-    if (mediaStream.getVideoTracks().isNotEmpty && !_presenting) {
+    if (mediaStream
+        .getVideoTracks()
+        .isNotEmpty && !_presenting) {
       await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getVideoTracks()[0]);
     }
 
