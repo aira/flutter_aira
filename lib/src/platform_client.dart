@@ -109,10 +109,11 @@ class PlatformClient {
 
   /// Returns a verification code that can be used to log in the user to the specified client.
   Future<String> createClientVerificationCode(String clientId) async {
-    // This API uses form fields instead of a JSON body.
-    Map<String, String> body = {'clientId': clientId};
-
-    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/client', body);
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client',
+      {'clientId': clientId},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
 
     return response['payload'];
   }
@@ -162,11 +163,12 @@ class PlatformClient {
 
   /// Logs in with a client verification code.
   Future<Session> loginWithClientVerificationCode(String verificationCode) async {
-    // This API uses form fields instead of a JSON body.
-    Map<String, String> body = {'verificationCode': verificationCode};
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client/confirm',
+      {'verificationCode': verificationCode},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
 
-    // Exchange the client verification code for phone verification credentials.
-    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/client/confirm', body);
     Credentials credentials = Credentials(
       'PHONE_VERIFICATION',
       response['verificationCode'],
