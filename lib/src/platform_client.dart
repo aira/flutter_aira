@@ -172,7 +172,7 @@ class PlatformClient {
     Credentials credentials = Credentials(
       'PHONE_VERIFICATION',
       response['verificationCode'],
-      response['phoneVerificationId'],
+      response['phoneVerificationId'].toString(),
       response['newUser'],
     );
 
