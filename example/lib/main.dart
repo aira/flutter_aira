@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     super.initState();
 
     // During development, you can set these here instead of through the UI to iterate faster.
-    _apiKeyController.text = 'eA70l1eghObM66Deu3A70BjxYWkbFbwk';
+    _apiKeyController.text = '';
     _clientIdController.text = '';
     _messagingReceiveKeyController.text = '';
     _messagingSendKeyController.text = '';
@@ -392,7 +392,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           _userIdController.text = session.userId.toString();
         });
       } else {
-        _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
+        await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
       }
 
       // Get the local audio and video. Do this before calling, because if access to the media is blocked, why call?
