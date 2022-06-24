@@ -67,6 +67,8 @@ abstract class Room implements Listenable {
   /// If the application does not support messaging, this will throw an exception.
   Future<void> sendFile(String fileName, List<int> file, {String? text});
 
+  Uri getFileUrl(String fileId, String fileName);
+
   /// Replaces the local audio and video stream with the provided one.
   Future<void> replaceStream(MediaStream localStream);
 
@@ -148,21 +150,10 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
    */
     return _messageSubscription!.messages.map((pn.Envelope envelope) {
       Map<String, dynamic> content;
+      Map<String, dynamic> fileInfo = {};
       if(envelope.messageType == pn.MessageType.file) {
         content = envelope.content['message'];
-        var fileInfo = envelope.content['file'];
-
-        String displayedFileInfo = '${fileInfo['name']} >> ${fileInfo['id']}';
-        if (content['text']?.toString().isEmpty ?? true) {
-          content['text'] = displayedFileInfo;
-        } else {
-          content['text'] += '\n$displayedFileInfo';
-        }
-        // This is only a starting point here.
-        // TODO here we need to query PubNub to get the URL the user can click to download the file and add it to the
-        // message which will be displayed: https://www.pubnub.com/docs/files#receiving-files
-        // This is also the right time to add Message Types.
-        // I think it could be nice to have a FileMessage which could extend Message and return those in the returned Stream.
+        fileInfo = envelope.content['file'];
       } else {
         content = envelope.content;
       }
@@ -173,6 +164,8 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
         sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
         text: content['text'] ?? '',
         userId: content['senderId'],
+        fileId: fileInfo['id'],
+        fileName: fileInfo['name'],
       );
     });
   }
@@ -299,6 +292,15 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     }
 
     _log.finest('sent file $fileName with message: $content');
+  }
+
+  @override
+  Uri getFileUrl(String fileId, String fileName) {
+    if (_pubnub == null) {
+      throw UnsupportedError('The application does not support messaging');
+    }
+
+    return _pubnub!.files.getFileUrl(_messageChannel, fileId, fileName);
   }
 
   @override
