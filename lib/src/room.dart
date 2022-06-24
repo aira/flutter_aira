@@ -309,14 +309,10 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     _localStream = mediaStream;
 
     // Replace the tracks.
-    if (mediaStream
-        .getAudioTracks()
-        .isNotEmpty) {
+    if (mediaStream.getAudioTracks().isNotEmpty) {
       await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getAudioTracks()[0]);
     }
-    if (mediaStream
-        .getVideoTracks()
-        .isNotEmpty && !_presenting) {
+    if (mediaStream.getVideoTracks().isNotEmpty && !_presenting) {
       await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getVideoTracks()[0]);
     }
 
