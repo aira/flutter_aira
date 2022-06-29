@@ -207,17 +207,31 @@ class PlatformClient {
     if(null == messagingClient) {
       throw UnsupportedError('The application does not support messaging');
     }
-    if(null != text && text.isNotEmpty){
-      _log.info('Sending pre-call message');
+    _log.info('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')}');
+    String? message = text?.trim();
+    if (null != fileMap && fileMap.isNotEmpty) {
+      if(fileMap.length == 1) {
+        // If we have only one file, send it with the file.
+        var fileEntry = fileMap.entries.first;
+        SentFileInfo futureFileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
+        return [futureFileInfo.id];
+      } else {
+        // if we have multiple files, send them separately from teh message
+        if(null != message && message.isNotEmpty) {
+          // Waiting on first message separately to insure it gets to the server first.
+          await messagingClient!.sendMessage(message);
+        }
+
+        List<Future<SentFileInfo>> futureFileInfo = fileMap.entries.map((e) =>
+            messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
+        List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
+
+        return fileInfoList.map((fi) => fi.id).toList(growable: false);
+      }
+    } else if(null != text && text.isNotEmpty){
       await messagingClient!.sendMessage(text);
     }
-    if (null != fileMap) {
-      List<Future<SentFileInfo>> futureFileInfo = fileMap.entries.map((e) => messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
-      List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
-      return fileInfoList.map((fi) => fi.id).toList(growable: false);
-    } else {
-      return [];
-    }
+    return [];
   }
 
   /// Cancels a service request.
