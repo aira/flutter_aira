@@ -201,24 +201,27 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
 
+    messagingClient?.serviceRequestId = serviceRequest.id;
+
     return KurentoRoom.create(_config.environment, this, _session!, messagingClient, serviceRequest, roomHandler);
   }
 
   Future<List<String>> _sendPreCallMessage(String? text, Map<String, List<int>>? fileMap) async {
-    if(null == messagingClient) {
+    if (null == messagingClient) {
       throw UnsupportedError('The application does not support messaging');
     }
-    _log.info('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')}');
+    _log.finest('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})');
     String? message = text?.trim();
+    await messagingClient!.sendStart();
     if (null != fileMap && fileMap.isNotEmpty) {
-      if(fileMap.length == 1) {
+      if (fileMap.length == 1) {
         // If we have only one file, send it with the file.
         var fileEntry = fileMap.entries.first;
-        SentFileInfo futureFileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
-        return [futureFileInfo.id];
+        SentFileInfo fileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
+        return [fileInfo.id];
       } else {
         // if we have multiple files, send them separately from teh message
-        if(null != message && message.isNotEmpty) {
+        if (null != message && message.isNotEmpty) {
           // Waiting on first message separately to insure it gets to the server first.
           await messagingClient!.sendMessage(message);
         }
@@ -227,9 +230,10 @@ class PlatformClient {
             messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
         List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
 
-        return fileInfoList.map((fi) => fi.id).toList(growable: false);
+        List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
+        return fileIds;
       }
-    } else if(null != text && text.isNotEmpty){
+    } else if (null != text && text.isNotEmpty){
       await messagingClient!.sendMessage(text);
     }
     return [];

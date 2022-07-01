@@ -18,6 +18,8 @@ abstract class MessagingClient {
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
 
+  Future<void> sendStart();
+
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
@@ -72,10 +74,12 @@ class MessagingClientPubNub implements MessagingClient {
 content={senderId: 6187, serviceId: 88697, text: with one picture} 16549118932702816 1654911893270
 content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, file: {id: f548dd3e-4c15-41dd-85da-0e4a27254252, name: crab.jpg}} 16549116914626095
    */
-    return _messageSubscription!.messages.map((pn.Envelope envelope) {
+    return _messageSubscription!.messages
+        .where((pn.Envelope envelope) => envelope.content['start'] != true)
+        .map((pn.Envelope envelope) {
       Map<String, dynamic> content;
       Map<String, dynamic> fileInfo = {};
-      if(envelope.messageType == pn.MessageType.file) {
+      if (envelope.messageType == pn.MessageType.file) {
         content = envelope.content['message'];
         fileInfo = envelope.content['file'];
       } else {
@@ -95,6 +99,21 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   }
 
   @override
+  Future<void> sendStart() async {
+    Map<String, dynamic> content = {
+      'senderId': _userId,
+      'start': true,
+    };
+
+    pn.PublishResult result = await _pubnub.publish(_messageChannel, content);
+    if (result.isError) {
+      throw PlatformUnknownException(result.description);
+    }
+
+    _log.finest('Sent start message. Content=$content');
+  }
+
+  @override
   Future<void> sendMessage(String text) async {
     Map<String, dynamic> content = {
       'senderId': _userId,
@@ -107,7 +126,7 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
       throw PlatformUnknownException(result.description);
     }
 
-    _log.finest('sent message content=$content');
+    _log.finest('Sent message. Content=$content');
   }
 
   @override
