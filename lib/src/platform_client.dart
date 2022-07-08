@@ -5,6 +5,8 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/src/gelocation_abstraction.dart';
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -178,19 +180,25 @@ class PlatformClient {
     Map<String, dynamic> context = {
       'app': await _appContext,
       'device': await _deviceContext,
-      'permissions': {'location': false},
+      'permissions': {'location': await GeolocationAbstraction.hasGeolocationPermission()},
       'intent': 'NONE',
     };
 
-    String body = jsonEncode({
+    var params = {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
       'useWebrtcRoom': true,
-    });
+    };
+
+    Position? position = await GeolocationAbstraction.conditionallyGetCurrentPosition();
+    if(null != position) {
+      params['latitude'] = position.latitude;
+      params['longitude'] = position.longitude;
+    }
 
     ServiceRequest serviceRequest =
-        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
+        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
     return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
   }

@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_aira/src/gelocation_abstraction.dart';
+import 'package:flutter_aira/src/models/direction_enum.dart';
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -87,9 +91,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _presenting = false;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
+  int? _agentId;
   MediaStream? _localStream;
   int? _localTrackId;
   pn.Subscription? _messageSubscription;
+  Stream<Position>? _gpsLocationStream;
 
   // Private constructor.
   KurentoRoom._(this._env, this._client, Session session, this._pubnub, this._serviceRequest, this._roomHandler) {
@@ -101,6 +107,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
+
+    _gpsLocationStream = await GeolocationAbstraction.conditionallyGetPositionStream();
+    _gpsLocationStream?.listen(_updateLocation);
 
     // If messaging is supported, subscribe to the message channel.
     if (_pubnub != null) {
@@ -164,6 +173,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
+
+  String get _siPubTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
+
+  String get _gpsLocationTopic => '${_env.name}/si/fs/${_serviceRequest.userId}/gps';
 
   String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
@@ -345,6 +358,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // message and transition the service request status to started.
           _log.shout('missed service request status message topic=$_serviceRequestPresenceTopic');
           _agentName = '';
+          _agentId = 0;
           _serviceRequestState = ServiceRequestState.started;
           await _updateParticipantStatus();
           notifyListeners();
@@ -381,6 +395,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       case 'ASSIGNED':
         _serviceRequestState = ServiceRequestState.assigned;
         _agentName = json['agentFirstName'];
+        _agentId = json['agentId'];
         break;
 
       case 'STARTED':
@@ -458,5 +473,49 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } catch (e) {
       _log.shout('failed to update participant status=${status.name}', e);
     }
+  }
+
+  void _updateLocation(Position position) {
+    String provider = kIsWeb ? 'WEB' : Platform.operatingSystem.toUpperCase();
+
+    List<Map<String, dynamic>> data = [
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LAT',
+        'paramValue': position.latitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LONG',
+        'paramValue': position.longitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'BEARING',
+        'paramValue': position.heading},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'DIRECTION',
+        'paramValue': DirectionEnum.fromDegrees(position.heading).name},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'PROVIDER',
+        'paramValue': provider},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'HORIZONTAL_ACCURACY',
+        'paramValue': position.accuracy},
+    ];
+
+    Map<String, dynamic> payload = {
+      'serviceRequestID': _serviceRequest.id,
+      'agentid': _agentId ?? 0,
+      'data': data
+    };
+
+    _log.info('Publish location info');
+    _log.finest(payload);
+    _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload));
+
+    Map<String, dynamic> data2 = {
+      'userId': _serviceRequest.userId,
+      'lt': position.latitude,
+      'lg': position.longitude,
+      // 'br': position.course, // TODO do we need this? Haven't seen any use of it in Platform...
+      'p': provider, // TODO can we remove this? Haven't seen any use of it in Platform...
+    };
+    _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2));
   }
 }
