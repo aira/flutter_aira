@@ -1,4 +1,5 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:geolocator/geolocator.dart' as g;
 import 'package:logging/logging.dart';
@@ -19,9 +20,9 @@ class GeolocationAbstraction {
     if(await hasGeolocationPermission()) {
       _log.info('Sending location with service request');
       g.LocationSettings locationSettings = const g.LocationSettings(
-        accuracy: g.LocationAccuracy.best,
-        distanceFilter: 10, // Will update if position changes of a minimum of 10 meters
-        timeLimit: Duration(seconds: 20), // Will update position if last update is older than 20 seconds.
+        accuracy: kIsWeb ? g.LocationAccuracy.low : g.LocationAccuracy.best,
+        distanceFilter: kIsWeb ? 100 : 10, // In meters... good old meters I do miss you!
+        timeLimit: Duration(seconds: kIsWeb ? 60 : 20), // In seconds.
       );
       return g.Geolocator.getPositionStream(locationSettings: locationSettings).map(Position.fromGeolocatorPlugin);
     }
