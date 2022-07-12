@@ -32,7 +32,9 @@ class PlatformMQImpl implements PlatformMQ {
   final Map<String, List<MessageCallback>> _callbacksByTopic = {};
   Completer<void> _connectCompleter = Completer<void>();
 
-  PlatformMQImpl(PlatformEnvironment env, this._session, {String? lastWillMessage, String? lastWillTopic}) {
+  PlatformMQImpl._(this._session);
+
+  Future<void> _init(PlatformEnvironment env, {String? lastWillMessage, String? lastWillTopic}) async {
     _client = mqttsetup.setup('wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws', _clientId)
       ..autoReconnect = true
       ..keepAlivePeriod = 30
@@ -54,10 +56,16 @@ class PlatformMQImpl implements PlatformMQ {
 
     // Connect to the server (the connect happens asynchronously, so we'll complete _isConnected in _onConnected)
     // TODO: How should we handle connection errors?
-    _client.connect('Token-${_session.token}', 'x'); // The password can be any non-empty string
+    await _client.connect('Token-${_session.token}', 'x'); // The password can be any non-empty string
 
     // Register our message handler (this needs to be done after calling `connect` to avoid a null value)
     _client.published!.listen(_handleData);
+  }
+
+  static Future<PlatformMQ> create(PlatformEnvironment env, Session session, {String? lastWillMessage, String? lastWillTopic}) async {
+    PlatformMQImpl instance = PlatformMQImpl._(session);
+    await instance._init(env, lastWillMessage: lastWillMessage, lastWillTopic: lastWillTopic);
+    return instance;
   }
 
   String get _clientId {

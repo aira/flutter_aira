@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_aira/src/gelocation_abstraction.dart';
+import 'package:flutter_aira/src/geolocation_service.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -174,25 +174,29 @@ class PlatformClient {
   }
 
   /// Creates a service request for the logged-in user.
-  Future<Room> createServiceRequest(RoomHandler roomHandler) async {
+  ///
+  /// [geolocation] can be provided if we want to have the permission requested prior to the Service Request creation.
+  Future<Room> createServiceRequest(RoomHandler roomHandler, {GeolocationService? geolocation}) async {
     _verifyIsLoggedIn();
+    geolocation ??= GeolocationService();
 
     Map<String, dynamic> context = {
       'app': await _appContext,
       'device': await _deviceContext,
-      'permissions': {'location': await GeolocationAbstraction.hasGeolocationPermission()},
+      'permissions': {'location': await geolocation.hasGeolocationPermission},
       'intent': 'NONE',
     };
 
-    var params = {
+    Map<String, dynamic> params = {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
       'useWebrtcRoom': true,
     };
 
-    Position? position = await GeolocationAbstraction.conditionallyGetCurrentPosition();
+    Position? position = await geolocation.conditionallyGetCurrentPosition();
     if(null != position) {
+      _log.finer('Adding gps coordinates to ServiceRequest query');
       params['latitude'] = position.latitude;
       params['longitude'] = position.longitude;
     }
@@ -200,7 +204,8 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
-    return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
+    return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler,
+        geolocation: geolocation);
   }
 
   /// Cancels a service request.

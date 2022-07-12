@@ -1,3 +1,4 @@
+export 'src/geolocation_service.dart' show GeolocationService;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;

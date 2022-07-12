@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_aira/src/gelocation_abstraction.dart';
+import 'package:flutter_aira/src/geolocation_service.dart';
 import 'package:flutter_aira/src/models/direction_enum.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -81,6 +81,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformEnvironment _env;
   final PlatformClient _client;
   late final PlatformMQ _mq;
+  late final GeolocationService _geolocation;
   final pn.PubNub? _pubnub;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
@@ -98,17 +99,17 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Stream<Position>? _gpsLocationStream;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, Session session, this._pubnub, this._serviceRequest, this._roomHandler) {
-    _mq = PlatformMQImpl(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
-  }
+  KurentoRoom._(this._env, this._client, this._pubnub, this._serviceRequest, this._roomHandler);
 
-  Future<void> _init() async {
+  Future<void> _init(Session session, {GeolocationService? geolocation}) async {
+    _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
+    _geolocation = geolocation ?? GeolocationService();
     // Asynchronously subscribe to the room-related topics.
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
 
-    _gpsLocationStream = await GeolocationAbstraction.conditionallyGetPositionStream();
+    _gpsLocationStream = await _geolocation.conditionallyGetPositionStream();
     _gpsLocationStream?.listen(_updateLocation);
 
     // If messaging is supported, subscribe to the message channel.
@@ -119,10 +120,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
   static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
-      ServiceRequest serviceRequest, RoomHandler roomHandler) async {
-    KurentoRoom room = KurentoRoom._(env, client, session, pubnub, serviceRequest, roomHandler);
+      ServiceRequest serviceRequest, RoomHandler roomHandler, {GeolocationService? geolocation}) async {
+    KurentoRoom room = KurentoRoom._(env, client, pubnub, serviceRequest, roomHandler);
     try {
-      await room._init();
+      await room._init(session, geolocation: geolocation);
       return room;
     } catch (e) {
       // If something went wrong, trash the room.
@@ -433,23 +434,23 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _log.info('connection state changed track_id=$trackId state=$state');
   }
 
-  void _handleIceCandidate(int trackId, RTCIceCandidate candidate) {
+  Future<void> _handleIceCandidate(int trackId, RTCIceCandidate candidate) async {
     ParticipantMessage message = ParticipantMessage(
         ParticipantMessageType.ICE_CANDIDATE,
         trackId,
         _serviceRequest.participantId,
         {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex});
-    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+    await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
-  void _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) {
+  Future<void> _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) async {
     ParticipantMessage message = ParticipantMessage(ParticipantMessageType.SDP_OFFER, trackId,
         _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp});
-    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+    await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
-  void _handleTrack(int trackId, RTCTrackEvent event) {
-    _roomHandler.addRemoteStream(event.streams[0]);
+  Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
+    await _roomHandler.addRemoteStream(event.streams[0]);
   }
 
   Future<void> _updateParticipantStatus() async {
@@ -475,7 +476,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  void _updateLocation(Position position) {
+  void _updateLocation(Position position) async {
+    if (!_mq.isConnected) {
+      _log.warning('MQTT client is not connected, cannot send gps coordinates');
+      return;
+    }
     String provider = kIsWeb ? 'WEB' : Platform.operatingSystem.toUpperCase();
 
     List<Map<String, dynamic>> data = [
@@ -488,15 +493,19 @@ class KurentoRoom extends ChangeNotifier implements Room {
       {'instrumentationType': 'TYPE_GPS',
         'paramName': 'BEARING',
         'paramValue': position.heading},
-      {'instrumentationType': 'TYPE_GPS',
+      if (null != position.heading) {'instrumentationType': 'TYPE_GPS',
         'paramName': 'DIRECTION',
-        'paramValue': DirectionEnum.fromDegrees(position.heading).name},
+        'paramValue': DirectionEnum.fromDegrees(position.heading!).name},
       {'instrumentationType': 'TYPE_GPS',
         'paramName': 'PROVIDER',
         'paramValue': provider},
       {'instrumentationType': 'TYPE_GPS',
         'paramName': 'HORIZONTAL_ACCURACY',
         'paramValue': position.accuracy},
+      // TODO add this information in Dashboard to be able to use it
+      if (null != position.headingAccuracy) {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'DIRECTION_ACCURACY',
+        'paramValue': position.headingAccuracy},
     ];
 
     Map<String, dynamic> payload = {
@@ -505,17 +514,23 @@ class KurentoRoom extends ChangeNotifier implements Room {
       'data': data
     };
 
-    _log.info('Publish location info');
-    _log.finest(payload);
-    _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload));
-
     Map<String, dynamic> data2 = {
       'userId': _serviceRequest.userId,
       'lt': position.latitude,
       'lg': position.longitude,
-      // 'br': position.course, // TODO do we need this? Haven't seen any use of it in Platform...
+      'br': -1, //position.course, // TODO do we need this? Haven't seen any use of it in Platform...
       'p': provider, // TODO can we remove this? Haven't seen any use of it in Platform...
     };
-    _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2));
+
+    try {
+      _log.info('Publish location info');
+      _log.finest(payload);
+      await Future.wait([
+        _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload)),
+        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2)),
+      ]);
+    } catch (e) {
+      _log.warning('Unable to send data to topic $_siPubTopic & $_gpsLocationTopic because of $e');
+    }
   }
 }
