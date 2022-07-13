@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_aira/src/geolocation_service.dart';
-import 'package:flutter_aira/src/models/direction_enum.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
@@ -73,6 +70,10 @@ abstract class Room implements Listenable {
   ///
   /// After this is called, the object is not in a usable state and should be discarded.
   Future<void> dispose();
+
+  /// Function to call to update the location during a call. This function is meant to use in conjunction with a
+  /// Position Stream which you can get through Flutter plugins like Geolocator and Location.
+  Future<void> updateLocation(Position position);
 }
 
 class KurentoRoom extends ChangeNotifier implements Room {
@@ -81,7 +82,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformEnvironment _env;
   final PlatformClient _client;
   late final PlatformMQ _mq;
-  late final GeolocationService _geolocation;
   final pn.PubNub? _pubnub;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
@@ -96,21 +96,16 @@ class KurentoRoom extends ChangeNotifier implements Room {
   MediaStream? _localStream;
   int? _localTrackId;
   pn.Subscription? _messageSubscription;
-  Stream<Position>? _gpsLocationStream;
 
   // Private constructor.
   KurentoRoom._(this._env, this._client, this._pubnub, this._serviceRequest, this._roomHandler);
 
-  Future<void> _init(Session session, {GeolocationService? geolocation}) async {
+  Future<void> _init(Session session) async {
     _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
-    _geolocation = geolocation ?? GeolocationService();
     // Asynchronously subscribe to the room-related topics.
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
-
-    _gpsLocationStream = await _geolocation.conditionallyGetPositionStream();
-    _gpsLocationStream?.listen(_updateLocation);
 
     // If messaging is supported, subscribe to the message channel.
     if (_pubnub != null) {
@@ -120,10 +115,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
   static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
-      ServiceRequest serviceRequest, RoomHandler roomHandler, {GeolocationService? geolocation}) async {
+      ServiceRequest serviceRequest, RoomHandler roomHandler) async {
     KurentoRoom room = KurentoRoom._(env, client, pubnub, serviceRequest, roomHandler);
     try {
-      await room._init(session, geolocation: geolocation);
+      await room._init(session);
       return room;
     } catch (e) {
       // If something went wrong, trash the room.
@@ -282,6 +277,59 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     // Publish our participant status using the mute states of the new local stream.
     await _updateParticipantStatus();
+  }
+
+  @override
+  Future<void> updateLocation(Position position) async {
+    if (!_mq.isConnected) {
+      _log.warning('MQTT client is not connected, cannot send gps coordinates');
+      return;
+    }
+    if (ServiceRequestState.started != _serviceRequestState) {
+      _log.warning('ServiceRequest is not started yet, not sending position ($_serviceRequestState)');
+      return;
+    }
+
+    List<Map<String, dynamic>> data = [
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LAT',
+        'paramValue': position.latitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LONG',
+        'paramValue': position.longitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'BEARING',
+        'paramValue': position.heading},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'HORIZONTAL_ACCURACY',
+        'paramValue': position.accuracy},
+      if (null != position.headingAccuracy) {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'DIRECTION_ACCURACY',
+        'paramValue': position.headingAccuracy},
+    ];
+
+    Map<String, dynamic> payload = {
+      'serviceRequestID': _serviceRequest.id,
+      'agentid': _agentId ?? 0,
+      'data': data
+    };
+
+    Map<String, dynamic> data2 = {
+      'userId': _serviceRequest.userId,
+      'lt': position.latitude,
+      'lg': position.longitude,
+    };
+
+    try {
+      _log.info('Publish location info');
+      _log.finest(payload);
+      await Future.wait([
+        _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload)),
+        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2)),
+      ]);
+    } catch (e) {
+      _log.warning('Unable to send data to topic $_siPubTopic & $_gpsLocationTopic because of $e');
+    }
   }
 
   @override
@@ -473,64 +521,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       _log.info('updated participant status=${status.name}');
     } catch (e) {
       _log.shout('failed to update participant status=${status.name}', e);
-    }
-  }
-
-  void _updateLocation(Position position) async {
-    if (!_mq.isConnected) {
-      _log.warning('MQTT client is not connected, cannot send gps coordinates');
-      return;
-    }
-    String provider = kIsWeb ? 'WEB' : Platform.operatingSystem.toUpperCase();
-
-    List<Map<String, dynamic>> data = [
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LAT',
-        'paramValue': position.latitude},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LONG',
-        'paramValue': position.longitude},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'BEARING',
-        'paramValue': position.heading},
-      if (null != position.heading) {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'DIRECTION',
-        'paramValue': DirectionEnum.fromDegrees(position.heading!).name},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'PROVIDER',
-        'paramValue': provider},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'HORIZONTAL_ACCURACY',
-        'paramValue': position.accuracy},
-      // TODO add this information in Dashboard to be able to use it
-      if (null != position.headingAccuracy) {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'DIRECTION_ACCURACY',
-        'paramValue': position.headingAccuracy},
-    ];
-
-    Map<String, dynamic> payload = {
-      'serviceRequestID': _serviceRequest.id,
-      'agentid': _agentId ?? 0,
-      'data': data
-    };
-
-    Map<String, dynamic> data2 = {
-      'userId': _serviceRequest.userId,
-      'lt': position.latitude,
-      'lg': position.longitude,
-      'br': -1, //position.course, // TODO do we need this? Haven't seen any use of it in Platform...
-      'p': provider, // TODO can we remove this? Haven't seen any use of it in Platform...
-    };
-
-    try {
-      _log.info('Publish location info');
-      _log.finest(payload);
-      await Future.wait([
-        _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload)),
-        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2)),
-      ]);
-    } catch (e) {
-      _log.warning('Unable to send data to topic $_siPubTopic & $_gpsLocationTopic because of $e');
     }
   }
 }

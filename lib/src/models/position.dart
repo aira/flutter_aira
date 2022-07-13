@@ -1,6 +1,4 @@
 
-import 'package:location/location.dart';
-
 class Position {
   /// Constructs an instance with the given values for testing. [Position]
   /// instances constructed this way won't actually reflect any real information
@@ -18,19 +16,6 @@ class Position {
     this.headingAccuracy,
   });
 
-  Position.fromLocationData(LocationData position) :
-        longitude = position.longitude,
-        latitude = position.latitude,
-        timestamp = null == position.time ? null : DateTime.fromMillisecondsSinceEpoch(position.time!.round()),
-        accuracy = position.accuracy,
-        altitude = position.altitude,
-        heading = position.heading,
-        headingAccuracy = position.headingAccuracy,
-        speed = position.speed,
-        speedAccuracy = position.speedAccuracy,
-        verticalAccuracy = position.verticalAccuracy;
-
-
   /// The latitude of this position in degrees normalized to the interval -90.0
   /// to +90.0 (both inclusive).
   final double? latitude;
@@ -43,14 +28,9 @@ class Position {
   final DateTime? timestamp;
 
   /// The altitude of the device in meters.
-  ///
-  /// The altitude is not available on all devices. In these cases the returned
-  /// value is 0.0.
   final double? altitude;
 
   /// Estimated horizontal accuracy of this location, radial, in meters
-  ///
-  /// Always 0 on Web
   final double? accuracy;
 
   /// Estimated vertical accuracy of this location, in meters.
@@ -58,15 +38,10 @@ class Position {
 
   /// The heading in which the device is traveling in degrees.
   ///
-  /// The heading is not available on all devices. In these cases the value is
-  /// 0.0.
+  /// The heading is not available on all devices. In these cases the value is 0.0.
   final double? heading;
 
-  /// The floor specifies the floor of the building on which the device is
-  /// located.
-  ///
-  /// The floor property is only available on iOS and only when the information
-  /// is available. In all other cases this value will be null.
+  /// The estimated bearing accuracy of this location, in degrees.
   final double? headingAccuracy;
 
   /// The speed at which the devices is traveling in meters per second over

@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
   flutter_webrtc: ^0.8.4
   http: ^0.13.4
-  location: ^4.4.0
   logging: ^1.0.2
   mqtt_client: ^9.6.5
   package_info_plus: ^1.4.0
