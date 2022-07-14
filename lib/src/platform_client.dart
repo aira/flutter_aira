@@ -479,7 +479,7 @@ class PlatformClient {
           // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
           publishKey: _config.messagingKeys!.sendKey,
           subscribeKey: _config.messagingKeys!.receiveKey,
-          uuid: pn.UUID(_userId.toString()),
+          userId: pn.UserId(_userId.toString()),
         ),
       );
     }

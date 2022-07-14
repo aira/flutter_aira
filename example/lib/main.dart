@@ -463,7 +463,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _platformClient = null;
 
     // Close the call progress dialog if it's open.
-    if (!ModalRoute.of(context)!.isCurrent) {
+    if (mounted && !ModalRoute.of(context)!.isCurrent) {
       Navigator.pop(context);
     }
   }

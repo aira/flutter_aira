@@ -11,14 +11,14 @@ dependencies:
   device_info_plus: ^3.2.2
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.8.4
+  flutter_webrtc: ^0.8.11
   http: ^0.13.4
   logging: ^1.0.2
-  mqtt_client: ^9.6.5
-  package_info_plus: ^1.4.0
-  pubnub: ^4.1.3
+  mqtt_client: ^9.6.8
+  package_info_plus: ^1.4.2
+  pubnub: ^4.2.1
 
 dev_dependencies:
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
