@@ -6,9 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.9] - 2022-07-14
+## [0.0.10] - 2022-07-14
 ### Changed
 - Client verification codes (#14).
+
+## [0.0.9] - 2022-06-09
+### Added
+- `PlatformClient.createAccount` and `PlatformClient.loginWithCredentials` (#12).
+
+### Removed
+- **BREAKING:** `PlatformClient.loginWithPhone` and `PlatformClient.loginWithEmail` (#12).
 
 ## [0.0.8] - 2022-06-02
 ### Fixed
