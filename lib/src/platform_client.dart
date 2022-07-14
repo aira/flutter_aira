@@ -107,6 +107,17 @@ class PlatformClient {
     return Credentials('EMAIL_VERIFICATION', email, response['verificationCode'], response['newUser']);
   }
 
+  /// Returns a verification code that can be used to log in the user to the specified client.
+  Future<String> createClientVerificationCode(String clientId) async {
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client',
+      {'clientId': clientId},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
+
+    return response['payload'];
+  }
+
   /// Logs in with a token.
   ///
   /// Throws a [PlatformInvalidTokenException] if the [token] is invalid.
@@ -148,6 +159,24 @@ class PlatformClient {
     _initSession();
 
     return _session!;
+  }
+
+  /// Logs in with a client verification code.
+  Future<Session> loginWithClientVerificationCode(String verificationCode) async {
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client/confirm',
+      {'verificationCode': verificationCode},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
+
+    Credentials credentials = Credentials(
+      'PHONE_VERIFICATION',
+      response['verificationCode'],
+      response['phoneVerificationId'].toString(),
+      response['newUser'],
+    );
+
+    return loginWithCredentials(credentials);
   }
 
   /// Logs out the user.

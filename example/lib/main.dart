@@ -29,6 +29,8 @@ void main() {
   ));
 }
 
+enum LoginType { verificationCode, token }
+
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -48,10 +50,12 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   final TextEditingController _messagingSendKeyController = TextEditingController();
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
+  final TextEditingController _verificationCodeController = TextEditingController();
 
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
   late final Future<void> _rendererInitialized;
 
+  LoginType _loginType = LoginType.verificationCode;
   MediaStream? _localStream;
   PlatformClient? _platformClient;
   Room? _room;
@@ -72,6 +76,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _messagingSendKeyController.text = '';
     _tokenController.text = '';
     _userIdController.text = '';
+    _verificationCodeController.text = '';
 
     _rendererInitialized = _remoteRenderer.initialize();
   }
@@ -89,6 +94,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _messagingSendKeyController.dispose();
     _tokenController.dispose();
     _userIdController.dispose();
+    _verificationCodeController.dispose();
 
     super.dispose();
   }
@@ -180,6 +186,27 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       key: _formKey,
       child: Column(
         children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: RadioListTile<LoginType>(
+                  groupValue: _loginType,
+                  onChanged: (LoginType? newValue) => setState(() => _loginType = newValue!),
+                  title: const Text('Login with Verification Code', overflow: TextOverflow.ellipsis),
+                  value: LoginType.verificationCode,
+                ),
+              ),
+              Expanded(
+                child: RadioListTile<LoginType>(
+                  groupValue: _loginType,
+                  onChanged: (LoginType? newValue) => setState(() => _loginType = newValue!),
+                  title: const Text('Login with Token', overflow: TextOverflow.ellipsis),
+                  value: LoginType.token,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           TextFormField(
             controller: _clientIdController,
             decoration: const InputDecoration(
@@ -212,37 +239,57 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
             },
           ),
           const SizedBox(height: 8),
-          TextFormField(
-            controller: _userIdController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-              helperText: kIsWeb ? ' ' : null,
-              labelText: 'User ID',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'A user ID is required';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _tokenController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
-              helperText: kIsWeb ? ' ' : null,
-              labelText: 'Token',
-            ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return 'A token is required';
-              }
-              return null;
-            },
-          ),
+          ..._loginType == LoginType.verificationCode
+              ? <Widget>[
+                  TextFormField(
+                    controller: _verificationCodeController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                      helperText: kIsWeb ? ' ' : null,
+                      labelText: 'Verification Code',
+                    ),
+                    validator: (String? value) {
+                      if (_loginType == LoginType.verificationCode && (value?.isEmpty ?? true)) {
+                        return 'A verification code is required';
+                      }
+                      return null;
+                    },
+                  ),
+                ]
+              : <Widget>[
+                  TextFormField(
+                    controller: _userIdController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                      helperText: kIsWeb ? ' ' : null,
+                      labelText: 'User ID',
+                    ),
+                    validator: (String? value) {
+                      if (_loginType == LoginType.token && (value?.isEmpty ?? true)) {
+                        return 'A user ID is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _tokenController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      // Announce validation errors (https://github.com/flutter/flutter/issues/99715).
+                      helperText: kIsWeb ? ' ' : null,
+                      labelText: 'Token',
+                    ),
+                    validator: (String? value) {
+                      if (_loginType == LoginType.token && (value?.isEmpty ?? true)) {
+                        return 'A token is required';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
           const SizedBox(height: 8),
           TextFormField(
             controller: _messagingSendKeyController,
@@ -336,7 +383,17 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       ));
 
       // Log in.
-      await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
+      if (_loginType == LoginType.verificationCode) {
+        Session session = await _platformClient!.loginWithClientVerificationCode(_verificationCodeController.text);
+        setState(() {
+          // The verification code can only be used once, so switch to logging in with the returned token.
+          _loginType = LoginType.token;
+          _tokenController.text = session.token;
+          _userIdController.text = session.userId.toString();
+        });
+      } else {
+        await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
+      }
 
       // Get the local audio and video. Do this before calling, because if access to the media is blocked, why call?
       _localStream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': true});
