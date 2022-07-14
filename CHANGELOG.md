@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2022-07-14
+### Changed
+- `flutter pub upgrade` and `pod update` (#17).
+
 ## [0.0.10] - 2022-07-14
 ### Changed
 - Client verification codes (#14).
