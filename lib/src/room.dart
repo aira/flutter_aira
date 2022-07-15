@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
+import 'messaging_client.dart';
 import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
@@ -13,7 +14,6 @@ import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
 import 'platform_client.dart';
-import 'platform_exceptions.dart';
 import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
@@ -34,9 +34,15 @@ abstract class Room implements Listenable {
   /// If the service request has not yet been assigned, this will return `null`.
   String? get agentName;
 
+  /// Getter providing the [MessagingClient].
+  ///
+  /// If the application does not support messaging, the returned value will be null.
+  MessagingClient? get messagingClient;
+
   /// A broadcast stream of messages sent and received.
   ///
   /// If the application does not support messaging, this will throw an exception.
+  @Deprecated('This getter was moved into [MessagingClient].')
   Stream<Message> get messageStream;
 
   /// Joins the room with the provided local audio and video stream.
@@ -60,14 +66,8 @@ abstract class Room implements Listenable {
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
+  @Deprecated('This function was moved into [MessagingClient].')
   Future<void> sendMessage(String text);
-
-  /// Sends the provided message to the Agent.
-  ///
-  /// If the application does not support messaging, this will throw an exception.
-  Future<void> sendFile(String fileName, List<int> file, {String? text});
-
-  Uri getFileUrl(String fileId, String fileName);
 
   /// Replaces the local audio and video stream with the provided one.
   Future<void> replaceStream(MediaStream localStream);
@@ -84,7 +84,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformEnvironment _env;
   final PlatformClient _client;
   late final PlatformMQ _mq;
-  final pn.PubNub? _pubnub;
+  @override
+  final MessagingClient? messagingClient;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
 
@@ -99,7 +100,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   pn.Subscription? _messageSubscription;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, Session session, this._pubnub, this._serviceRequest, this._roomHandler) {
+  KurentoRoom._(this._env, this._client, Session session, this.messagingClient, this._serviceRequest, this._roomHandler) {
     _mq = PlatformMQImpl(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
   }
 
@@ -108,17 +109,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
-
-    // If messaging is supported, subscribe to the message channel.
-    if (_pubnub != null) {
-      _messageSubscription = _pubnub!.subscribe(channels: {_messageChannel});
-    }
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
-  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
-      ServiceRequest serviceRequest, RoomHandler roomHandler) async {
-    KurentoRoom room = KurentoRoom._(env, client, session, pubnub, serviceRequest, roomHandler);
+  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
+      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler) async {
+    KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
     try {
       await room._init();
       return room;
@@ -140,34 +136,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Stream<Message> get messageStream {
-    if (_messageSubscription == null) {
+    if (messagingClient == null) {
       throw UnsupportedError('The application does not support messaging');
+    } else {
+      return messagingClient!.messageStream;
     }
-
-    /* the Envelope is not filled the same way for both types of messages...
-content={senderId: 6187, serviceId: 88697, text: with one picture} 16549118932702816 1654911893270
-content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, file: {id: f548dd3e-4c15-41dd-85da-0e4a27254252, name: crab.jpg}} 16549116914626095
-   */
-    return _messageSubscription!.messages.map((pn.Envelope envelope) {
-      Map<String, dynamic> content;
-      Map<String, dynamic> fileInfo = {};
-      if(envelope.messageType == pn.MessageType.file) {
-        content = envelope.content['message'];
-        fileInfo = envelope.content['file'];
-      } else {
-        content = envelope.content;
-      }
-      _log.finest('received message content=${envelope.content}');
-
-      return Message(
-        isLocal: content['senderId'] == _serviceRequest.userId,
-        sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
-        text: content['text'] ?? '',
-        userId: content['senderId'],
-        fileId: fileInfo['id'],
-        fileName: fileInfo['name'],
-      );
-    });
   }
 
   // The audio is muted if there is no audio track or if the first audio track is disabled.
@@ -185,8 +158,6 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
-
-  String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
   // If the MQTT client disconnects ungracefully, the last-will message will cancel the service request if it is still
   // queued using Platform's (deprecated but functional) ServiceRequestsListener.
@@ -251,56 +222,16 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     // track.
     await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
     _presenting = false;
-    _log.info('stopped presenting');
+    _log.info('Stopped presenting');
   }
 
   @override
   Future<void> sendMessage(String text) async {
-    if (_pubnub == null) {
+    if (messagingClient == null) {
       throw UnsupportedError('The application does not support messaging');
+    } else {
+      await messagingClient!.sendMessage(text);
     }
-
-    Map<String, dynamic> content = {
-      'senderId': _serviceRequest.userId,
-      'serviceId': serviceRequestId,
-      'text': text,
-    };
-
-    pn.PublishResult result = await _pubnub!.publish(_messageChannel, content);
-    if (result.isError) {
-      throw PlatformUnknownException(result.description);
-    }
-
-    _log.finest('sent message content=$content');
-  }
-
-  @override
-  Future<void> sendFile(String fileName, List<int> file, {String? text}) async {
-    if (_pubnub == null) {
-      throw UnsupportedError('The application does not support messaging');
-    }
-
-    Map<String, dynamic> content = {
-      'senderId': _serviceRequest.userId,
-      'serviceId': serviceRequestId,
-      'text': text,
-    };
-
-    pn.PublishFileMessageResult result = await _pubnub!.files.sendFile(_messageChannel, fileName, file, fileMessage: content);
-    if (true == result.isError) {
-      throw PlatformUnknownException(result.description ?? 'No provided error detail');
-    }
-
-    _log.finest('sent file $fileName with message: $content');
-  }
-
-  @override
-  Uri getFileUrl(String fileId, String fileName) {
-    if (_pubnub == null) {
-      throw UnsupportedError('The application does not support messaging');
-    }
-
-    return _pubnub!.files.getFileUrl(_messageChannel, fileId, fileName);
   }
 
   @override

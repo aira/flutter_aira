@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -5,10 +6,11 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:pubnub/pubnub.dart' as pn;
 
 import 'models/credentials.dart';
 import 'models/feedback.dart';
@@ -32,7 +34,7 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  pn.PubNub? _pubnub;
+  MessagingClient? messagingClient;
 
   int get _userId => _session!.userId;
 
@@ -121,7 +123,7 @@ class PlatformClient {
 
       _session = Session(token, userId);
 
-      _initSession();
+      _initMessagingClient();
 
       return _session!;
     } on PlatformLocalizedException catch (e) {
@@ -145,7 +147,7 @@ class PlatformClient {
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
 
-    _initSession();
+    _initMessagingClient();
 
     return _session!;
   }
@@ -172,8 +174,11 @@ class PlatformClient {
   }
 
   /// Creates a service request for the logged-in user.
-  Future<Room> createServiceRequest(RoomHandler roomHandler) async {
+  Future<Room> createServiceRequest(RoomHandler roomHandler, {String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
     _verifyIsLoggedIn();
+
+    List<String> fileIds = await _sendPreCallMessage(message, fileMap);
+    String fileNames = fileMap?.keys.join(', ') ?? '';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
@@ -186,13 +191,52 @@ class PlatformClient {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
+      'hasMessage': (null != message && message.isNotEmpty) || fileNames.isNotEmpty || true == cannotTalk,
+      'message': '$message${fileNames.isEmpty ? '' : ' (With files: $fileNames)'}',
+      'fileIds': fileIds,
+      'cannotTalk': cannotTalk ?? false,
       'useWebrtcRoom': true,
     });
 
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
 
-    return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
+    messagingClient?.serviceRequestId = serviceRequest.id;
+
+    return KurentoRoom.create(_config.environment, this, _session!, messagingClient, serviceRequest, roomHandler);
+  }
+
+  Future<List<String>> _sendPreCallMessage(String? text, Map<String, List<int>>? fileMap) async {
+    if (null == messagingClient) {
+      throw UnsupportedError('The application does not support messaging');
+    }
+    _log.finest('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})');
+    String? message = text?.trim();
+    await messagingClient!.sendStart();
+    if (null != fileMap && fileMap.isNotEmpty) {
+      if (fileMap.length == 1) {
+        // If we have only one file, send it with the file.
+        var fileEntry = fileMap.entries.first;
+        SentFileInfo fileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
+        return [fileInfo.id];
+      } else {
+        // if we have multiple files, send them separately from teh message
+        if (null != message && message.isNotEmpty) {
+          // Waiting on first message separately to insure it gets to the server first.
+          await messagingClient!.sendMessage(message);
+        }
+
+        List<Future<SentFileInfo>> futureFileInfo = fileMap.entries.map((e) =>
+            messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
+        List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
+
+        List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
+        return fileIds;
+      }
+    } else if (null != text && text.isNotEmpty){
+      await messagingClient!.sendMessage(text);
+    }
+    return [];
   }
 
   /// Cancels a service request.
@@ -440,19 +484,10 @@ class PlatformClient {
     }
   }
 
-  void _initSession() {
+  void _initMessagingClient() {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
-      _pubnub = pn.PubNub(
-        defaultKeyset: pn.Keyset(
-          authKey: _token,
-          // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
-          // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
-          publishKey: _config.messagingKeys!.sendKey,
-          subscribeKey: _config.messagingKeys!.receiveKey,
-          uuid: pn.UUID(_userId.toString()),
-        ),
-      );
+      messagingClient = MessagingClientPubNub(_session!, _config.messagingKeys!);
     }
   }
 }
