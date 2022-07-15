@@ -191,7 +191,7 @@ class PlatformClient {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
-      'hasMessage': null != message && message.isNotEmpty,
+      'hasMessage': (null != message && message.isNotEmpty) || fileNames.isNotEmpty || true == cannotTalk,
       'message': '$message${fileNames.isEmpty ? '' : ' (With files: $fileNames)'}',
       'fileIds': fileIds,
       'cannotTalk': cannotTalk ?? false,
