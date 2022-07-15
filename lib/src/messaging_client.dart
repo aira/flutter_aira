@@ -48,7 +48,7 @@ class MessagingClientPubNub implements MessagingClient {
         // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
         publishKey: messagingKeys.sendKey,
         subscribeKey: messagingKeys.receiveKey,
-        uuid: pn.UUID(session.userId.toString()),
+        userId: pn.UserId(session.userId.toString()),
       ),
     )
   {
