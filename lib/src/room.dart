@@ -92,7 +92,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _presenting = false;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
-  int? _agentId;
   MediaStream? _localStream;
   int? _localTrackId;
   pn.Subscription? _messageSubscription;
@@ -170,7 +169,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
 
-  String get _siPubTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
+  String get _serviceInfoTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
 
   String get _gpsLocationTopic => '${_env.name}/si/fs/${_serviceRequest.userId}/gps';
 
@@ -290,7 +289,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
 
-    List<Map<String, dynamic>> data = [
+    List<Map<String, dynamic>> serviceInfoData = [
       {'instrumentationType': 'TYPE_GPS',
         'paramName': 'LAT',
         'paramValue': position.latitude},
@@ -298,37 +297,42 @@ class KurentoRoom extends ChangeNotifier implements Room {
         'paramName': 'LONG',
         'paramValue': position.longitude},
       {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'HORIZONTAL_ACCURACY',
+        'paramValue': position.accuracy},
+      {'instrumentationType': 'TYPE_GPS',
         'paramName': 'BEARING',
         'paramValue': position.heading},
       {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'HORIZONTAL_ACCURACY',
-        'paramValue': position.accuracy},
-      if (null != position.headingAccuracy) {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'DIRECTION_ACCURACY',
+        'paramName': 'BEARING_ACCURACY',
         'paramValue': position.headingAccuracy},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'ALTITUDE',
+        'paramValue': position.altitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'VERTICAL_ACCURACY',
+        'paramValue': position.verticalAccuracy},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'SPEED',
+        'paramValue': position.speed},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'SPEED_ACCURACY',
+        'paramValue': position.speedAccuracy},
     ];
 
-    Map<String, dynamic> payload = {
-      'serviceRequestID': _serviceRequest.id,
-      'agentid': _agentId ?? 0,
-      'data': data
-    };
-
-    Map<String, dynamic> data2 = {
+    Map<String, dynamic> gpsLocationData = {
       'userId': _serviceRequest.userId,
       'lt': position.latitude,
       'lg': position.longitude,
     };
 
     try {
-      _log.info('Publish location info');
-      _log.finest(payload);
+      _log.finest('Publish location info\n\t$serviceInfoData\n\t$gpsLocationData');
       await Future.wait([
-        _mq.publish(_siPubTopic, MqttQos.atMostOnce, jsonEncode(payload)),
-        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(data2)),
+        _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData })),
+        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
     } catch (e) {
-      _log.warning('Unable to send data to topic $_siPubTopic & $_gpsLocationTopic because of $e');
+      _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
     }
   }
 
@@ -407,7 +411,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // message and transition the service request status to started.
           _log.shout('missed service request status message topic=$_serviceRequestPresenceTopic');
           _agentName = '';
-          _agentId = 0;
           _serviceRequestState = ServiceRequestState.started;
           await _updateParticipantStatus();
           notifyListeners();
@@ -444,7 +447,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       case 'ASSIGNED':
         _serviceRequestState = ServiceRequestState.assigned;
         _agentName = json['agentFirstName'];
-        _agentId = json['agentId'];
         break;
 
       case 'STARTED':

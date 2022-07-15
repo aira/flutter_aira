@@ -221,7 +221,7 @@ class PlatformClient {
       'useWebrtcRoom': true,
     };
 
-    if(null != position) {
+    if (null != position) {
       _log.finer('Adding gps coordinates to ServiceRequest query');
       params['latitude'] = position.latitude;
       params['longitude'] = position.longitude;

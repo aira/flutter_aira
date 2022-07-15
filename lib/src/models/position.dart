@@ -1,31 +1,31 @@
 
+/// Model used to carry the Position information.
+///
+/// If any information (other than the 3 required ones) is not available, set it to null.
 class Position {
-  /// Constructs an instance with the given values for testing. [Position]
-  /// instances constructed this way won't actually reflect any real information
-  /// from the platform, just whatever was passed in at construction time.
   const Position({
     required this.longitude,
     required this.latitude,
     required this.timestamp,
-    required this.accuracy,
-    required this.verticalAccuracy,
-    required this.altitude,
-    required this.heading,
-    required this.speed,
-    required this.speedAccuracy,
+    this.altitude,
+    this.accuracy,
+    this.verticalAccuracy,
+    this.heading,
     this.headingAccuracy,
+    this.speed,
+    this.speedAccuracy,
   });
 
   /// The latitude of this position in degrees normalized to the interval -90.0
   /// to +90.0 (both inclusive).
-  final double? latitude;
+  final double latitude;
 
   /// The longitude of the position in degrees normalized to the interval -180
   /// (exclusive) to +180 (inclusive).
-  final double? longitude;
+  final double longitude;
 
   /// The time at which this position was determined.
-  final DateTime? timestamp;
+  final DateTime timestamp;
 
   /// The altitude of the device in meters.
   final double? altitude;
@@ -38,22 +38,22 @@ class Position {
 
   /// The heading in which the device is traveling in degrees.
   ///
-  /// The heading is not available on all devices. In these cases the value is 0.0.
+  /// The heading is not available on all devices. In these cases the value should be null.
   final double? heading;
 
   /// The estimated bearing accuracy of this location, in degrees.
+  ///
+  /// In the case the accuracy is not available the value should be null.
   final double? headingAccuracy;
 
   /// The speed at which the devices is traveling in meters per second over
   /// ground.
   ///
-  /// The speed is not available on all devices. In these cases the value is
-  /// 0.0.
+  /// The speed is not available on all devices. In these cases the value should be null.
   final double? speed;
 
   /// The estimated speed accuracy of this position, in meters per second.
   ///
-  /// The speedAccuracy is not available on all devices. In these cases the
-  /// value is 0.0.
+  /// The speedAccuracy is not available on all devices. In these cases the value should be null.
   final double? speedAccuracy;
 }
