@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -201,25 +202,33 @@ class PlatformClient {
   }
 
   /// Creates a service request for the logged-in user.
-  Future<Room> createServiceRequest(RoomHandler roomHandler) async {
+  ///
+  /// [geolocation] can be provided if we want to have the permission requested prior to the Service Request creation.
+  Future<Room> createServiceRequest(RoomHandler roomHandler, {Position? position}) async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> context = {
       'app': await _appContext,
       'device': await _deviceContext,
-      'permissions': {'location': false},
+      'permissions': {'location': null != position},
       'intent': 'NONE',
     };
 
-    String body = jsonEncode({
+    Map<String, dynamic> params = {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
       'useWebrtcRoom': true,
-    });
+    };
+
+    if (null != position) {
+      _log.finer('Adding gps coordinates to ServiceRequest query');
+      params['latitude'] = position.latitude;
+      params['longitude'] = position.longitude;
+    }
 
     ServiceRequest serviceRequest =
-        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
+        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
     return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
   }
