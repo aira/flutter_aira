@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2022-07-15
+### Changed
+- Support sending location updates (#16).
+
 ## [0.0.11] - 2022-07-14
 ### Changed
 - `flutter pub upgrade` and `pod update` (#17).
