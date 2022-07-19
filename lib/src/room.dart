@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
+import 'messaging_client.dart';
 import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
@@ -14,7 +15,6 @@ import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
 import 'platform_client.dart';
-import 'platform_exceptions.dart';
 import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
@@ -35,9 +35,15 @@ abstract class Room implements Listenable {
   /// If the service request has not yet been assigned, this will return `null`.
   String? get agentName;
 
+  /// Getter providing the [MessagingClient].
+  ///
+  /// If the application does not support messaging, the returned value will be null.
+  MessagingClient? get messagingClient;
+
   /// A broadcast stream of messages sent and received.
   ///
   /// If the application does not support messaging, this will throw an exception.
+  @Deprecated('This getter was moved into [MessagingClient].')
   Stream<Message> get messageStream;
 
   /// Joins the room with the provided local audio and video stream.
@@ -61,6 +67,7 @@ abstract class Room implements Listenable {
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
+  @Deprecated('This function was moved into [MessagingClient].')
   Future<void> sendMessage(String text);
 
   /// Replaces the local audio and video stream with the provided one.
@@ -82,7 +89,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformEnvironment _env;
   final PlatformClient _client;
   late final PlatformMQ _mq;
-  final pn.PubNub? _pubnub;
+  @override
+  final MessagingClient? messagingClient;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
 
@@ -97,7 +105,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   pn.Subscription? _messageSubscription;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, this._pubnub, this._serviceRequest, this._roomHandler);
+  KurentoRoom._(this._env, this._client, Session session, this.messagingClient, this._serviceRequest, this._roomHandler);
 
   Future<void> _init(Session session) async {
     _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
@@ -105,17 +113,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
-
-    // If messaging is supported, subscribe to the message channel.
-    if (_pubnub != null) {
-      _messageSubscription = _pubnub!.subscribe(channels: {_messageChannel});
-    }
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
-  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
-      ServiceRequest serviceRequest, RoomHandler roomHandler) async {
-    KurentoRoom room = KurentoRoom._(env, client, pubnub, serviceRequest, roomHandler);
+  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
+      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler) async {
+    KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
     try {
       await room._init(session);
       return room;
@@ -137,20 +140,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Stream<Message> get messageStream {
-    if (_messageSubscription == null) {
+    if (messagingClient == null) {
       throw UnsupportedError('The application does not support messaging');
+    } else {
+      return messagingClient!.messageStream;
     }
-
-    return _messageSubscription!.messages.map((pn.Envelope envelope) {
-      _log.finest('received message content=${envelope.content}');
-
-      return Message(
-        isLocal: envelope.content['senderId'] == _serviceRequest.userId,
-        sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
-        text: envelope.content['text'],
-        userId: envelope.content['senderId'],
-      );
-    });
   }
 
   // The audio is muted if there is no audio track or if the first audio track is disabled.
@@ -172,8 +166,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _serviceInfoTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
 
   String get _gpsLocationTopic => '${_env.name}/si/fs/${_serviceRequest.userId}/gps';
-
-  String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
   // If the MQTT client disconnects ungracefully, the last-will message will cancel the service request if it is still
   // queued using Platform's (deprecated but functional) ServiceRequestsListener.
@@ -238,27 +230,16 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // track.
     await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
     _presenting = false;
-    _log.info('stopped presenting');
+    _log.info('Stopped presenting');
   }
 
   @override
   Future<void> sendMessage(String text) async {
-    if (_pubnub == null) {
+    if (messagingClient == null) {
       throw UnsupportedError('The application does not support messaging');
+    } else {
+      await messagingClient!.sendMessage(text);
     }
-
-    Map<String, dynamic> content = {
-      'senderId': _serviceRequest.userId,
-      'serviceId': serviceRequestId,
-      'text': text,
-    };
-
-    pn.PublishResult result = await _pubnub!.publish(_messageChannel, content);
-    if (result.isError) {
-      throw PlatformUnknownException(result.description);
-    }
-
-    _log.finest('sent message content=$content');
   }
 
   @override

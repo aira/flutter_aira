@@ -14,10 +14,18 @@ class Message {
   /// Whether the message was sent by the Agent.
   bool get isRemote => !isLocal;
 
+  /// The File Id of the stored file within history.
+  String? fileId;
+
+  /// The File Name of the stored file within history.
+  String? fileName;
+
   Message({
     required this.isLocal,
     required this.sentAt,
     required this.text,
     required this.userId,
+    this.fileId,
+    this.fileName,
   });
 }

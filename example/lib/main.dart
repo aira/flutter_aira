@@ -174,7 +174,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   void _sendMessage() async {
-    _room!.sendMessage(_messageController.text);
+    _room!.messagingClient!.sendMessage(_messageController.text);
 
     setState(() => _messageController.clear());
 
@@ -426,7 +426,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         }
       });
       if (_isMessagingEnabled) {
-        _room!.messageStream.listen((Message message) {
+        _room!.messagingClient!.messageStream.listen((Message message) {
           if (message.isRemote) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text('Agent: ${message.text}'),
