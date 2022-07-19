@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -76,6 +77,10 @@ abstract class Room implements Listenable {
   ///
   /// After this is called, the object is not in a usable state and should be discarded.
   Future<void> dispose();
+
+  /// Function to call to update the location during a call. This function is meant to use in conjunction with a
+  /// Position Stream which you can get through Flutter plugins like Geolocator and Location.
+  Future<void> updateLocation(Position position);
 }
 
 class KurentoRoom extends ChangeNotifier implements Room {
@@ -99,11 +104,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
   pn.Subscription? _messageSubscription;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, Session session, this._pubnub, this._serviceRequest, this._roomHandler) {
-    _mq = PlatformMQImpl(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
-  }
+  KurentoRoom._(this._env, this._client, this._pubnub, this._serviceRequest, this._roomHandler);
 
-  Future<void> _init() async {
+  Future<void> _init(Session session) async {
+    _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
     // Asynchronously subscribe to the room-related topics.
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
@@ -118,9 +122,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
   static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session, pn.PubNub? pubnub,
       ServiceRequest serviceRequest, RoomHandler roomHandler) async {
-    KurentoRoom room = KurentoRoom._(env, client, session, pubnub, serviceRequest, roomHandler);
+    KurentoRoom room = KurentoRoom._(env, client, pubnub, serviceRequest, roomHandler);
     try {
-      await room._init();
+      await room._init(session);
       return room;
     } catch (e) {
       // If something went wrong, trash the room.
@@ -185,6 +189,10 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
+
+  String get _serviceInfoTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
+
+  String get _gpsLocationTopic => '${_env.name}/si/fs/${_serviceRequest.userId}/gps';
 
   String get _messageChannel => 'user-room-${_serviceRequest.userId}';
 
@@ -318,6 +326,64 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
 
     // Publish our participant status using the mute states of the new local stream.
     await _updateParticipantStatus();
+  }
+
+  @override
+  Future<void> updateLocation(Position position) async {
+    if (!_mq.isConnected) {
+      _log.warning('MQTT client is not connected, cannot send gps coordinates');
+      return;
+    }
+    if (ServiceRequestState.started != _serviceRequestState) {
+      _log.warning('ServiceRequest is not started yet, not sending position ($_serviceRequestState)');
+      return;
+    }
+
+    List<Map<String, dynamic>> serviceInfoData = [
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LAT',
+        'paramValue': position.latitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'LONG',
+        'paramValue': position.longitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'HORIZONTAL_ACCURACY',
+        'paramValue': position.accuracy},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'BEARING',
+        'paramValue': position.heading},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'BEARING_ACCURACY',
+        'paramValue': position.headingAccuracy},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'ALTITUDE',
+        'paramValue': position.altitude},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'VERTICAL_ACCURACY',
+        'paramValue': position.verticalAccuracy},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'SPEED',
+        'paramValue': position.speed},
+      {'instrumentationType': 'TYPE_GPS',
+        'paramName': 'SPEED_ACCURACY',
+        'paramValue': position.speedAccuracy},
+    ];
+
+    Map<String, dynamic> gpsLocationData = {
+      'userId': _serviceRequest.userId,
+      'lt': position.latitude,
+      'lg': position.longitude,
+    };
+
+    try {
+      _log.finest('Publish location info\n\t$serviceInfoData\n\t$gpsLocationData');
+      await Future.wait([
+        _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData })),
+        _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
+      ]);
+    } catch (e) {
+      _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
+    }
   }
 
   @override
@@ -468,23 +534,23 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     _log.info('connection state changed track_id=$trackId state=$state');
   }
 
-  void _handleIceCandidate(int trackId, RTCIceCandidate candidate) {
+  Future<void> _handleIceCandidate(int trackId, RTCIceCandidate candidate) async {
     ParticipantMessage message = ParticipantMessage(
         ParticipantMessageType.ICE_CANDIDATE,
         trackId,
         _serviceRequest.participantId,
         {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex});
-    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+    await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
-  void _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) {
+  Future<void> _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) async {
     ParticipantMessage message = ParticipantMessage(ParticipantMessageType.SDP_OFFER, trackId,
         _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp});
-    _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+    await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
-  void _handleTrack(int trackId, RTCTrackEvent event) {
-    _roomHandler.addRemoteStream(event.streams[0]);
+  Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
+    await _roomHandler.addRemoteStream(event.streams[0]);
   }
 
   Future<void> _updateParticipantStatus() async {

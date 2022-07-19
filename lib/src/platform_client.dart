@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -107,6 +108,17 @@ class PlatformClient {
     return Credentials('EMAIL_VERIFICATION', email, response['verificationCode'], response['newUser']);
   }
 
+  /// Returns a verification code that can be used to log in the user to the specified client.
+  Future<String> createClientVerificationCode(String clientId) async {
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client',
+      {'clientId': clientId},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
+
+    return response['payload'];
+  }
+
   /// Logs in with a token.
   ///
   /// Throws a [PlatformInvalidTokenException] if the [token] is invalid.
@@ -150,6 +162,24 @@ class PlatformClient {
     return _session!;
   }
 
+  /// Logs in with a client verification code.
+  Future<Session> loginWithClientVerificationCode(String verificationCode) async {
+    Map<String, dynamic> response = await _httpPost(
+      '/api/smartapp/verify/client/confirm',
+      {'verificationCode': verificationCode},
+      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
+
+    Credentials credentials = Credentials(
+      'PHONE_VERIFICATION',
+      response['verificationCode'],
+      response['phoneVerificationId'].toString(),
+      response['newUser'],
+    );
+
+    return loginWithCredentials(credentials);
+  }
+
   /// Logs out the user.
   Future<void> logout() async {
     // TODO: Actually log out. For now, we're copying the legacy apps and just removing the token.
@@ -172,25 +202,33 @@ class PlatformClient {
   }
 
   /// Creates a service request for the logged-in user.
-  Future<Room> createServiceRequest(RoomHandler roomHandler) async {
+  ///
+  /// [geolocation] can be provided if we want to have the permission requested prior to the Service Request creation.
+  Future<Room> createServiceRequest(RoomHandler roomHandler, {Position? position}) async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> context = {
       'app': await _appContext,
       'device': await _deviceContext,
-      'permissions': {'location': false},
+      'permissions': {'location': null != position},
       'intent': 'NONE',
     };
 
-    String body = jsonEncode({
+    Map<String, dynamic> params = {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
       'useWebrtcRoom': true,
-    });
+    };
+
+    if (null != position) {
+      _log.finer('Adding gps coordinates to ServiceRequest query');
+      params['latitude'] = position.latitude;
+      params['longitude'] = position.longitude;
+    }
 
     ServiceRequest serviceRequest =
-        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', body));
+        ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
     return KurentoRoom.create(_config.environment, this, _session!, _pubnub, serviceRequest, roomHandler);
   }
@@ -450,7 +488,7 @@ class PlatformClient {
           // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
           publishKey: _config.messagingKeys!.sendKey,
           subscribeKey: _config.messagingKeys!.receiveKey,
-          uuid: pn.UUID(_userId.toString()),
+          userId: pn.UserId(_userId.toString()),
         ),
       );
     }

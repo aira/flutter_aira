@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2022-07-15
+### Changed
+- Support sending location updates (#16).
+
+## [0.0.11] - 2022-07-14
+### Changed
+- `flutter pub upgrade` and `pod update` (#17).
+
+## [0.0.10] - 2022-07-14
+### Changed
+- Client verification codes (#14).
+
+## [0.0.9] - 2022-06-09
+### Added
+- `PlatformClient.createAccount` and `PlatformClient.loginWithCredentials` (#12).
+
+### Removed
+- **BREAKING:** `PlatformClient.loginWithPhone` and `PlatformClient.loginWithEmail` (#12).
+
 ## [0.0.8] - 2022-06-02
 ### Fixed
 - MediaStreamTrack has been disposed (#11).
