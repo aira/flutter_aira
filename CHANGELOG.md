@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2022-07-27
+### Changed
+* **BREAKING:** The `PlatformClientConfig` constructor now uses named parameters
+  instead of positional parameters to make it easier to add configuration
+  options in the future.
+* Configurable device ID (#19).
+
+## [0.0.13] - 2022-07-19
+### Changed
+* Support sending and receiving files (#13).
+
 ## [0.0.12] - 2022-07-15
 ### Changed
 - Support sending location updates (#16).
