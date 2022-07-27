@@ -6,8 +6,8 @@ import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -213,7 +213,8 @@ class PlatformClient {
   /// [fileMap] is used to send files to the Agent as you start the call. This feature is usually used to save call time.
   ///
   /// [cannotTalk] will let hte agent know if the Explorer cannot talk at connection time.
-  Future<Room> createServiceRequest(RoomHandler roomHandler, {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
+  Future<Room> createServiceRequest(RoomHandler roomHandler,
+      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
     _verifyIsLoggedIn();
 
     List<String> fileIds = await _sendPreCallMessage(message, fileMap);
@@ -271,14 +272,14 @@ class PlatformClient {
           await messagingClient!.sendMessage(message);
         }
 
-        List<Future<SentFileInfo>> futureFileInfo = fileMap.entries.map((e) =>
-            messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
+        List<Future<SentFileInfo>> futureFileInfo =
+            fileMap.entries.map((e) => messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
         List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
 
         List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
         return fileIds;
       }
-    } else if (null != text && text.isNotEmpty){
+    } else if (null != text && text.isNotEmpty) {
       await messagingClient!.sendMessage(text);
     }
     return [];
@@ -490,7 +491,9 @@ class PlatformClient {
   }
 
   Future<String?> get _deviceId async {
-    if (kIsWeb) {
+    if (_config.deviceId != null) {
+      return _config.deviceId;
+    } else if (kIsWeb) {
       // We don't have a device ID for web.
       return null;
     } else if (Platform.isAndroid) {
@@ -552,9 +555,21 @@ class PlatformClientConfig {
   final PlatformEnvironment environment;
   final String apiKey;
   final String clientId;
+  final String? deviceId;
   final PlatformMessagingKeys? messagingKeys;
 
-  PlatformClientConfig(this.environment, this.apiKey, this.clientId, [this.messagingKeys]);
+  /// Creates a new [PlatformClientConfig].
+  ///
+  /// If the [deviceId] is not provided, the [PlatformClient] will attempt to use the [`ANDROID_ID`](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID)
+  /// on Android and the [`identifierForVendor`](https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor)
+  /// on iOS. The [deviceId] is not set by default on other platforms, which will result in tokens with short lifetimes.
+  PlatformClientConfig({
+    required this.apiKey,
+    this.deviceId,
+    required this.environment,
+    required this.clientId,
+    this.messagingKeys,
+  });
 }
 
 /// The keys used to send and receive messages if the application supports messaging.

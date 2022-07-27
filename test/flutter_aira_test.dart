@@ -6,7 +6,11 @@ import 'package:http/http.dart';
 import 'package:http/testing.dart';
 
 void main() {
-  final platformClientConfig = PlatformClientConfig(PlatformEnvironment.dev, 'testApiKey', 'testClientId');
+  final platformClientConfig = PlatformClientConfig(
+    apiKey: 'testApiKey',
+    clientId: 'testClientId',
+    environment: PlatformEnvironment.dev,
+  );
 
   group('loginWithToken', () {
     test('should throw PlatformInvalidTokenException on KN-UM-056 error', () async {
