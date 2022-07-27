@@ -376,10 +376,10 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
       }
       _platformClient = PlatformClient(PlatformClientConfig(
-        PlatformEnvironment.dev,
-        _apiKeyController.text,
-        _clientIdController.text,
-        messagingKeys,
+        apiKey: _apiKeyController.text,
+        clientId: _clientIdController.text,
+        environment: PlatformEnvironment.dev,
+        messagingKeys: messagingKeys,
       ));
 
       // Log in.
