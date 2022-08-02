@@ -112,7 +112,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // Asynchronously subscribe to the room-related topics.
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
-    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atMostOnce, _handleServiceRequestPresenceMessage);
+    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
