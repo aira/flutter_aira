@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/src/models/position.dart';
@@ -21,6 +22,9 @@ import 'sfu_connection.dart';
 abstract class RoomHandler {
   /// Adds the remote stream to an [RTCVideoRenderer].
   Future<void> addRemoteStream(MediaStream stream);
+
+  /// Takes a photo.
+  Future<ByteBuffer> takePhoto();
 }
 
 abstract class Room implements Listenable {
@@ -105,7 +109,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
   pn.Subscription? _messageSubscription;
 
   // Private constructor.
-  KurentoRoom._(this._env, this._client, Session session, this.messagingClient, this._serviceRequest, this._roomHandler);
+  KurentoRoom._(
+    this._env,
+    this._client,
+    Session session,
+    this.messagingClient,
+    this._serviceRequest,
+    this._roomHandler,
+  );
 
   Future<void> _init(Session session) async {
     _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
@@ -271,33 +282,15 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     List<Map<String, dynamic>> serviceInfoData = [
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LAT',
-        'paramValue': position.latitude},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LONG',
-        'paramValue': position.longitude},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'HORIZONTAL_ACCURACY',
-        'paramValue': position.accuracy},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'BEARING',
-        'paramValue': position.heading},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'BEARING_ACCURACY',
-        'paramValue': position.headingAccuracy},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'ALTITUDE',
-        'paramValue': position.altitude},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'VERTICAL_ACCURACY',
-        'paramValue': position.verticalAccuracy},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'SPEED',
-        'paramValue': position.speed},
-      {'instrumentationType': 'TYPE_GPS',
-        'paramName': 'SPEED_ACCURACY',
-        'paramValue': position.speedAccuracy},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'LAT', 'paramValue': position.latitude},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'LONG', 'paramValue': position.longitude},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'HORIZONTAL_ACCURACY', 'paramValue': position.accuracy},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'BEARING', 'paramValue': position.heading},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'BEARING_ACCURACY', 'paramValue': position.headingAccuracy},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'ALTITUDE', 'paramValue': position.altitude},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'VERTICAL_ACCURACY', 'paramValue': position.verticalAccuracy},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'SPEED', 'paramValue': position.speed},
+      {'instrumentationType': 'TYPE_GPS', 'paramName': 'SPEED_ACCURACY', 'paramValue': position.speedAccuracy},
     ];
 
     Map<String, dynamic> gpsLocationData = {
@@ -309,7 +302,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     try {
       _log.finest('Publish location info\n\t$serviceInfoData\n\t$gpsLocationData');
       await Future.wait([
-        _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData })),
+        _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData})),
         _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
     } catch (e) {
@@ -357,7 +350,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _log.warning('cannot take photo when presenting');
         return;
       }
-      await _client.uploadPhoto(_serviceRequest.id, await _localStream!.getVideoTracks()[0].captureFrame());
+
+      try {
+        await _client.uploadPhoto(_serviceRequest.id, await _roomHandler.takePhoto());
+      } catch (e, s) {
+        _log.shout('failed to take photo', e, s);
+      }
     } else {
       _log.warning('ignoring participant event message type=${json['type']}');
     }
