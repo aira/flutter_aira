@@ -50,7 +50,7 @@ class PlatformMQImpl implements PlatformMQ {
       _client.connectionMessage = MqttConnectMessage()
         ..startClean()
         ..withWillMessage(lastWillMessage)
-        ..withWillQos(MqttQos.atMostOnce)
+        ..withWillQos(MqttQos.atLeastOnce)
         ..withWillTopic(lastWillTopic);
     }
 
