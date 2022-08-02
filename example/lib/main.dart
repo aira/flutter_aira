@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -322,6 +323,11 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   Future<void> addRemoteStream(MediaStream stream) async {
     await _rendererInitialized;
     _remoteRenderer.srcObject = stream;
+  }
+
+  @override
+  Future<ByteBuffer> takePhoto() async {
+    return _localStream!.getVideoTracks()[0].captureFrame();
   }
 
   Future<void> _callAira() async {
