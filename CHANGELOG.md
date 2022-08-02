@@ -6,16 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15] - 2022-08-02
+### Added
+- **BREAKING:** `RoomHandler.takePhoto` must now be implemented by clients (#22).
+  In its simplest form, this can return a frame from the video track like this:
+  
+   ```dart
+   @override
+   Future<ByteBuffer> takePhoto() async {
+     return _localStream!.getVideoTracks()[0].captureFrame();
+   }
+   ```
+
+- Device ID and model to service request `context` (#20).
+
+### Changed
+- Use MQTT QoS level 1 for critical messages (#21).
+
 ## [0.0.14] - 2022-07-27
 ### Changed
-* **BREAKING:** The `PlatformClientConfig` constructor now uses named parameters
+- **BREAKING:** The `PlatformClientConfig` constructor now uses named parameters
   instead of positional parameters to make it easier to add configuration
   options in the future.
-* Configurable device ID (#19).
+- Configurable device ID (#19).
 
 ## [0.0.13] - 2022-07-19
 ### Changed
-* Support sending and receiving files (#13).
+- Support sending and receiving files (#13).
 
 ## [0.0.12] - 2022-07-15
 ### Changed
