@@ -158,11 +158,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  // The audio is muted if there is no audio track or if the first audio track is disabled.
-  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
+  // The audio is muted if the first audio track is disabled.
+  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? false : !_localStream!.getAudioTracks()[0].enabled;
 
-  // The video is muted if there is no video track or if the first video track is disabled.
-  bool get _isVideoMuted => _localStream!.getVideoTracks().isEmpty ? true : !_localStream!.getVideoTracks()[0].enabled;
+  // The video is muted if the first video track is disabled.
+  bool get _isVideoMuted => _localStream!.getVideoTracks().isEmpty ? false : !_localStream!.getVideoTracks()[0].enabled;
 
   String get _participantEventTopic =>
       '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}/event';

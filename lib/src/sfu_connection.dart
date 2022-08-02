@@ -2,14 +2,16 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 /// Represents a single incoming or outgoing connection to the selective forwarding unit (SFU).
 class SfuConnection {
-  int trackId;
+  final int trackId;
   final MediaStream? _localStream;
   late final RTCPeerConnection _peerConnection;
+  late final RTCRtpTransceiver _audio;
+  late final RTCRtpTransceiver _video;
 
-  Function(int trackId, RTCPeerConnectionState) onConnectionState;
-  Function(int trackId, RTCIceCandidate candidate) onIceCandidate;
-  Function(int trackId, RTCSessionDescription offer) onSdpOffer;
-  Function(int trackId, RTCTrackEvent event) onTrack;
+  final Function(int trackId, RTCPeerConnectionState) onConnectionState;
+  final Function(int trackId, RTCIceCandidate candidate) onIceCandidate;
+  final Function(int trackId, RTCSessionDescription offer) onSdpOffer;
+  final Function(int trackId, RTCTrackEvent event) onTrack;
 
   /// Creates a new [SfuConnection].
   ///
@@ -31,17 +33,29 @@ class SfuConnection {
 
     if (_localStream == null) {
       // Add a transceiver for receiving audio.
-      await _peerConnection.addTransceiver(
+      _audio = await _peerConnection.addTransceiver(
           kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
           init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly));
     } else {
       // Add transceivers for sending audio and video.
-      for (MediaStreamTrack track in _localStream!.getTracks()) {
-        // REVIEW: Do we need to set any encoding options, similar to
-        // https://github.com/flutter-webrtc/flutter-webrtc-demo/blob/b2a495d8888fa84da9c8eba164cb2c8d46988a44/lib/src/call_sample/signaling.dart#L352-L373?
-        await _peerConnection.addTransceiver(
-            track: track,
-            init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_localStream!]));
+      // REVIEW: Do we need to set any encoding options, similar to
+      // https://github.com/flutter-webrtc/flutter-webrtc-demo/blob/b2a495d8888fa84da9c8eba164cb2c8d46988a44/lib/src/call_sample/signaling.dart#L352-L373?
+      _audio = await _peerConnection.addTransceiver(
+        init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_localStream!]),
+        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+        track: _localStream!.getAudioTracks()[0],
+      );
+      if (_localStream!.getVideoTracks().isNotEmpty) {
+        _video = await _peerConnection.addTransceiver(
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_localStream!]),
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+          track: _localStream!.getVideoTracks()[0],
+        );
+      } else {
+        _video = await _peerConnection.addTransceiver(
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly),
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+        );
       }
     }
 
@@ -65,9 +79,11 @@ class SfuConnection {
     }
 
     // Find the right kind of sender and replace its track.
-    RTCRtpSender sender =
-        (await _peerConnection.senders).firstWhere((RTCRtpSender sender) => sender.track?.kind == track.kind);
-    await sender.replaceTrack(track);
+    if (track.kind == 'audio') {
+      await _audio.sender.replaceTrack(track);
+    } else {
+      await _video.sender.replaceTrack(track);
+    }
   }
 
   /// Handles an ICE candidate from the SFU.
