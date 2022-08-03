@@ -73,17 +73,18 @@ class SfuConnection {
     onSdpOffer.call(trackId, offer);
   }
 
-  Future<void> replaceTrack(MediaStreamTrack track) async {
+  Future<void> replaceAudioTrack(MediaStreamTrack? track) async {
     if (_localStream == null) {
-      throw StateError('Cannot replace track on incoming connection');
+      throw StateError('Cannot replace audio track on incoming connection');
     }
+    await _audio.sender.replaceTrack(track);
+  }
 
-    // Find the right kind of sender and replace its track.
-    if (track.kind == 'audio') {
-      await _audio.sender.replaceTrack(track);
-    } else {
-      await _video.sender.replaceTrack(track);
+  Future<void> replaceVideoTrack(MediaStreamTrack? track) async {
+    if (_localStream == null) {
+      throw StateError('Cannot replace video track on incoming connection');
     }
+    await _video.sender.replaceTrack(track);
   }
 
   /// Handles an ICE candidate from the SFU.

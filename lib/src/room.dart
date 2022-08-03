@@ -101,7 +101,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final Map<int, SfuConnection> _connectionByTrackId = {};
 
   bool _disposed = false;
-  bool _presenting = false;
+  MediaStreamTrack? _presentationVideoTrack;
+  bool get _isPresenting => null != _presentationVideoTrack;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
   MediaStream? _localStream;
@@ -159,10 +160,16 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   // The audio is muted if the first audio track is disabled.
-  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? false : !_localStream!.getAudioTracks()[0].enabled;
+  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
 
   // The video is muted if the first video track is disabled.
-  bool get _isVideoMuted => _localStream!.getVideoTracks().isEmpty ? false : !_localStream!.getVideoTracks()[0].enabled;
+  bool get _isVideoMuted {
+    MediaStreamTrack? activeVideoTrack = _activeVideoTrack;
+    return null == activeVideoTrack || !activeVideoTrack.enabled;
+  }
+
+  MediaStreamTrack? get _activeVideoTrack =>
+      _presentationVideoTrack ?? (_localStream!.getVideoTracks().isEmpty ? null : _localStream!.getVideoTracks()[0]);
 
   String get _participantEventTopic =>
       '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}/event';
@@ -211,9 +218,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (_localStream == null) {
       throw StateError('Cannot mute audio before joining the room');
     }
-
-    _localStream!.getAudioTracks()[0].enabled = !muted;
-    _updateParticipantStatus();
+    if (_localStream!.getAudioTracks().isEmpty) {
+      _log.warning('Cannot mute audio because there is not audio tracks to mute');
+    } else {
+      _localStream!.getAudioTracks()[0].enabled = !muted;
+      _updateParticipantStatus();
+    }
   }
 
   @override
@@ -221,27 +231,35 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (_localStream == null) {
       throw StateError('Cannot mute video before joining the room');
     }
-
-    _localStream!.getVideoTracks()[0].enabled = !muted;
-    _updateParticipantStatus();
+    MediaStreamTrack? activeVideoTrack = _activeVideoTrack;
+    if (null == activeVideoTrack) {
+      _log.warning('Cannot mute video because there is not video tracks to mute');
+    } else {
+      activeVideoTrack.enabled = !muted;
+      _updateParticipantStatus();
+    }
   }
 
   @override
   Future<void> startPresenting(MediaStream displayStream) async {
     // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
     // so for now, we start presenting by replacing the Explorer's video track with the display video track.
-    await _connectionByTrackId[_localTrackId]!.replaceTrack(displayStream.getVideoTracks()[0]);
-    _presenting = true;
-    _log.info('started presenting track=${displayStream.getVideoTracks()[0].label}');
+    _presentationVideoTrack = displayStream.getVideoTracks()[0];
+    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_presentationVideoTrack);
+    _log.info('started presenting track=${_presentationVideoTrack!.label}');
+    await _updateParticipantStatus();
   }
 
   @override
   Future<void> stopPresenting() async {
     // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
     // track.
-    await _connectionByTrackId[_localTrackId]!.replaceTrack(_localStream!.getVideoTracks()[0]);
-    _presenting = false;
+    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
+        _localStream!.getVideoTracks().isEmpty ? null : _localStream!.getVideoTracks()[0]
+    );
+    _presentationVideoTrack = null;
     _log.info('Stopped presenting');
+    await _updateParticipantStatus();
   }
 
   @override
@@ -259,11 +277,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _localStream = mediaStream;
 
     // Replace the tracks.
-    if (mediaStream.getAudioTracks().isNotEmpty) {
-      await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getAudioTracks()[0]);
-    }
-    if (mediaStream.getVideoTracks().isNotEmpty && !_presenting) {
-      await _connectionByTrackId[_localTrackId]!.replaceTrack(mediaStream.getVideoTracks()[0]);
+    await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
+        mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]
+    );
+    if (!_isPresenting) {
+      await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
+          mediaStream.getVideoTracks().isEmpty ? null : mediaStream.getVideoTracks()[0]
+      );
     }
 
     // Publish our participant status using the mute states of the new local stream.
@@ -346,7 +366,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       if (_isVideoMuted) {
         _log.warning('cannot take photo when video is muted');
         return;
-      } else if (_presenting) {
+      } else if (_isPresenting) {
         _log.warning('cannot take photo when presenting');
         return;
       }
