@@ -100,7 +100,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
 
-  bool _disposed = false;
+  bool _isDisposed = false;
   MediaStreamTrack? _presentationVideoTrack;
   bool get _isPresenting => null != _presentationVideoTrack;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
@@ -159,10 +159,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  // The audio is muted if the first audio track is disabled.
+  // The audio is muted if the first audio track is disabled or absent.
   bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
 
-  // The video is muted if the first video track is disabled.
+  // The video is muted if the first video track is disabled or absent.
   bool get _isVideoMuted {
     MediaStreamTrack? activeVideoTrack = _activeVideoTrack;
     return null == activeVideoTrack || !activeVideoTrack.enabled;
@@ -332,14 +332,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   void notifyListeners() {
-    if (!_disposed) {
+    if (!_isDisposed) {
       super.notifyListeners();
     }
   }
 
   @override
   Future<void> dispose() async {
-    _disposed = true;
+    _isDisposed = true;
 
     await _messageSubscription?.dispose();
 
