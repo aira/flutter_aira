@@ -8,7 +8,7 @@ environment:
   sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
-  device_info_plus: ^3.2.2
+  device_info_plus: ^4.0.2
   flutter:
     sdk: flutter
   flutter_webrtc: ^0.8.11
