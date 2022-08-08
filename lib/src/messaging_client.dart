@@ -39,11 +39,10 @@ abstract class MessagingClient {
 }
 
 class MessagingClientPubNub implements MessagingClient {
-  MessagingClientPubNub(Session session, PlatformMessagingKeys messagingKeys) :
+  MessagingClientPubNub(Session session, PlatformMessagingKeys messagingKeys, String token) :
     _userId = session.userId,
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
-        authKey: session.token,
         // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
         // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
         publishKey: messagingKeys.sendKey,
@@ -52,6 +51,7 @@ class MessagingClientPubNub implements MessagingClient {
       ),
     )
   {
+    _pubnub.setToken(token);
     _messageSubscription = _pubnub.subscribe(channels: {_messageChannel});
   }
 
