@@ -1,4 +1,3 @@
-
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_aira/src/platform_exceptions.dart';
@@ -6,7 +5,6 @@ import 'package:logging/logging.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
 import 'models/message.dart';
-import 'models/session.dart';
 
 /// Room independent class to handle all messaging.
 abstract class MessagingClient {
@@ -39,26 +37,25 @@ abstract class MessagingClient {
 }
 
 class MessagingClientPubNub implements MessagingClient {
-  MessagingClientPubNub(Session session, PlatformMessagingKeys messagingKeys, String token) :
-    _userId = session.userId,
+  MessagingClientPubNub(PlatformMessagingKeys messagingKeys, int userId, String token) : _userId = userId {
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
         // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
         // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
         publishKey: messagingKeys.sendKey,
         subscribeKey: messagingKeys.receiveKey,
-        userId: pn.UserId(session.userId.toString()),
+        userId: pn.UserId(userId.toString()),
       ),
-    )
-  {
+    );
     _pubnub.setToken(token);
+
     _messageSubscription = _pubnub.subscribe(channels: {_messageChannel});
   }
 
   final Logger _log = Logger('MessagingClientPubNub');
 
-  final pn.PubNub _pubnub;
-  pn.Subscription? _messageSubscription;
+  late final pn.PubNub _pubnub;
+  late final pn.Subscription? _messageSubscription;
 
   final int _userId;
   int? _serviceRequestId;
@@ -138,7 +135,8 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     };
 
     // TODO add cipher key for more privacy
-    pn.PublishFileMessageResult result = await _pubnub.files.sendFile(_messageChannel, fileName, file, fileMessage: content);
+    pn.PublishFileMessageResult result =
+        await _pubnub.files.sendFile(_messageChannel, fileName, file, fileMessage: content);
     if (true == result.isError) {
       throw PlatformUnknownException(result.description ?? 'No provided error detail');
     }

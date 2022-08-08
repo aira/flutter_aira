@@ -538,7 +538,7 @@ class PlatformClient {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
       String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      messagingClient = MessagingClientPubNub(_session!, _config.messagingKeys!, token);
+      messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }
