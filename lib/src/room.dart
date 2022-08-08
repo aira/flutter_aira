@@ -219,7 +219,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       throw StateError('Cannot mute audio before joining the room');
     }
     if (_localStream!.getAudioTracks().isEmpty) {
-      _log.warning('Cannot mute audio because there is not audio tracks to mute');
+      throw StateError('Cannot mute audio because there is not audio tracks to mute');
     } else {
       _localStream!.getAudioTracks()[0].enabled = !muted;
       _updateParticipantStatus();
@@ -233,7 +233,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
     MediaStreamTrack? activeVideoTrack = _activeVideoTrack;
     if (null == activeVideoTrack) {
-      _log.warning('Cannot mute video because there is not video tracks to mute');
+      throw StateError('Cannot mute video because there is not video tracks to mute');
     } else {
       activeVideoTrack.enabled = !muted;
       _updateParticipantStatus();
