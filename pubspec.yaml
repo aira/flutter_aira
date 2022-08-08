@@ -4,18 +4,18 @@ version: 0.0.1
 homepage: https://github.com/aira-collab/flutter_aira
 
 environment:
-  flutter: ">=1.17.0"
+  flutter: ">=3.0.0"
   sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
-  device_info_plus: ^3.2.2
+  device_info_plus: ^4.0.2
   flutter:
     sdk: flutter
   flutter_webrtc: ^0.8.11
   http: ^0.13.4
   logging: ^1.0.2
   mqtt_client: ^9.6.8
-  package_info_plus: ^1.4.2
+  package_info_plus: ^1.4.3
   pubnub: ^4.2.1
 
 dev_dependencies:
