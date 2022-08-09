@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.17] - 2022-08-09
+### Changed
+- Migrate from PubNub Access Manager v2 to
+  [v3](https://www.pubnub.com/docs/resources/migration-guides/pam-v3-migration#differences-between-v2-and-v3) (#25).
+
+### Fixed
+- `createServiceRequest` fails when messaging is not supported (#27).
+
+## [0.0.16] - 2022-08-08
+### Changed
+- A video track is no longer required when joining a room (#23).
+- **BREAKING:** `Room.setVideoMuted(bool)` only affects the active video track
+  (either the display or camera track). If the active video track is changed
+  (e.g. using `Room.stopPresenting()` or `Room.replaceStream(MediaStream)`), the
+  new track video will not automatically inherit the previous mute state (#23).
+
 ## [0.0.15] - 2022-08-02
 ### Added
 - **BREAKING:** `RoomHandler.takePhoto` must now be implemented by clients (#22).
