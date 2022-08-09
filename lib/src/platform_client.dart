@@ -135,7 +135,7 @@ class PlatformClient {
 
       _session = Session(token, userId);
 
-      _initMessagingClient();
+      await _initMessagingClient();
 
       return _session!;
     } on PlatformLocalizedException catch (e) {
@@ -159,7 +159,7 @@ class PlatformClient {
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
 
-    _initMessagingClient();
+    await _initMessagingClient();
 
     return _session!;
   }
@@ -534,10 +534,11 @@ class PlatformClient {
     }
   }
 
-  void _initMessagingClient() {
+  Future<void> _initMessagingClient() async {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
-      messagingClient = MessagingClientPubNub(_session!, _config.messagingKeys!);
+      String token = (await _httpPost('/api/pubnub/token', null))['payload'];
+      messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }
