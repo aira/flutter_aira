@@ -212,7 +212,7 @@ class PlatformClient {
   ///
   /// [fileMap] is used to send files to the Agent as you start the call. This feature is usually used to save call time.
   ///
-  /// [cannotTalk] will let hte agent know if the Explorer cannot talk at connection time.
+  /// [cannotTalk] will let the agent know if the Explorer cannot talk at connection time.
   Future<Room> createServiceRequest(RoomHandler roomHandler,
       {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
     _verifyIsLoggedIn();
