@@ -217,7 +217,9 @@ class PlatformClient {
       {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
     _verifyIsLoggedIn();
 
-    List<String> fileIds = await _sendPreCallMessage(message, fileMap);
+    if ((message?.isNotEmpty ?? false) || (fileMap?.isNotEmpty ?? false)) {
+      await _sendPreCallMessage(message, fileMap);
+    }
     String fileNames = fileMap?.keys.join(', ') ?? '';
 
     Map<String, dynamic> context = {
@@ -233,7 +235,6 @@ class PlatformClient {
       'requestType': 'AIRA', // Required but unused.
       'hasMessage': (null != message && message.isNotEmpty) || fileNames.isNotEmpty || true == cannotTalk,
       'message': '$message${fileNames.isEmpty ? '' : ' (With files: $fileNames)'}',
-      'fileIds': fileIds,
       'cannotTalk': cannotTalk ?? false,
       'useWebrtcRoom': true,
     };
