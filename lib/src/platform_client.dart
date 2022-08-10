@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/src/messaging_client.dart';
@@ -485,7 +486,7 @@ class PlatformClient {
       };
     } else {
       return {
-        'id': await _deviceId,
+        'id': (await _deviceId) ?? '',
         'model': (await DeviceInfoPlugin().deviceInfo).toMap()['model'],
         'platform': Platform.operatingSystem.toString().split('.').last,
         'platformVersion': Platform.operatingSystemVersion,
@@ -501,7 +502,7 @@ class PlatformClient {
       return null;
     } else if (Platform.isAndroid) {
       // Use https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID.
-      return (await DeviceInfoPlugin().androidInfo).androidId;
+      return (await const AndroidId().getId());
     } else if (Platform.isIOS) {
       // Use https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor.
       return (await DeviceInfoPlugin().iosInfo).identifierForVendor;
