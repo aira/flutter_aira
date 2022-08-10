@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.18] - 2022-08-10
+### Fixed
+- "Oops" error when calling from Android app (#29).
+
 ## [0.0.17] - 2022-08-09
 ### Changed
 - Migrate from PubNub Access Manager v2 to
