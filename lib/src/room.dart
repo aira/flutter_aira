@@ -56,14 +56,29 @@ abstract class Room implements Listenable {
   /// [join].
   Future<void> join(MediaStream localStream);
 
-  /// Mutes or un-mutes the local audio stream.
-  void setAudioMuted(bool muted);
+  /// Whether the local audio is muted.
+  bool get isAudioMuted;
 
-  /// Mutes or un-mutes the local video stream.
-  void setVideoMuted(bool muted);
+  /// Mutes or un-mutes the local audio.
+  Future<void> setAudioMuted(bool muted);
+
+  /// Whether the local video is muted.
+  bool get isVideoMuted;
+
+  /// Mutes or un-mutes the local video.
+  Future<void> setVideoMuted(bool muted);
+
+  /// Enables or disables privacy mode.
+  ///
+  /// In privacy mode, both the local audio and video (if present) are muted. This is equivalent to calling both
+  /// [setAudioMuted] and [setVideoMuted] and is intended as a convenience for apps that do not support muting the audio
+  /// and video independently.
+  Future<void> setPrivacyMode(bool enabled);
 
   /// Starts presenting the provided display stream.
   Future<void> startPresenting(MediaStream displayStream);
+
+  Future<void> setPresentationMuted(bool muted);
 
   /// Stops presenting the display stream.
   Future<void> stopPresenting();
@@ -101,6 +116,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final Map<int, SfuConnection> _connectionByTrackId = {};
 
   bool _isDisposed = false;
+  bool _isAudioMuted = false;
+  bool _isVideoMuted = false;
   MediaStreamTrack? _presentationVideoTrack;
   bool get _isPresenting => null != _presentationVideoTrack;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
@@ -158,18 +175,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return messagingClient!.messageStream;
     }
   }
-
-  // The audio is muted if the first audio track is disabled or absent.
-  bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
-
-  // The video is muted if the first video track is disabled or absent.
-  bool get _isVideoMuted {
-    MediaStreamTrack? activeVideoTrack = _activeVideoTrack;
-    return null == activeVideoTrack || !activeVideoTrack.enabled;
-  }
-
-  MediaStreamTrack? get _activeVideoTrack =>
-      _presentationVideoTrack ?? (_localStream!.getVideoTracks().isEmpty ? null : _localStream!.getVideoTracks()[0]);
 
   String get _participantEventTopic =>
       '${_env.name}/webrtc/room/${_serviceRequest.roomId}/participant/${_serviceRequest.participantId}/event';
@@ -238,6 +243,24 @@ class KurentoRoom extends ChangeNotifier implements Room {
       activeVideoTrack.enabled = !muted;
       _updateParticipantStatus();
     }
+  }
+
+  @override
+  Future<void> setPrivacyMode(bool enabled) async {
+    if (_localStream == null) {
+      throw StateError('Cannot set privacy mode before joining the room');
+    }
+
+    if (_localStream!.getAudioTracks().isNotEmpty) {
+      _localStream!.getAudioTracks()[0].enabled = !enabled;
+    }
+
+    MediaStreamTrack? videoTrack = _activeVideoTrack;
+    if (videoTrack != null) {
+      videoTrack.enabled = !enabled;
+    }
+
+    await _updateParticipantStatus();
   }
 
   @override

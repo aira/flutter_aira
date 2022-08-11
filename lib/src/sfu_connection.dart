@@ -1,9 +1,19 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+/// The direction of the connection to the selective forwarding unit (SFU).
+enum SfuConnectionDirection {
+  /// An incoming connection receiving audio from the SFU.
+  incoming,
+
+  /// An outgoing connection sending audio and (optionally) video to the SFU.
+  outgoing,
+}
+
 /// Represents a single incoming or outgoing connection to the selective forwarding unit (SFU).
 class SfuConnection {
   final int trackId;
-  final MediaStream? _localStream;
+  final SfuConnectionDirection direction;
+
   late final RTCPeerConnection _peerConnection;
   late final RTCRtpTransceiver _audio;
   late final RTCRtpTransceiver _video;
@@ -14,15 +24,20 @@ class SfuConnection {
   final Function(int trackId, RTCTrackEvent event) onTrack;
 
   /// Creates a new [SfuConnection].
-  ///
-  /// Provide [_localStream] if this is an outgoing connection sending the stream's audio and video to the SFU;
-  /// otherwise, this is an incoming connection receiving audio from the SFU.
-  SfuConnection(this.trackId, this.onConnectionState, this.onIceCandidate, this.onSdpOffer, this.onTrack,
-      [MediaStream? localStream])
-      : _localStream = localStream;
+  SfuConnection({
+    required this.direction,
+    required this.onConnectionState,
+    required this.onIceCandidate,
+    required this.onSdpOffer,
+    required this.onTrack,
+    required this.trackId,
+  });
+
+  bool get _isIncoming => direction == SfuConnectionDirection.incoming;
 
   /// Connects to the SFU.
-  Future<void> connect(List<dynamic> stunServers, List<dynamic> turnServers) async {
+  Future<void> connect(List<dynamic> stunServers, List<dynamic> turnServers,
+      {MediaStreamTrack? outgoingAudioTrack, MediaStreamTrack? outgoingVideoTrack}) async {
     Map<String, dynamic> configuration = _getConfiguration(stunServers, turnServers);
 
     // Create the peer connection.
@@ -31,7 +46,7 @@ class SfuConnection {
       ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
-    if (_localStream == null) {
+    if (_isIncoming) {
       // Add a transceiver for receiving audio.
       _audio = await _peerConnection.addTransceiver(
           kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
@@ -40,16 +55,23 @@ class SfuConnection {
       // Add transceivers for sending audio and video.
       // REVIEW: Do we need to set any encoding options, similar to
       // https://github.com/flutter-webrtc/flutter-webrtc-demo/blob/b2a495d8888fa84da9c8eba164cb2c8d46988a44/lib/src/call_sample/signaling.dart#L352-L373?
-      _audio = await _peerConnection.addTransceiver(
-        init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_localStream!]),
-        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-        track: _localStream!.getAudioTracks()[0],
-      );
-      if (_localStream!.getVideoTracks().isNotEmpty) {
+      if (outgoingAudioTrack != null) {
+        _audio = await _peerConnection.addTransceiver(
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly),
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+          track: outgoingAudioTrack,
+        );
+      } else {
+        _audio = await _peerConnection.addTransceiver(
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly),
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+        );
+      }
+      if (outgoingVideoTrack != null) {
         _video = await _peerConnection.addTransceiver(
-          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [_localStream!]),
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly),
           kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
-          track: _localStream!.getVideoTracks()[0],
+          track: outgoingVideoTrack,
         );
       } else {
         _video = await _peerConnection.addTransceiver(
@@ -62,7 +84,7 @@ class SfuConnection {
     // Create the SDP offer.
     RTCSessionDescription offer = await _peerConnection.createOffer({
       'mandatory': {
-        'OfferToReceiveAudio': _localStream == null,
+        'OfferToReceiveAudio': _isIncoming,
         'OfferToReceiveVideo': false,
       },
       'optional': [],
@@ -74,14 +96,14 @@ class SfuConnection {
   }
 
   Future<void> replaceAudioTrack(MediaStreamTrack? track) async {
-    if (_localStream == null) {
+    if (_isIncoming) {
       throw StateError('Cannot replace audio track on incoming connection');
     }
     await _audio.sender.replaceTrack(track);
   }
 
   Future<void> replaceVideoTrack(MediaStreamTrack? track) async {
-    if (_localStream == null) {
+    if (_isIncoming) {
       throw StateError('Cannot replace video track on incoming connection');
     }
     await _video.sender.replaceTrack(track);
