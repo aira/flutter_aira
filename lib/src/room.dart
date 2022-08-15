@@ -9,7 +9,6 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
 import 'messaging_client.dart';
-import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
 import 'models/service_request.dart';
@@ -44,12 +43,6 @@ abstract class Room implements Listenable {
   /// If the application does not support messaging, the returned value will be null.
   MessagingClient? get messagingClient;
 
-  /// A broadcast stream of messages sent and received.
-  ///
-  /// If the application does not support messaging, this will throw an exception.
-  @Deprecated('This getter was moved into [MessagingClient].')
-  Stream<Message> get messageStream;
-
   /// Joins the room with the provided local audio and video stream.
   ///
   /// If the room should be joined with the audio and/or video muted, disable the corresponding track(s) before calling
@@ -67,12 +60,6 @@ abstract class Room implements Listenable {
 
   /// Stops presenting the display stream.
   Future<void> stopPresenting();
-
-  /// Sends the provided message to the Agent.
-  ///
-  /// If the application does not support messaging, this will throw an exception.
-  @Deprecated('This function was moved into [MessagingClient].')
-  Future<void> sendMessage(String text);
 
   /// Replaces the local audio and video stream with the provided one.
   Future<void> replaceStream(MediaStream localStream);
@@ -102,6 +89,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   bool _isDisposed = false;
   MediaStreamTrack? _presentationVideoTrack;
+
   bool get _isPresenting => null != _presentationVideoTrack;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
@@ -149,15 +137,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   String? get agentName => _agentName;
-
-  @override
-  Stream<Message> get messageStream {
-    if (messagingClient == null) {
-      throw UnsupportedError('The application does not support messaging');
-    } else {
-      return messagingClient!.messageStream;
-    }
-  }
 
   // The audio is muted if the first audio track is disabled or absent.
   bool get _isAudioMuted => _localStream!.getAudioTracks().isEmpty ? true : !_localStream!.getAudioTracks()[0].enabled;
@@ -254,21 +233,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> stopPresenting() async {
     // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
     // track.
-    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
-        _localStream!.getVideoTracks().isEmpty ? null : _localStream!.getVideoTracks()[0]
-    );
+    await _connectionByTrackId[_localTrackId]!
+        .replaceVideoTrack(_localStream!.getVideoTracks().isEmpty ? null : _localStream!.getVideoTracks()[0]);
     _presentationVideoTrack = null;
     _log.info('Stopped presenting');
     await _updateParticipantStatus();
-  }
-
-  @override
-  Future<void> sendMessage(String text) async {
-    if (messagingClient == null) {
-      throw UnsupportedError('The application does not support messaging');
-    } else {
-      await messagingClient!.sendMessage(text);
-    }
   }
 
   @override
@@ -277,13 +246,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _localStream = mediaStream;
 
     // Replace the tracks.
-    await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
-        mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]
-    );
+    await _connectionByTrackId[_localTrackId]!
+        .replaceAudioTrack(mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]);
     if (!_isPresenting) {
-      await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
-          mediaStream.getVideoTracks().isEmpty ? null : mediaStream.getVideoTracks()[0]
-      );
+      await _connectionByTrackId[_localTrackId]!
+          .replaceVideoTrack(mediaStream.getVideoTracks().isEmpty ? null : mediaStream.getVideoTracks()[0]);
     }
 
     // Publish our participant status using the mute states of the new local stream.
