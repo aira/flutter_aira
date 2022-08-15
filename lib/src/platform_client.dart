@@ -153,6 +153,7 @@ class PlatformClient {
   Future<Session> loginWithCredentials(Credentials credentials) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
+      'device': await _deviceContext,
       'login': credentials.login,
       'loginfrom': 'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
       'password': credentials.password,

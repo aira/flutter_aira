@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.19] - 2022-08-11
+### Added
+- Device context to `loginWithCredentials` (#31).
+
 ## [0.0.18] - 2022-08-10
 ### Fixed
 - "Oops" error when calling from Android app (#29).
@@ -30,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **BREAKING:** `RoomHandler.takePhoto` must now be implemented by clients (#22).
   In its simplest form, this can return a frame from the video track like this:
-  
+
    ```dart
    @override
    Future<ByteBuffer> takePhoto() async {
