@@ -11,6 +11,16 @@ enum SfuConnectionDirection {
 
 /// Represents a single incoming or outgoing connection to the selective forwarding unit (SFU).
 class SfuConnection {
+  /// Creates a new [SfuConnection].
+  SfuConnection({
+    required this.direction,
+    required this.onConnectionState,
+    required this.onIceCandidate,
+    required this.onSdpOffer,
+    required this.onTrack,
+    required this.trackId,
+  });
+
   final int trackId;
   final SfuConnectionDirection direction;
 
@@ -22,16 +32,6 @@ class SfuConnection {
   final Function(int trackId, RTCIceCandidate candidate) onIceCandidate;
   final Function(int trackId, RTCSessionDescription offer) onSdpOffer;
   final Function(int trackId, RTCTrackEvent event) onTrack;
-
-  /// Creates a new [SfuConnection].
-  SfuConnection({
-    required this.direction,
-    required this.onConnectionState,
-    required this.onIceCandidate,
-    required this.onSdpOffer,
-    required this.onTrack,
-    required this.trackId,
-  });
 
   bool get _isIncoming => direction == SfuConnectionDirection.incoming;
 
