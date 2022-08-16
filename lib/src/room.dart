@@ -9,7 +9,6 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
 import 'messaging_client.dart';
-import 'models/message.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
 import 'models/service_request.dart';
@@ -44,12 +43,6 @@ abstract class Room implements Listenable {
   /// If the application does not support messaging, the returned value will be null.
   MessagingClient? get messagingClient;
 
-  /// A broadcast stream of messages sent and received.
-  ///
-  /// If the application does not support messaging, this will throw an exception.
-  @Deprecated('This getter was moved into [MessagingClient].')
-  Stream<Message> get messageStream;
-
   /// Joins the room with the provided local audio and video stream.
   Future<void> join(MediaStream localStream);
 
@@ -83,12 +76,6 @@ abstract class Room implements Listenable {
 
   /// Stops presenting the display stream.
   Future<void> stopPresenting();
-
-  /// Sends the provided message to the Agent.
-  ///
-  /// If the application does not support messaging, this will throw an exception.
-  @Deprecated('This function was moved into [MessagingClient].')
-  Future<void> sendMessage(String text);
 
   /// Replaces the local audio and video stream with the provided one.
   Future<void> replaceStream(MediaStream localStream);
@@ -169,15 +156,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   String? get agentName => _agentName;
-
-  @override
-  Stream<Message> get messageStream {
-    if (messagingClient == null) {
-      throw UnsupportedError('The application does not support messaging');
-    } else {
-      return messagingClient!.messageStream;
-    }
-  }
 
   @override
   bool get isAudioMuted => _isAudioMuted;
@@ -281,15 +259,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _presentationVideoTrack = null;
     await _updateParticipantStatus();
     _log.info('stopped presenting');
-  }
-
-  @override
-  Future<void> sendMessage(String text) async {
-    if (messagingClient == null) {
-      throw UnsupportedError('The application does not support messaging');
-    } else {
-      await messagingClient!.sendMessage(text);
-    }
   }
 
   @override
