@@ -40,6 +40,9 @@ class MessagingClientPubNub implements MessagingClient {
   MessagingClientPubNub(PlatformMessagingKeys messagingKeys, int userId, String token) : _userId = userId {
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
+        // TODO: Setting the `authKey` shouldn't be necessary, but there is a bug in the PubNub SDK where
+        // [PubNub.files.getFileUrl] does not use the value configured with [PubNub.setToken].
+        authKey: token,
         // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
         // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
         publishKey: messagingKeys.sendKey,
