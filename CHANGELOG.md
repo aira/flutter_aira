@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.21] - 2022-08-17
+### Fixed
+- HTTP 403 error for URLs returned by `MessagingClient.getFileUrl` (#37).
+
 ## [0.0.20] - 2022-08-16
 ### Added
 - `Room.isAudioMuted`, `Room.isVideoMuted`, `Room.isPresentationMuted`, `Room.setPresentationMuted`,
