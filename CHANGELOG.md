@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.20] - 2022-08-16
+### Added
+- `Room.isAudioMuted`, `Room.isVideoMuted`, `Room.isPresentationMuted`, `Room.setPresentationMuted`,
+  and `Room.setPrivacyMode` (#35).
+
+### Changed
+- **BREAKING:** The `Room` now manages its mute states separately from the `MediaStreamTrack`s (#35).
+  Previously, to join a `Room` with the audio muted, you would do this before calling `Room.join`:
+
+   ```dart
+   _localMediaStream.getAudioTracks()[0].enabled = false;
+   ```
+
+   Now, you will do this:
+
+   ```dart
+   _room.setAudioMuted(true);
+   ```
+
+### Removed
+- **BREAKING:** `Room.messageStream` and `Room.sendMessage` (#33).
+
 ## [0.0.19] - 2022-08-11
 ### Added
 - Device context to `loginWithCredentials` (#31).
