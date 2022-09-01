@@ -26,7 +26,7 @@ class ServiceRequest {
         participantId = json['userWebrtcParticipantId'],
         roomId = json['webrtcRoomId'],
         userId = json['userId'],
-        accountID = json['account']['id']
+        accountID = json['accountId']
         stunServers = json['stunServers'],
         turnServers = json['turnServers'];
 }
