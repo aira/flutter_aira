@@ -596,8 +596,9 @@ Future<User> getUserDetails() async {
       throw const PlatformInvalidTokenException();
     }
     _accountId = response['accounts']['account']['id']
+    _accountName = response['accounts']['account']['name']
     _accountType = response['accounts']['userType']
-    return _accountId!, _accountType!;
+    return _accountId!,_accountName!, _accountType!;
 
   } on PlatformLocalizedException catch (e) {
     // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
