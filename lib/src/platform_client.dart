@@ -216,7 +216,7 @@ class PlatformClient {
   ///
   /// [cannotTalk] will let the agent know if the Explorer cannot talk at connection time.
   Future<Room> createServiceRequest(RoomHandler roomHandler,
-      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
+      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk, Double? accountId}) async {
     _verifyIsLoggedIn();
 
     if ((message?.isNotEmpty ?? false) || (fileMap?.isNotEmpty ?? false)) {
@@ -587,7 +587,7 @@ class PlatformMessagingKeys {
 }
 
 /// Get User information from API and return relevant information on the account.
-Future<Session> getUserDetails(String token, int userId) async {
+Future<User> getUserDetails() async {
   try {
     // Set X-Aira-Token ourselves instead of using the value in _userLogin (if set).
     var response = await _httpGet('/api/user/$userId', additionalHeaders: {'X-Aira-Token': token});
