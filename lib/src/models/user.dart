@@ -1,17 +1,23 @@
-class User {
+enum ProfileType { primary, business }
+
+class Profile {
   int accountId;
   String accountName;
-  String accountType;
+  ProfileType type;
 
-  User.fromJson(Map<String, dynamic> json)
-      : accountId = int.parse(json['accounts']['account']['id']),
-        accountName = json['accounts']['account']['name'],
-        accountType =json['accounts']['userType'];
+  Profile.fromJson(Map<String, dynamic> json)
+      : accountId = int.parse(json['account']['id']),
+        accountName = json['account']['name'],
+        type = ProfileType.values.firstWhere((e) => e.name == json['userType']);
 }
 
-class UserDetails {
-  List<User>? details;
+class User {
+  String firstName;
+  String lastName;
+  List<Profile> profiles;
 
-  UserDetails.fromJson(Map<String, dynamic> json)
-      : details = (json['details'] as List<dynamic>).map((details) => User.fromJson(details)).toList(growable: false);
+  User.fromJson(Map<String, dynamic> json)
+      : firstName = json['firstName'],
+        lastName = json['lastName'],
+        profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
 }
