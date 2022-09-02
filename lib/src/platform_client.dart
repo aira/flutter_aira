@@ -21,6 +21,7 @@ import 'models/profile.dart';
 import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
+import 'models/user.dart';
 import 'platform_exceptions.dart';
 import 'room.dart';
 
@@ -216,7 +217,7 @@ class PlatformClient {
   ///
   /// [cannotTalk] will let the agent know if the Explorer cannot talk at connection time.
   Future<Room> createServiceRequest(RoomHandler roomHandler,
-      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk, Double? accountId}) async {
+      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk, int? accountId}) async {
     _verifyIsLoggedIn();
 
     if ((message?.isNotEmpty ?? false) || (fileMap?.isNotEmpty ?? false)) {
@@ -544,6 +545,18 @@ class PlatformClient {
       messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
+
+  /// Get User information from API and return relevant information on the account.
+  Future<User> getUserDetails() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
+
+    dynamic userAccount = User.fromJson(response);
+    dynamic userDetails = UserDetails.fromJson(userAccount);
+
+    return userDetails;
+  }
 }
 
 /// The Platform environment.
@@ -586,32 +599,3 @@ class PlatformMessagingKeys {
   PlatformMessagingKeys(this.sendKey, this.receiveKey);
 }
 
-/// Get User information from API and return relevant information on the account.
-Future<List<User>> getUserDetails() async {
-  try {
-    // Set X-Aira-Token ourselves instead of using the value in _userLogin (if set).
-    final response = await _httpGet('/api/user/$userId', additionalHeaders: {'X-Aira-Token': token});
-    if (response.statusCode == 200) {
-      var details = jsonDecode(response.body)
-      _accountId = details['accounts']['account']['id']
-      _accountName = details['accounts']['account']['name']
-      _accountType = details['accounts']['userType']
-      Map<String, String> userDetails= {
-        "account_id": _accountId,
-        "account_name": _accountName,
-        "account_type": _accountType
-      }
-
-      return userDetails!;
-    }
-
-
-  } on PlatformLocalizedException catch (e) {
-    // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
-    if (e.code == 'KN-UM-056') {
-      throw const PlatformInvalidTokenException();
-    } else {
-      rethrow;
-    }
-  }
-}
