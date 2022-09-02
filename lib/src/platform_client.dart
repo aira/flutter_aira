@@ -596,7 +596,13 @@ Future<List<User>> getUserDetails() async {
       _accountId = details['accounts']['account']['id']
       _accountName = details['accounts']['account']['name']
       _accountType = details['accounts']['userType']
-      return _accountId!,_accountName!, _accountType!;
+      Map<String, String> userDetails= {
+        "account_id": _accountId,
+        "account_name": _accountName,
+        "account_type": _accountType
+      }
+
+      return userDetails!;
     }
 
 
