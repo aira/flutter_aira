@@ -587,25 +587,22 @@ class PlatformMessagingKeys {
 }
 
 /// Get User information from API and return relevant information on the account.
-Future<User> getUserDetails() async {
+Future<List<User>> getUserDetails() async {
   try {
     // Set X-Aira-Token ourselves instead of using the value in _userLogin (if set).
-    var response = await _httpGet('/api/user/$userId', additionalHeaders: {'X-Aira-Token': token});
-    if (response['userId'] != userId) {
-      // If we have somebody else's userId, that's A Bad Thing.
-      throw const PlatformInvalidTokenException();
+    final response = await _httpGet('/api/user/$userId', additionalHeaders: {'X-Aira-Token': token});
+    if (response.statusCode == 200) {
+      var details = jsonDecode(response.body)
+      _accountId = details['accounts']['account']['id']
+      _accountName = details['accounts']['account']['name']
+      _accountType = details['accounts']['userType']
+      return _accountId!,_accountName!, _accountType!;
     }
-    _accountId = response['accounts']['account']['id']
-    _accountName = response['accounts']['account']['name']
-    _accountType = response['accounts']['userType']
-    return _accountId!,_accountName!, _accountType!;
+
 
   } on PlatformLocalizedException catch (e) {
     // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
     if (e.code == 'KN-UM-056') {
-      throw const PlatformInvalidTokenException();
-      // Platform returns error code UU-404 (Unknown User - 404 Not Found) if the userId returns nothing.
-    } if (e.code == 'UU-404') {
       throw const PlatformInvalidTokenException();
     } else {
       rethrow;
