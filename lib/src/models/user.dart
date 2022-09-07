@@ -1,5 +1,9 @@
 enum ProfileType { primary, business }
 
+extension ProfileTypeExtension on ProfileType {
+  get name => toString().split('.').last;
+}
+
 class Profile {
   int accountId;
   String accountName;
