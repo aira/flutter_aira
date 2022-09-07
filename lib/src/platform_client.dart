@@ -333,6 +333,13 @@ class PlatformClient {
     return Track.fromJson(await _httpPost('/api/webrtc/room/$roomId/participant/$participantId/track', body));
   }
 
+  /// Deletes all tracks for a participant in a room.
+  Future<void> deleteTracks(int roomId, int participantId) async {
+    _verifyIsLoggedIn();
+
+    await _httpDelete('/api/$roomId/participant/$participantId/track');
+  }
+
   /// Saves feedback for a service request.
   Future<void> saveFeedback(int serviceRequestId,
       {AgentFeedback? agentFeedback, Feedback? appFeedback, Feedback? offerFeedback}) async {
@@ -412,6 +419,9 @@ class PlatformClient {
       throw PlatformUnknownException(e.message);
     }
   }
+
+  Future<Map<String, dynamic>> _httpDelete(String unencodedPath, {Map<String, String>? additionalHeaders}) async =>
+      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders);
 
   Future<Map<String, dynamic>> _httpGet(String unencodedPath,
           {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters}) async =>

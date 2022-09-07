@@ -363,6 +363,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
       } catch (e, s) {
         _log.shout('failed to take photo', e, s);
       }
+    } else if (json['type'] == 'RECONNECT') {
+      await _reconnect();
     } else {
       _log.warning('ignoring participant event message type=${json['type']}');
     }
@@ -579,6 +581,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
       } else {
         await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_presentationVideoTrack);
       }
+    }
+  }
+
+  Future<void> _reconnect() async {
+    // TODO: Notify room handler about reconnect.
+    try {
+      await _client.deleteTracks(_serviceRequest.roomId, _serviceRequest.participantId);
+
+      for (SfuConnection connection in _connectionByTrackId.values) {
+        await connection.dispose();
+      }
+      _connectionByTrackId.clear();
+      
+      
+    } catch (e, s) {
+      _log.shout('failed to reconnect', e, s);
     }
   }
 }
