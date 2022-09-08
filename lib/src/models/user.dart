@@ -10,7 +10,7 @@ class Profile {
   ProfileType type;
 
   Profile.fromJson(Map<String, dynamic> json)
-      : accountId = int.parse(json['account']['id']),
+      : accountId = json['account']['id'],
         accountName = json['account']['name'],
         type = ProfileType.values.firstWhere((e) => e.name == json['userType']);
 }

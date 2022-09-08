@@ -552,7 +552,7 @@ class PlatformClient {
 
     Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
 
-    return User.fromJson(response['payload']);
+    return User.fromJson(response);
   }
 }
 
