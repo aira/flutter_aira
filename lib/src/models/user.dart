@@ -16,9 +16,12 @@ class Profile {
 }
 
 class User {
-  String firstName;
-  String lastName;
-  List<Profile> profiles;
+  String? firstName;
+  String? lastName;
+  List<Profile>? profiles;
+
+  User(this.firstName, this.lastName, this.profiles);
+  User.empty();
 
   User.fromJson(Map<String, dynamic> json)
       : firstName = json['firstName'],
