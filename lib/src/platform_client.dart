@@ -337,7 +337,7 @@ class PlatformClient {
   Future<void> deleteTracks(int roomId, int participantId) async {
     _verifyIsLoggedIn();
 
-    await _httpDelete('/api/$roomId/participant/$participantId/track');
+    await _httpDelete('/api/webrtc/room/$roomId/participant/$participantId/track');
   }
 
   /// Saves feedback for a service request.
@@ -403,6 +403,9 @@ class PlatformClient {
       _log.finest('trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}');
 
       switch (method) {
+        case 'DELETE':
+          http.Response response = await _httpClient.delete(uri, headers: headers);
+          return _parseResponse(response.statusCode, response.body);
         case 'GET':
           http.Response response = await _httpClient.get(uri, headers: headers);
           return _parseResponse(response.statusCode, response.body);
