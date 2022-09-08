@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.22] - 2022-09-08
+### Changed
+- Updated for Flutter 3.3.
+
 ## [0.0.21] - 2022-08-17
 ### Fixed
 - HTTP 403 error for URLs returned by `MessagingClient.getFileUrl` (#37).

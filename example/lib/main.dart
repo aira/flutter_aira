@@ -141,7 +141,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _hangUp,
-          style: ElevatedButton.styleFrom(primary: Theme.of(context).errorColor),
+          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).errorColor),
           child: const Text('End Call'),
         ),
       ],
@@ -311,7 +311,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _callAira,
-            style: ElevatedButton.styleFrom(primary: Theme.of(context).primaryColor),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
             child: const Text('Call an Aira Agent'),
           ),
         ],
@@ -366,7 +366,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                     await _hangUp();
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).errorColor,
+                    backgroundColor: Theme.of(context).errorColor,
                   ),
                   child: const Text('Cancel'),
                 ),
