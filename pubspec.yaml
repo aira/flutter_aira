@@ -12,7 +12,7 @@ dependencies:
   device_info_plus: ^4.0.2
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.8.11
+  flutter_webrtc: ^0.9.6
   http: ^0.13.4
   logging: ^1.0.2
   mqtt_client: ^9.6.8
