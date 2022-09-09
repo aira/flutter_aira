@@ -7,4 +7,6 @@ class Track {
       : id = int.parse(json['id']),
         participantId = json['participantId'],
         incomingTrackId = int.tryParse(json['incomingTrackId'] ?? '');
+
+  bool get isOutgoing => incomingTrackId == null;
 }
