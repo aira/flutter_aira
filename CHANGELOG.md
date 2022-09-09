@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.23] - 2022-09-09
+### Added
+- `RECONNECT` support (#41).
+
+### Fixed
+- Mute and un-mute stop working on Android (#42).
+
 ## [0.0.22] - 2022-09-08
 ### Changed
 - Updated for Flutter 3.3.
