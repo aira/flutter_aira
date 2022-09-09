@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 /// The direction of the connection to the selective forwarding unit (SFU).
@@ -99,14 +102,22 @@ class SfuConnection {
     if (_isIncoming) {
       throw StateError('Cannot replace audio track on incoming connection');
     }
-    await _audio.sender.replaceTrack(track);
+    if (kIsWeb || !Platform.isAndroid) {
+      await _audio.sender.replaceTrack(track);
+    } else {
+      await _audio.sender.setTrack(track, takeOwnership: false);
+    }
   }
 
   Future<void> replaceVideoTrack(MediaStreamTrack? track) async {
     if (_isIncoming) {
       throw StateError('Cannot replace video track on incoming connection');
     }
-    await _video.sender.replaceTrack(track);
+    if (kIsWeb || !Platform.isAndroid) {
+      await _video.sender.replaceTrack(track);
+    } else {
+      await _video.sender.setTrack(track, takeOwnership: false);
+    }
   }
 
   /// Handles an ICE candidate from the SFU.
