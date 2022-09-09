@@ -23,6 +23,12 @@ class User {
   User(this.firstName, this.lastName, this.profiles);
   User.empty();
 
+  void clear() {
+    firstName = null;
+    lastName = null;
+    profiles = null;
+  }
+
   User.fromJson(Map<String, dynamic> json)
       : firstName = json['firstName'],
         lastName = json['lastName'],
