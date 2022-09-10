@@ -419,34 +419,30 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           // Rebuild the UI.
           setState(() {});
 
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Connected to Agent ${_room!.agentName}'),
-          ));
+          _showSnackBar('Connected to Agent ${_room!.agentName}');
         } else if (_room!.serviceRequestState == ServiceRequestState.ended) {
           // The call was ended by the Agent or Platform, so hang up.
           _hangUp();
 
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Call ended'),
-          ));
+          _showSnackBar('Call ended');
         }
       });
+
       if (_isMessagingEnabled) {
         _room!.messagingClient!.messageStream.listen((Message message) {
           if (message.isRemote) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Agent: ${message.text}'),
-            ));
+            _showSnackBar('Agent: ${message.text}');
           }
         });
       }
 
+      _room!.onReconnect = () => _showSnackBar('Reconnecting');
+      _room!.onReconnected = () => _showSnackBar('Reconnected');
+
       // Join the room.
       _room!.join(_localStream!);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString()),
-      ));
+      _showSnackBar(e.toString());
 
       // Hang up if there was an error.
       _hangUp();
@@ -472,5 +468,11 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     if (mounted && !ModalRoute.of(context)!.isCurrent) {
       Navigator.pop(context);
     }
+  }
+
+  void _showSnackBar(String content) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(content),
+    ));
   }
 }

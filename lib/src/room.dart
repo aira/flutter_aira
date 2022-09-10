@@ -27,6 +27,12 @@ abstract class RoomHandler {
 }
 
 abstract class Room implements Listenable {
+  /// Called when a reconnect is initiated.
+  VoidCallback? onReconnect;
+
+  /// Called when a reconnect has completed.
+  VoidCallback? onReconnected;
+
   /// The ID of the service request.
   int get serviceRequestId;
 
@@ -149,6 +155,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   @override
+  VoidCallback? onReconnect;
+
+  @override
+  VoidCallback? onReconnected;
+
+  @override
   int get serviceRequestId => _serviceRequest.id;
 
   @override
@@ -196,18 +208,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   @override
   Future<void> join(MediaStream localStream) async {
     _localStream = localStream;
-
-    // Create a track for the Explorer audio and video.
-    // REVIEW: Instead of connecting the real stream now, we could connect a dummy stream and then replace the tracks
-    // after the call has started. That way, we won't be recording audio and video prematurely. See
-    // https://w3c.github.io/webrtc-pc/#advanced-peer-to-peer-example-with-warm-up for a how-to.
-    Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId);
-    _log.info('created outgoing track id=${track.id}');
-
-    _localTrackId = track.id;
-
-    // Start the WebRTC signaling process.
-    await _connectTrack(_localTrackId!, _localStream);
+    await _createOutgoingTrack();
   }
 
   @override
@@ -363,6 +364,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
       } catch (e, s) {
         _log.shout('failed to take photo', e, s);
       }
+    } else if (json['type'] == 'RECONNECT') {
+      await _reconnect();
     } else {
       _log.warning('ignoring participant event message type=${json['type']}');
     }
@@ -383,13 +386,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
 
       case ParticipantMessageType.INCOMING_TRACK_CREATE:
-        // Create a track for the Agent audio.
-        Track track = await _client.createTrack(
-            _serviceRequest.roomId, _serviceRequest.participantId, participantMessage.trackId);
-        _log.info('created incoming track id=${track.id} outgoing_track_id=${participantMessage.trackId}');
-
-        // Start the WebRTC signaling process.
-        await _connectTrack(track.id);
+        await _createIncomingTrack(participantMessage.trackId);
 
         if (serviceRequestState == ServiceRequestState.queued) {
           // HACK: If the Agent is sending audio and we still think we're queued, we're not receiving messages on the
@@ -579,6 +576,62 @@ class KurentoRoom extends ChangeNotifier implements Room {
       } else {
         await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_presentationVideoTrack);
       }
+    }
+  }
+
+  /// Creates and connects a track to send the [_localStream] to Kurento.
+  Future<void> _createOutgoingTrack() async {
+    Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId);
+    _log.info('created outgoing track id=${track.id}');
+
+    _localTrackId = track.id;
+
+    await _connectTrack(_localTrackId!, _localStream);
+  }
+
+  /// Creates and connects a track to receive a remote stream from Kurento.
+  Future<void> _createIncomingTrack(int outgoingTrackId) async {
+    Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId, outgoingTrackId);
+    _log.info('created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId');
+
+    await _connectTrack(track.id);
+  }
+
+  Future<void> _reconnect() async {
+    try {
+      _log.info('reconnecting');
+
+      onReconnect?.call();
+
+      // Delete the old tracks.
+      await _client.deleteTracks(_serviceRequest.roomId, _serviceRequest.participantId);
+
+      // Close the old connections.
+      for (SfuConnection connection in _connectionByTrackId.values) {
+        await connection.dispose();
+      }
+      _connectionByTrackId.clear();
+
+      // Create and connect new tracks to receive the remote streams from the other participant(s). (Do this before our
+      // local stream, since we want to be able to hear the Agent ASAP.)
+      for (Participant participant in await _client.getParticipants(_serviceRequest.roomId)) {
+        if (participant.id != _serviceRequest.participantId) {
+          for (Track track in participant.tracks ?? []) {
+            if (track.isOutgoing) {
+              await _createIncomingTrack(track.id);
+            }
+          }
+        }
+      }
+
+      // Create and connect a new track to send our local stream.
+      await _createOutgoingTrack();
+
+      _log.info('reconnected');
+    } catch (e, s) {
+      _log.shout('failed to reconnect', e, s);
+    } finally {
+      onReconnected?.call();
     }
   }
 }
