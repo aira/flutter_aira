@@ -219,12 +219,15 @@ class PlatformClient {
   Future<Room> createServiceRequest(
     RoomHandler roomHandler, {
     int? accountId,
-    bool cannotTalk = false,
-    Map<String, List<int>> fileMap = const {},
-    String message = '',
+    bool? cannotTalk,
+    Map<String, List<int>>? fileMap,
+    String? message,
     Position? position,
   }) async {
     _verifyIsLoggedIn();
+
+    String preCallMessage =
+        '$message${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
@@ -238,9 +241,9 @@ class PlatformClient {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
-      'hasMessage': message.isNotEmpty || fileMap.isNotEmpty || cannotTalk,
-      'message': '$message${fileMap.isEmpty ? '' : ' (With files: ${fileMap.keys.join(', ')})'}',
-      'cannotTalk': cannotTalk,
+      'hasMessage': preCallMessage.isNotEmpty || cannotTalk == true,
+      'message': preCallMessage,
+      'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
     };
 
@@ -249,7 +252,7 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
-    if (message.isNotEmpty || fileMap.isNotEmpty) {
+    if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
     }
 
