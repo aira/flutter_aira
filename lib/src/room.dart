@@ -108,6 +108,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final RoomHandler _roomHandler;
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
+  int _lastPositionUpdate = 0;
 
   bool _isDisposed = false;
   bool _isAudioMuted = false;
@@ -289,6 +290,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
 
+    const int delta = 2 * 1000; // 2 seconds.
+    if (DateTime.now().millisecondsSinceEpoch - _lastPositionUpdate < delta) {
+      return;
+    }
+
     List<Map<String, dynamic>> serviceInfoData = [
       {'instrumentationType': 'TYPE_GPS', 'paramName': 'LAT', 'paramValue': position.latitude},
       {'instrumentationType': 'TYPE_GPS', 'paramName': 'LONG', 'paramValue': position.longitude},
@@ -308,11 +314,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
     };
 
     try {
-      _log.finest('Publish location info\n\t$serviceInfoData\n\t$gpsLocationData');
       await Future.wait([
         _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData})),
         _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
+      // We don't want to start letting position update stack up if it takes more than delta milliseconds to update the
+      // position. So, exclude the processing time from the delay (i.e.: use a new "now" value here).
+      _lastPositionUpdate = DateTime.now().millisecondsSinceEpoch;
+      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData\n\tat $_lastPositionUpdate');
     } catch (e) {
       _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
     }
