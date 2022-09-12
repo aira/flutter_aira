@@ -616,4 +616,3 @@ class PlatformMessagingKeys {
 
   PlatformMessagingKeys(this.sendKey, this.receiveKey);
 }
-
