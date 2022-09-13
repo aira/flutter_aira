@@ -22,6 +22,9 @@ void main() {
     if (record.error != null) {
       print(record.error); // ignore: avoid_print
     }
+    if (record.stackTrace != null) {
+      print(record.stackTrace); // ignore: avoid_print
+    }
   });
 
   runApp(const MaterialApp(
@@ -59,9 +62,9 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   LoginType _loginType = LoginType.verificationCode;
   MediaStream? _localStream;
   PlatformClient? _platformClient;
+  User? _user;
+  int? _accountId;
   Room? _room;
-
-  bool get _isInCall => _room != null;
 
   bool get _isMessagingEnabled =>
       _messagingSendKeyController.text.isNotEmpty && _messagingReceiveKeyController.text.isNotEmpty;
@@ -117,7 +120,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                   minHeight: viewportConstraints.maxHeight - 32,
                 ),
                 child: IntrinsicHeight(
-                  child: _isInCall ? _inCallWidget : _callSetupWidget,
+                  child: _body,
                 ),
               ),
             );
@@ -125,6 +128,16 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         ),
       ),
     );
+  }
+
+  Widget get _body {
+    if (_room != null) {
+      return _inCallWidget;
+    }
+    if (_platformClient != null) {
+      return _callSetupWidget;
+    }
+    return _loginWidget;
   }
 
   Widget get _inCallWidget {
@@ -183,6 +196,45 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   Widget get _callSetupWidget {
+    return Column(
+      children: <Widget>[
+        DropdownButtonFormField<int>(
+          decoration: const InputDecoration(hintText: 'Profile'),
+          items: _user!.profiles
+              .map((e) => DropdownMenuItem<int>(
+                    value: e.account.id,
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          e.account.type == AccountType.business ? Icons.work : Icons.account_circle,
+                          semanticLabel: e.account.type == AccountType.business ? 'Business' : 'Personal',
+                        ),
+                        const SizedBox(width: 5),
+                        Text(e.account.name),
+                      ],
+                    ),
+                  ))
+              .toList(growable: false),
+          onChanged: (int? newValue) => setState(() => _accountId = newValue),
+          value: _accountId,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _callAira,
+          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+          child: const Text('Call an Aira Agent'),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _logout,
+          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).errorColor),
+          child: const Text('Logout'),
+        ),
+      ],
+    );
+  }
+
+  Widget get _loginWidget {
     return Form(
       key: _formKey,
       child: Column(
@@ -306,13 +358,12 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
               border: OutlineInputBorder(),
               labelText: 'Messaging Receive Key (Optional)',
             ),
-            enabled: !_isInCall,
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: _callAira,
+            onPressed: _login,
             style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-            child: const Text('Call an Aira Agent'),
+            child: const Text('Log In'),
           ),
         ],
       ),
@@ -330,11 +381,61 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     return _localStream!.getVideoTracks()[0].captureFrame();
   }
 
-  Future<void> _callAira() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    try {
+      // Create the [PlatformClient]. Normally, you would do this at startup and expose the client using a [Provider].
+      PlatformMessagingKeys? messagingKeys;
+      if (_isMessagingEnabled) {
+        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
+      }
+      _platformClient = PlatformClient(PlatformClientConfig(
+        apiKey: _apiKeyController.text,
+        clientId: _clientIdController.text,
+        environment: PlatformEnvironment.dev,
+        messagingKeys: messagingKeys,
+      ));
+
+      // Log in.
+      if (_loginType == LoginType.verificationCode) {
+        Session session = await _platformClient!.loginWithClientVerificationCode(_verificationCodeController.text);
+
+        // The verification code can only be used once, so switch to logging in with the returned token.
+        _loginType = LoginType.token;
+        _tokenController.text = session.token;
+        _userIdController.text = session.userId.toString();
+      } else {
+        await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
+      }
+
+      _user = await _platformClient!.getUser();
+      _accountId = null;
+
+      setState(() {});
+    } catch (e) {
+      _showSnackBar(e.toString());
+
+      _platformClient?.dispose();
+      _platformClient = null;
+    }
+  }
+
+  Future<void> _logout() async {
+    try {
+      _platformClient?.logout();
+      _tokenController.clear();
+    } catch (e) {
+      _showSnackBar(e.toString());
+    }
+
+    _platformClient?.dispose();
+    setState(() => _platformClient = null);
+  }
+
+  Future<void> _callAira() async {
     try {
       String progressText = 'Calling...';
       StateSetter? progressSetState; // Idea from https://stackoverflow.com/a/62129750.
@@ -376,36 +477,11 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         ),
       );
 
-      // Create the [PlatformClient]. Normally, you would do this at startup and expose the client using a [Provider].
-      PlatformMessagingKeys? messagingKeys;
-      if (_isMessagingEnabled) {
-        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
-      }
-      _platformClient = PlatformClient(PlatformClientConfig(
-        apiKey: _apiKeyController.text,
-        clientId: _clientIdController.text,
-        environment: PlatformEnvironment.dev,
-        messagingKeys: messagingKeys,
-      ));
-
-      // Log in.
-      if (_loginType == LoginType.verificationCode) {
-        Session session = await _platformClient!.loginWithClientVerificationCode(_verificationCodeController.text);
-        setState(() {
-          // The verification code can only be used once, so switch to logging in with the returned token.
-          _loginType = LoginType.token;
-          _tokenController.text = session.token;
-          _userIdController.text = session.userId.toString();
-        });
-      } else {
-        await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
-      }
-
       // Get the local audio and video. Do this before calling, because if access to the media is blocked, why call?
       _localStream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': true});
 
       // Call Aira.
-      _room = await _platformClient!.createServiceRequest(this);
+      _room = await _platformClient!.createServiceRequest(this, accountId: _accountId);
 
       // Listen for room updates.
       progressSetState!(() => progressText = 'Waiting for an Aira Agent...');
@@ -460,9 +536,6 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
     await _room?.dispose();
     setState(() => _room = null);
-
-    _platformClient?.dispose();
-    _platformClient = null;
 
     // Close the call progress dialog if it's open.
     if (mounted && !ModalRoute.of(context)!.isCurrent) {
