@@ -21,6 +21,7 @@ import 'models/profile.dart';
 import 'models/service_request.dart';
 import 'models/session.dart';
 import 'models/track.dart';
+import 'models/user.dart';
 import 'platform_exceptions.dart';
 import 'room.dart';
 
@@ -207,44 +208,52 @@ class PlatformClient {
 
   /// Creates a service request for the logged-in user.
   ///
-  /// [position] is used to start a call with an initial GPS location.
+  /// If the Explorer has more than one [Profile], specify the [accountId] to use for the service request; if no
+  /// [accountId] is specified, the Explorer's default account will be used.
   ///
-  /// [message] is used to start a call with a message which will be displayed to the Agent at connection time. This is
-  /// especially useful if the Explorer cannot talk.
+  /// The service request can be started with a [message] and/or [fileMap] (a [Map] of file names to bytes). If the
+  /// Explorer will be communicating with messages exclusively, set [cannotTalk] to `true`.
   ///
-  /// [fileMap] is used to send files to the Agent as you start the call. This feature is usually used to save call time.
-  ///
-  /// [cannotTalk] will let the agent know if the Explorer cannot talk at connection time.
-  Future<Room> createServiceRequest(RoomHandler roomHandler,
-      {Position? position, String? message, Map<String, List<int>>? fileMap, bool? cannotTalk}) async {
+  /// If the Explorer has allowed access to their location, include their starting [position]. If there is an Aira
+  /// Access offer for that location, it will be automatically activated.
+  Future<Room> createServiceRequest(
+    RoomHandler roomHandler, {
+    int? accountId,
+    bool? cannotTalk,
+    Map<String, List<int>>? fileMap,
+    String? message,
+    Position? position,
+  }) async {
     _verifyIsLoggedIn();
 
-    if ((message?.isNotEmpty ?? false) || (fileMap?.isNotEmpty ?? false)) {
-      await _sendPreCallMessage(message, fileMap);
-    }
-    String fileNames = fileMap?.keys.join(', ') ?? '';
+    String preCallMessage =
+        '$message${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
       'device': await _deviceContext,
-      'permissions': {'location': null != position},
+      'permissions': {'location': position != null},
       'intent': 'NONE',
     };
 
     Map<String, dynamic> params = {
+      'accountId': accountId,
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
-      'hasMessage': (null != message && message.isNotEmpty) || fileNames.isNotEmpty || true == cannotTalk,
-      'message': '$message${fileNames.isEmpty ? '' : ' (With files: $fileNames)'}',
-      'cannotTalk': cannotTalk ?? false,
+      'hasMessage': preCallMessage.isNotEmpty || cannotTalk == true,
+      'message': preCallMessage,
+      'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
     };
 
-    if (null != position) {
-      _log.finer('Adding gps coordinates to ServiceRequest query');
+    if (position != null) {
       params['latitude'] = position.latitude;
       params['longitude'] = position.longitude;
+    }
+
+    if (preCallMessage.isNotEmpty) {
+      await _sendPreCallMessage(message, fileMap);
     }
 
     ServiceRequest serviceRequest =
@@ -391,6 +400,15 @@ class PlatformClient {
     } on SocketException catch (e) {
       throw PlatformUnknownException(e.message);
     }
+  }
+
+  /// Returns the logged-in [User].
+  Future<User> getUser() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
+
+    return User.fromJson(response);
   }
 
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
