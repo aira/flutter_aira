@@ -108,6 +108,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final RoomHandler _roomHandler;
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
+  DateTime _lastLocationUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   bool _isDisposed = false;
   bool _isAudioMuted = false;
@@ -289,6 +290,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
 
+    DateTime now = DateTime.now();
+    if (DateTime.now().difference(_lastLocationUpdate).inSeconds < 1) {
+      return;
+    }
+    _lastLocationUpdate = now;
+
     List<Map<String, dynamic>> serviceInfoData = [
       {'instrumentationType': 'TYPE_GPS', 'paramName': 'LAT', 'paramValue': position.latitude},
       {'instrumentationType': 'TYPE_GPS', 'paramName': 'LONG', 'paramValue': position.longitude},
@@ -308,11 +315,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     };
 
     try {
-      _log.finest('Publish location info\n\t$serviceInfoData\n\t$gpsLocationData');
       await Future.wait([
         _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData})),
         _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
+      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData\n\tat ${_lastLocationUpdate.millisecondsSinceEpoch}');
     } catch (e) {
       _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
     }
