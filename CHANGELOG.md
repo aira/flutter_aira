@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.24] - 2022-09-13
+### Added
+- `PlatformClient.getUser` (#39).
+
+### Changed
+- Throttle `Room.updateLocation` (#44).
+
 ## [0.0.23] - 2022-09-09
 ### Added
 - `RECONNECT` support (#41).
