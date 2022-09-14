@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.25] - 2022-09-14
 ### Fixed
 - "null" pre-call message (#45).
+- "null" last name (#46).
 
 ## [0.0.24] - 2022-09-13
 ### Added
