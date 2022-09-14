@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.25] - 2022-09-14
+### Fixed
+- "null" pre-call message (#45).
+
 ## [0.0.24] - 2022-09-13
 ### Added
 - `PlatformClient.getUser` (#39).
