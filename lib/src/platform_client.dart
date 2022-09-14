@@ -227,7 +227,7 @@ class PlatformClient {
     _verifyIsLoggedIn();
 
     String preCallMessage =
-        '$message${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
+        '${message ?? ''}${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
