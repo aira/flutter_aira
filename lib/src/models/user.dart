@@ -9,6 +9,6 @@ class User {
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         firstName = json['firstName'],
-        lastName = json['lastName'],
+        lastName = json['lastName'] ?? '',
         profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
 }
