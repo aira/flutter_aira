@@ -8,6 +8,8 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/gallery_photo.dart';
+import 'package:flutter_aira/src/models/gallery_photo_aggregator.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
@@ -411,6 +413,44 @@ class PlatformClient {
     return User.fromJson(response);
   }
 
+  //  ___ _        _          ___      _ _                ___             _   _
+  // | _ \ |_  ___| |_ ___   / __|__ _| | |___ _ _ _  _  | __|  _ _ _  __| |_(_)___ _ _  ___
+  // |  _/ ' \/ _ \  _/ _ \ | (_ / _` | | / -_) '_| || | | _| || | ' \/ _|  _| / _ \ ' \(_-<
+  // |_| |_||_\___/\__\___/  \___\__,_|_|_\___|_|  \_, | |_| \_,_|_||_\__|\__|_\___/_||_/__/
+  // Photo Gallery Functions                       |__/
+
+  Future<GalleryPhotoAggregator> listGalleryPhotosByPage(GalleryPhotoAggregator aggregator) async {
+    Map<String, dynamic> response = {};
+    if(aggregator.hasMore) {
+      response = await _httpGet('/api/smartapp/photos/$_userId', queryParameters: {'page': aggregator.nextPage.toString()});
+      List<dynamic> jsonPhotos = response['photos'];
+      return aggregator..addPage(
+        response['response']['hasMore']!,
+        jsonPhotos.map((p) => GalleryPhoto.fromJSON(p)).toList(growable: false),
+      );
+    }
+    return aggregator;
+  }
+
+  Future<List<GalleryPhoto>> listAllGalleryPhotos() async {
+    GalleryPhotoAggregator aggregator = GalleryPhotoAggregator();
+    while(aggregator.hasMore) {
+      await listGalleryPhotosByPage(aggregator);
+    }
+    return aggregator.photos;
+  }
+  
+  Future<void> deleteGalleryPhotos(List<int> photoIds) async {
+    Map<String, dynamic> req = {'userId': _userId, 'photoIds': photoIds};
+    await _httpDelete('/api/smartapp/photos', body: jsonEncode(req));
+  }
+
+  //  _  _ _____ _____ ___   ___             _   _
+  // | || |_   _|_   _| _ \ | __|  _ _ _  __| |_(_)___ _ _  ___
+  // | __ | | |   | | |  _/ | _| || | ' \/ _|  _| / _ \ ' \(_-<
+  // |_||_| |_|   |_| |_|   |_| \_,_|_||_\__|\__|_\___/_||_/__/
+  // HTTP Functions
+
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
     try {
@@ -422,7 +462,7 @@ class PlatformClient {
 
       switch (method) {
         case 'DELETE':
-          http.Response response = await _httpClient.delete(uri, headers: headers);
+          http.Response response = await _httpClient.delete(uri, headers: headers, body: body);
           return _parseResponse(response.statusCode, response.body);
         case 'GET':
           http.Response response = await _httpClient.get(uri, headers: headers);
@@ -441,19 +481,32 @@ class PlatformClient {
     }
   }
 
-  Future<Map<String, dynamic>> _httpDelete(String unencodedPath, {Map<String, String>? additionalHeaders}) async =>
-      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders);
+  Future<Map<String, dynamic>> _httpDelete(
+    String unencodedPath, {
+    Map<String, String>? additionalHeaders,
+    Object? body,
+  }) async =>
+      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
-  Future<Map<String, dynamic>> _httpGet(String unencodedPath,
-          {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters}) async =>
+  Future<Map<String, dynamic>> _httpGet(
+    String unencodedPath, {
+    Map<String, String>? additionalHeaders,
+    Map<String, String>? queryParameters,
+  }) async =>
       _httpSend('GET', unencodedPath, additionalHeaders: additionalHeaders, queryParameters: queryParameters);
 
-  Future<Map<String, dynamic>> _httpPost(String unencodedPath, Object? body,
-          {Map<String, String>? additionalHeaders}) async =>
+  Future<Map<String, dynamic>> _httpPost(
+    String unencodedPath,
+    Object? body, {
+    Map<String, String>? additionalHeaders,
+  }) async =>
       _httpSend('POST', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
-  Future<Map<String, dynamic>> _httpPut(String unencodedPath,
-          {Object? body, Map<String, String>? additionalHeaders}) async =>
+  Future<Map<String, dynamic>> _httpPut(
+    String unencodedPath, {
+    Object? body,
+    Map<String, String>? additionalHeaders,
+  }) async =>
       _httpSend('PUT', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
   void _verifyIsLoggedIn() {
