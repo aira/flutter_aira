@@ -9,10 +9,8 @@ class GalleryPhotoAggregator {
   final List<GalleryPhoto> photos;
 
   bool get hasMore => _hasMore;
-  // List<GalleryPhoto> get photos => _photos.values.expand((list) => list).toList(growable: false);
 
   void addPage(bool hasMore, List<GalleryPhoto> lastPage) {
-    print('<<<<<<<<<< adding a page in GalleryPhotoAggregator');
     photos.addAll(lastPage);
     nextPage ++;
     _hasMore = hasMore;
