@@ -3,8 +3,8 @@
 class GalleryPhoto {
   GalleryPhoto({
     required this.id,
-    this.title,
-    required this.description,
+    required this.title,
+    this.description,
     List<String>? categories,
     required this.url,
     required this.thumbnailUrl,
@@ -16,10 +16,10 @@ class GalleryPhoto {
   final int id;
 
   /// Title attributed by the agent taking the picture.
-  final String? title;
+  final String title;
 
   /// Description attributed by the agent taking the picture.
-  final String description;
+  final String? description;
 
   /// Type of Photo (SNAPSHOT, PROFILE PICTURE, etc.)
   final List<String> categories;
