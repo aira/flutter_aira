@@ -8,8 +8,7 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/gallery_photo.dart';
-import 'package:flutter_aira/src/models/gallery_photo_aggregator.dart';
+import 'package:flutter_aira/src/models/photo.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
@@ -413,43 +412,26 @@ class PlatformClient {
     return User.fromJson(response);
   }
 
-  //  ___ _        _          ___      _ _                ___             _   _
-  // | _ \ |_  ___| |_ ___   / __|__ _| | |___ _ _ _  _  | __|  _ _ _  __| |_(_)___ _ _  ___
-  // |  _/ ' \/ _ \  _/ _ \ | (_ / _` | | / -_) '_| || | | _| || | ' \/ _|  _| / _ \ ' \(_-<
-  // |_| |_||_\___/\__\___/  \___\__,_|_|_\___|_|  \_, | |_| \_,_|_||_\__|\__|_\___/_||_/__/
-  // Photo Gallery Functions                       |__/
+  /// Retrieves a page of photos shared with the user.
+  ///
+  /// A page can contain up to 25 photos. If there are more photos available, [PhotosPage.hasMore] will be `true`.
+  Future<PhotosPage> getSharedPhotos(int page) async {
+    Map<String, dynamic> response = await _httpGet(
+      '/api/smartapp/photos/$_userId',
+      queryParameters: {'page': page.toString()},
+    );
+    return PhotosPage(
+      page: page,
+      hasMore: response['response']['hasMore']!,
+      photos: response['photos'].map((p) => Photo.fromJSON(p)).toList(growable: false),
+    );
+  }
 
-  Future<GalleryPhotoAggregator> listGalleryPhotosByPage(GalleryPhotoAggregator aggregator) async {
-    Map<String, dynamic> response = {};
-    if(aggregator.hasMore) {
-      response = await _httpGet('/api/smartapp/photos/$_userId', queryParameters: {'page': aggregator.nextPage.toString()});
-      List<dynamic> jsonPhotos = response['photos'];
-      return aggregator..addPage(
-        response['response']['hasMore']!,
-        jsonPhotos.map((p) => GalleryPhoto.fromJSON(p)).toList(growable: false),
+  /// Delete the photos with teh privided IDs
+  Future<void> deleteSharedPhotos(List<int> ids) => _httpDelete(
+        '/api/smartapp/photos',
+        body: jsonEncode({'userId': _userId, 'photoIds': ids}),
       );
-    }
-    return aggregator;
-  }
-
-  Future<List<GalleryPhoto>> listAllGalleryPhotos() async {
-    GalleryPhotoAggregator aggregator = GalleryPhotoAggregator();
-    while(aggregator.hasMore) {
-      await listGalleryPhotosByPage(aggregator);
-    }
-    return aggregator.photos;
-  }
-  
-  Future<void> deleteGalleryPhotos(List<int> photoIds) async {
-    Map<String, dynamic> req = {'userId': _userId, 'photoIds': photoIds};
-    await _httpDelete('/api/smartapp/photos', body: jsonEncode(req));
-  }
-
-  //  _  _ _____ _____ ___   ___             _   _
-  // | || |_   _|_   _| _ \ | __|  _ _ _  __| |_(_)___ _ _  ___
-  // | __ | | |   | | |  _/ | _| || | ' \/ _|  _| / _ \ ' \(_-<
-  // |_||_| |_|   |_| |_|   |_| \_,_|_||_\__|\__|_\___/_||_/__/
-  // HTTP Functions
 
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
