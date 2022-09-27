@@ -8,6 +8,7 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/photo.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
@@ -411,6 +412,27 @@ class PlatformClient {
     return User.fromJson(response);
   }
 
+  /// Retrieves a page of photos shared with the user.
+  ///
+  /// A page can contain up to 25 photos. If there are more photos available, [PhotosPage.hasMore] will be `true`.
+  Future<PhotosPage> getSharedPhotos(int page) async {
+    Map<String, dynamic> response = await _httpGet(
+      '/api/smartapp/photos/$_userId',
+      queryParameters: {'page': page.toString()},
+    );
+    return PhotosPage(
+      page: page,
+      hasMore: response['response']['hasMore'],
+      photos: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
+    );
+  }
+
+  /// Deletes the photos with the specified IDs.
+  Future<void> deleteSharedPhotos(List<int> ids) => _httpDelete(
+        '/api/smartapp/photos',
+        body: jsonEncode({'userId': _userId, 'photoIds': ids}),
+      );
+
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
     try {
@@ -422,7 +444,7 @@ class PlatformClient {
 
       switch (method) {
         case 'DELETE':
-          http.Response response = await _httpClient.delete(uri, headers: headers);
+          http.Response response = await _httpClient.delete(uri, headers: headers, body: body);
           return _parseResponse(response.statusCode, response.body);
         case 'GET':
           http.Response response = await _httpClient.get(uri, headers: headers);
@@ -441,19 +463,32 @@ class PlatformClient {
     }
   }
 
-  Future<Map<String, dynamic>> _httpDelete(String unencodedPath, {Map<String, String>? additionalHeaders}) async =>
-      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders);
+  Future<Map<String, dynamic>> _httpDelete(
+    String unencodedPath, {
+    Map<String, String>? additionalHeaders,
+    Object? body,
+  }) async =>
+      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
-  Future<Map<String, dynamic>> _httpGet(String unencodedPath,
-          {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters}) async =>
+  Future<Map<String, dynamic>> _httpGet(
+    String unencodedPath, {
+    Map<String, String>? additionalHeaders,
+    Map<String, String>? queryParameters,
+  }) async =>
       _httpSend('GET', unencodedPath, additionalHeaders: additionalHeaders, queryParameters: queryParameters);
 
-  Future<Map<String, dynamic>> _httpPost(String unencodedPath, Object? body,
-          {Map<String, String>? additionalHeaders}) async =>
+  Future<Map<String, dynamic>> _httpPost(
+    String unencodedPath,
+    Object? body, {
+    Map<String, String>? additionalHeaders,
+  }) async =>
       _httpSend('POST', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
-  Future<Map<String, dynamic>> _httpPut(String unencodedPath,
-          {Object? body, Map<String, String>? additionalHeaders}) async =>
+  Future<Map<String, dynamic>> _httpPut(
+    String unencodedPath, {
+    Object? body,
+    Map<String, String>? additionalHeaders,
+  }) async =>
       _httpSend('PUT', unencodedPath, additionalHeaders: additionalHeaders, body: body);
 
   void _verifyIsLoggedIn() {

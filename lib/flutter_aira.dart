@@ -4,6 +4,7 @@ export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;
 export 'src/models/participant.dart' show Participant, ParticipantStatus;
+export 'src/models/photo.dart' show Photo, PhotosPage;
 export 'src/models/position.dart' show Position;
 export 'src/models/profile.dart' show Language, Profile, ProfileType;
 export 'src/models/service_request.dart' show ServiceRequest, ServiceRequestState;
