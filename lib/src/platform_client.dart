@@ -590,7 +590,13 @@ class PlatformClient {
       }
     }
 
-    Map<String, dynamic> json = jsonDecode(body);
+    Map<String, dynamic> json;
+    try {
+      json = jsonDecode(body);
+    } catch (e) {
+      json = {};
+    }
+
     if (json['response']?['status'] == 'SUCCESS') {
       return json;
     } else if (json['response']?['errorCode'] == 'SEC-001') {
