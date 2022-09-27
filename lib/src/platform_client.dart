@@ -423,7 +423,7 @@ class PlatformClient {
     return PhotosPage(
       page: page,
       hasMore: response['response']['hasMore'],
-      photos: (response['photos'] as List<Map<String, dynamic>>).map((p) => Photo.fromJson(p)).toList(growable: false),
+      photos: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
     );
   }
 

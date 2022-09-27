@@ -13,7 +13,7 @@ class Photo {
   Photo.fromJson(Map<String, dynamic> json)
       : this(
           id: json['id'],
-          title: json['title'],
+          title: json['title'] ?? '',
           description: json['description'],
           url: json['url'],
           thumbnailUrl: json['thumbnailUrl'],
