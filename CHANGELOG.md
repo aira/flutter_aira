@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.26] - 2022-09-27
+### Added
+- `PlatformClient.getSharedPhotos` and `PlatformClient.deleteSharedPhotos` (#48).
+
+### Fixed
+- Handle non-JSON responses from Platform (#47).
+
 ## [0.0.25] - 2022-09-14
 ### Fixed
 - "null" pre-call message (#45).
