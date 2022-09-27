@@ -555,21 +555,22 @@ class PlatformClient {
       }
     }
 
+    Map<String, dynamic> json;
     try {
-      Map<String, dynamic> json = jsonDecode(body);
-      if (json['response']?['status'] == 'SUCCESS') {
-        return json;
-      } else if (json['response']?['errorCode'] == 'SEC-001') {
-        _session = null;
-        throw const PlatformInvalidTokenException();
-      } else if (json['response']?['errorMessage'] != null) {
-        throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
-      } else {
-        throw PlatformUnknownException('Platform returned unexpected body: $body');
-      }
+      json = jsonDecode(body);
     } catch (e) {
-      _log.shout('Unable to parse response to json. Response\'s body: $body', e);
-      rethrow;
+      json = {};
+    }
+
+    if (json['response']?['status'] == 'SUCCESS') {
+      return json;
+    } else if (json['response']?['errorCode'] == 'SEC-001') {
+      _session = null;
+      throw const PlatformInvalidTokenException();
+    } else if (json['response']?['errorMessage'] != null) {
+      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
+    } else {
+      throw PlatformUnknownException('Platform returned unexpected body: $body');
     }
   }
 
