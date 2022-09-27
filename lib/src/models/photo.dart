@@ -9,8 +9,8 @@ class Photo {
     required this.createdDate,
   });
 
-  /// Creates a GalleryPhoto from a JSON object
-  Photo.fromJSON(Map<String, dynamic> json)
+  /// Creates a [Photo] from a JSON object.
+  Photo.fromJson(Map<String, dynamic> json)
       : this(
           id: json['id'],
           title: json['title'],
@@ -38,7 +38,6 @@ class Photo {
   /// Creation Date.
   final DateTime createdDate;
 }
-
 
 class PhotosPage {
   PhotosPage({

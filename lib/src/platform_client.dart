@@ -422,12 +422,12 @@ class PlatformClient {
     );
     return PhotosPage(
       page: page,
-      hasMore: response['response']['hasMore']!,
-      photos: (response['photos'] as List<dynamic>).map((p) => Photo.fromJSON(p)).toList(growable: false),
+      hasMore: response['response']['hasMore'],
+      photos: (response['photos'] as List<Map<String, dynamic>>).map((p) => Photo.fromJson(p)).toList(growable: false),
     );
   }
 
-  /// Delete the photos with teh privided IDs
+  /// Deletes the photos with the specified IDs.
   Future<void> deleteSharedPhotos(List<int> ids) => _httpDelete(
         '/api/smartapp/photos',
         body: jsonEncode({'userId': _userId, 'photoIds': ids}),
