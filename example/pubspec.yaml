@@ -36,7 +36,10 @@ dependencies:
 
   flutter_aira:
     path: ../
-  flutter_webrtc: ^0.9.6
+  flutter_webrtc:
+    git:
+      url: git@github.com:aira/flutter-webrtc.git
+      ref: fix/809
   logging: ^1.0.2
 
 dev_dependencies:

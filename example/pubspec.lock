@@ -201,10 +201,12 @@ packages:
   flutter_webrtc:
     dependency: "direct main"
     description:
-      name: flutter_webrtc
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.9.6"
+      path: "."
+      ref: "fix/809"
+      resolved-ref: a2b7a205ca0c835d837ca75a0ffbabc678efa541
+      url: "git@github.com:aira/flutter-webrtc.git"
+    source: git
+    version: "0.9.8"
   form_data:
     dependency: transitive
     description:
