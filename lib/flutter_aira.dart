@@ -1,16 +1,19 @@
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/account.dart' show Account, AccountType;
+export 'src/models/call_history.dart' show CallSession;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;
+export 'src/models/paged.dart' show Paged;
 export 'src/models/participant.dart' show Participant, ParticipantStatus;
-export 'src/models/photo.dart' show Photo, PhotosPage;
+export 'src/models/photo.dart' show Photo;
 export 'src/models/position.dart' show Position;
 export 'src/models/profile.dart' show Language, Profile, ProfileType;
 export 'src/models/service_request.dart' show ServiceRequest, ServiceRequestState;
 export 'src/models/session.dart' show Session;
 export 'src/models/track.dart' show Track;
 export 'src/models/user.dart' show User;
+export 'src/models/plan_usage.dart' show PlanUsage, PlanUsageBreakdown, PlanMinuteBreakdown;
 export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'
     show PlatformLocalizedException, PlatformInvalidTokenException, PlatformUnknownException;

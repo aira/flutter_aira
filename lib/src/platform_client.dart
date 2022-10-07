@@ -8,9 +8,12 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/call_history.dart';
+import 'package:flutter_aira/src/models/paged.dart';
 import 'package:flutter_aira/src/models/photo.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
+import 'package:flutter_aira/src/models/plan_usage.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -415,23 +418,59 @@ class PlatformClient {
   /// Retrieves a page of photos shared with the user.
   ///
   /// A page can contain up to 25 photos. If there are more photos available, [PhotosPage.hasMore] will be `true`.
-  Future<PhotosPage> getSharedPhotos(int page) async {
+  Future<Paged<Photo>> getSharedPhotos(int page) async {
+    _verifyIsLoggedIn();
+
     Map<String, dynamic> response = await _httpGet(
       '/api/smartapp/photos/$_userId',
       queryParameters: {'page': page.toString()},
     );
-    return PhotosPage(
+    return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
-      photos: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
+      items: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
     );
   }
 
   /// Deletes the photos with the specified IDs.
-  Future<void> deleteSharedPhotos(List<int> ids) => _httpDelete(
-        '/api/smartapp/photos',
-        body: jsonEncode({'userId': _userId, 'photoIds': ids}),
-      );
+  Future<void> deleteSharedPhotos(List<int> ids) {
+    _verifyIsLoggedIn();
+    return _httpDelete(
+      '/api/smartapp/photos',
+      body: jsonEncode({'userId': _userId, 'photoIds': ids}),
+    );
+  }
+
+  Future<PlanUsage> getUsage() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet('/api/smartapp/usage/$_userId/v3');
+    return PlanUsage.fromJson(response);
+  }
+
+  Future<PlanSubscription> getSubscription() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet(
+      '/api/subscription/',
+      queryParameters: {'userId': _userId.toString()},
+    );
+    return PlanSubscription.fromJson(response);
+  }
+
+  Future<Paged<CallSession>> getCallHistory(int page) async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet(
+      '/api/user/service/history/bu',
+      queryParameters: {'pg': page.toString(), 'userId': _userId.toString()},
+    );
+    return Paged(
+      page: page,
+      hasMore: response['response']['hasMore'],
+      items: (response['requests'] as List<dynamic>).map((p) => CallSession.fromJson(p)).toList(growable: false),
+    );
+  }
 
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {

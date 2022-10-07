@@ -30,8 +30,10 @@ enum ProfileType {
 class Profile {
   final Account account;
   final ProfileType type;
+  final int durationAllowed;
 
   Profile.fromJson(Map<String, dynamic> json)
       : account = Account.fromJson(json['account']),
-        type = ProfileType.fromName(json['userType']);
+        type = ProfileType.fromName(json['userType']),
+        durationAllowed = json['durationAllowed'];
 }
