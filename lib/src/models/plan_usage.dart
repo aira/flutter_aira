@@ -1,28 +1,3 @@
-class PlanSubscription {
-  String? planCode;
-  String? name;
-  String? subCycleEndDate;
-  String? accountCode;
-  String? subscriptionStatus;
-  String? planType;
-  int? createdDate;   //this is a string in platform schema
-  int? subscriptionId;
-  int? usageLimit;
-  int? validityMonths;
-
-  PlanSubscription.fromJson(Map<String, dynamic> json)
-      : accountCode = json['accountCode'],
-        createdDate = null == json['createdDate'] ? null : int.parse(json['createdDate']),
-        name = json['name'],
-        planType = json['planType'],
-        subCycleEndDate = json['subCycleEndDate'],
-        subscriptionId = json['subscriptionId'],
-        subscriptionStatus = json['subscriptionStatus'],
-        usageLimit = json['usageLimit'],
-        validityMonths = json['validityMonths'],
-        planCode = json['planCode'];
-}
-
 class PlanUsageBreakdown {
   String? firstName;
   int? userId;

@@ -448,16 +448,6 @@ class PlatformClient {
     return PlanUsage.fromJson(response);
   }
 
-  Future<PlanSubscription> getSubscription() async {
-    _verifyIsLoggedIn();
-
-    Map<String, dynamic> response = await _httpGet(
-      '/api/subscription/',
-      queryParameters: {'userId': _userId.toString()},
-    );
-    return PlanSubscription.fromJson(response);
-  }
-
   Future<Paged<CallSession>> getCallHistory(int page) async {
     _verifyIsLoggedIn();
 
