@@ -1,3 +1,8 @@
+import 'package:intl/intl.dart';
+
+DateTime? _parseDate(String? inputDate) =>
+    null == inputDate ? null : DateFormat('yyyy-MM-dd\'T\'HH:mm:ssZ').parse(inputDate);
+
 class PlanUsageBreakdown {
   String? firstName;
   int? userId;
@@ -33,16 +38,16 @@ class PlanMinuteBreakdown {
 }
 
 class PlanUsage {
-  String? planName;
-  int? totalMinutes;
-  int? totalMinutesLeft;
+  String? planName; //*
+  int? totalMinutes; //*
+  int? totalMinutesLeft; //*
   int? totalPrimaryMinutes;
   int? totalPrimaryMinutesUsed;
-  int? totalAccessMinutesUsed;
+  int? totalAccessMinutesUsed; //*
   int? totalProductMinutesUsed;
   int? totalPromotionMinutesUsed;
   int? totalSiteMinutesUsed;
-  int? totalMinutesUsed;
+  int? totalMinutesUsed; //*
   int? totalMinutesRolledOver;
   int? totalCreditMinutes;
   int? totalCreditMinutesUsed;
@@ -51,21 +56,21 @@ class PlanUsage {
   int? totalFixedMinutes;
   int? totalFixedMinutesUsed;
   int? billingCycleStart;
-  int? billingCycleEnd;
+  DateTime? billingCycleEnd; //*
   String? billingCycleStartDate;
   String? billingCycleEndDate;
   bool? canPurchaseMinutes;
   bool? canModifyPlan;
-  bool? hasFreeCall;
-  String? timeUntilNextFreeCall;
+  bool? hasFreeCall; //*
+  DateTime? timeUntilNextFreeCall; //*
   bool? primary;
-  bool? planUnlimited;
+  bool? planUnlimited; //*
 
   List<PlanUsageBreakdown>? planUsageBreakdownList;
-  List<PlanMinuteBreakdown>? planMinuteBreakdownList;
+  List<PlanMinuteBreakdown>? planMinuteBreakdownList; //*
 
   PlanUsage.fromJson(Map<String, dynamic> json)
-      : billingCycleEnd = json['billingCycleEnd'],
+      : billingCycleEnd = null == json['billingCycleEnd'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),
         billingCycleEndDate = json['billingCycleEndDate'],
         billingCycleStart = json['billingCycleStart'],
         billingCycleStartDate = json['billingCycleStartDate'],
@@ -77,7 +82,7 @@ class PlanUsage {
         planUnlimited = json['planUnlimited'],
         planUsageBreakdownList = (json['usageBreakdown'] as List<dynamic>).map((e) => PlanUsageBreakdown.fromJson(e)).toList(growable: false),
         primary = json['primary'],
-        timeUntilNextFreeCall = json['timeUntilNextFreeCall'],
+        timeUntilNextFreeCall = _parseDate(json['timeUntilNextFreeCall']),
         totalAccessMinutesUsed = json['totalAccessMinutesUsed'],
         totalCreditMinutes = json['totalCreditMinutes'],
         totalCreditMinutesUsed = json['totalCreditMinutesUsed'],
