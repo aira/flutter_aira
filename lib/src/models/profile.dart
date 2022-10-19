@@ -30,10 +30,16 @@ enum ProfileType {
 class Profile {
   final Account account;
   final ProfileType type;
+
+  /// Duration Allowed for this Account in minutes
   final int durationAllowed;
+  /// Duration Used for this Account in minutes
+  final int durationUsed;
 
   Profile.fromJson(Map<String, dynamic> json)
       : account = Account.fromJson(json['account']),
         type = ProfileType.fromName(json['userType']),
-        durationAllowed = json['durationAllowed'];
+        durationAllowed = _convertSecondsToMinutes(json['durationAllowed']),
+        durationUsed = _convertSecondsToMinutes(json['durationUsed']);
 }
+int _convertSecondsToMinutes(int seconds) => -1 == seconds ? -1 : Duration(seconds: seconds).inMinutes;

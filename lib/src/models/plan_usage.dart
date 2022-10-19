@@ -1,21 +1,25 @@
 import 'package:intl/intl.dart';
 
-DateTime? _parseDate(String? inputDate) =>
-    null == inputDate ? null : DateFormat('yyyy-MM-dd\'T\'HH:mm:ssZ').parse(inputDate);
+DateTime? _parseDate(String? inputDate) {
+  if (null == inputDate) {
+    return null;
+  } else {
+    DateTime date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ssZ').parse(inputDate);
+    return date.add(date.timeZoneOffset);
+  }
+}
 
 class PlanUsageBreakdown {
-  String? firstName;
-  int? userId;
-  String? userType;
-  int? minutesUsed;
+  String firstName; //*
+  int userId;
+  String userType; //*
+  int minutesUsed; //*
   int? siteMinutesUsed;
-  bool? isPaused;
-  bool? paused;
+  bool isPaused; //*
 
   PlanUsageBreakdown.fromJson(Map<String, dynamic> json)
       : isPaused = json['isPaused'],
         minutesUsed = json['minutesUsed'],
-        paused = json['paused'],
         siteMinutesUsed = json['siteMinutesUsed'],
         userId = json['userId'],
         userType = json['userType'],
@@ -66,7 +70,7 @@ class PlanUsage {
   bool? primary;
   bool? planUnlimited; //*
 
-  List<PlanUsageBreakdown>? planUsageBreakdownList;
+  List<PlanUsageBreakdown>? planUsageBreakdownList; //*
   List<PlanMinuteBreakdown>? planMinuteBreakdownList; //*
 
   PlanUsage.fromJson(Map<String, dynamic> json)

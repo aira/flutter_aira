@@ -458,8 +458,20 @@ class PlatformClient {
     return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
-      items: (response['requests'] as List<dynamic>).map((p) => CallSession.fromJson(p)).toList(growable: false),
+      items: (response['requests'] as List<dynamic>)
+          .where((json) => null != json['startTimeStamp'])
+          .where((json) => null != json['endTimeStamp'])
+          .map((p) => CallSession.fromJson(p))
+          .toList(growable: false),
     );
+  }
+
+  Future<bool> pauseSecondaryUser(int secondaryUserId, bool isPaused) async {
+    Map<String, dynamic> response = await _httpPut(
+      '/api/smartapp/sharing/pause/',
+      body: jsonEncode({'userId': secondaryUserId, 'pauseUser': isPaused}),
+    );
+    return response['pauseUser'];
   }
 
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
