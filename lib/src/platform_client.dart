@@ -441,11 +441,11 @@ class PlatformClient {
     );
   }
 
-  Future<PlanUsage> getUsage() async {
+  Future<Usage> getUsage() async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> response = await _httpGet('/api/smartapp/usage/$_userId/v3');
-    return PlanUsage.fromJson(response);
+    return Usage.fromJson(response);
   }
 
   Future<Paged<CallSession>> getCallHistory(int page) async {

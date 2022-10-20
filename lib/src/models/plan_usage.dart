@@ -26,26 +26,11 @@ class PlanUsageBreakdown {
         firstName = json['firstName'];
 }
 
-class PlanMinuteBreakdown {
-  int? allocated;
-  int? consumed;
-  String? usageType;
-  String? serviceType;
-  String? productType;
-
-  PlanMinuteBreakdown.fromJson(Map<String, dynamic> json)
-      : allocated = json['allocated'],
-        consumed = json['consumed'],
-        usageType = json['usageType'],
-        serviceType = json['serviceType'],
-        productType = json['productType'];
-}
-
-class PlanUsage {
+class Usage {
   String? planName; //*
   int? totalMinutes; //*
   int? totalMinutesLeft; //*
-  int? totalPrimaryMinutes;
+  int? totalPrimaryMinutes; //*
   int? totalPrimaryMinutesUsed;
   int? totalAccessMinutesUsed; //*
   int? totalProductMinutesUsed;
@@ -53,13 +38,13 @@ class PlanUsage {
   int? totalSiteMinutesUsed;
   int? totalMinutesUsed; //*
   int? totalMinutesRolledOver;
-  int? totalCreditMinutes;
+  int? totalCreditMinutes; //*
   int? totalCreditMinutesUsed;
   int? totalPrivateSiteMinutes;
   int? totalPrivateSiteMinutesUsed;
-  int? totalFixedMinutes;
+  int? totalFixedMinutes; //*
   int? totalFixedMinutesUsed;
-  int? billingCycleStart;
+  DateTime? billingCycleStart;
   DateTime? billingCycleEnd; //*
   String? billingCycleStartDate;
   String? billingCycleEndDate;
@@ -71,17 +56,15 @@ class PlanUsage {
   bool? planUnlimited; //*
 
   List<PlanUsageBreakdown>? planUsageBreakdownList; //*
-  List<PlanMinuteBreakdown>? planMinuteBreakdownList; //*
 
-  PlanUsage.fromJson(Map<String, dynamic> json)
+  Usage.fromJson(Map<String, dynamic> json)
       : billingCycleEnd = null == json['billingCycleEnd'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),
         billingCycleEndDate = json['billingCycleEndDate'],
-        billingCycleStart = json['billingCycleStart'],
+        billingCycleStart = null == json['billingCycleStart'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleStart']),
         billingCycleStartDate = json['billingCycleStartDate'],
         canModifyPlan = json['canModifyPlan'],
         canPurchaseMinutes = json['canPurchaseMinutes'],
         hasFreeCall = json['hasFreeCall'],
-        planMinuteBreakdownList = (json['minuteBreakdown'] as List<dynamic>).map((e) => PlanMinuteBreakdown.fromJson(e)).toList(growable: false),
         planName = json['planName'],
         planUnlimited = json['planUnlimited'],
         planUsageBreakdownList = (json['usageBreakdown'] as List<dynamic>).map((e) => PlanUsageBreakdown.fromJson(e)).toList(growable: false),
