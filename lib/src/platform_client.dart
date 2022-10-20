@@ -433,6 +433,26 @@ class PlatformClient {
         body: jsonEncode({'userId': _userId, 'photoIds': ids}),
       );
 
+  /// Registers the device's push token so that it can receive push notifications.
+  ///
+  /// `token` is the Base64-encoded Apple Push Notification service (APNs) device token on iOS or the Firebase Cloud
+  /// Messaging (FCM) registration token on Android. It can be obtained using the
+  /// [`plain_notification_token`](https://pub.dev/packages/plain_notification_token) package.
+  Future<void> registerPushToken(String token) async {
+    _verifyIsLoggedIn();
+
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+      throw UnsupportedError('Unsupported platform');
+    }
+
+    String body = jsonEncode({
+      'token': token,
+      'type': Platform.isAndroid ? 'ANDROID' : 'IOS',
+    });
+
+    await _httpPost('/api/smartapp/token', body);
+  }
+
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
     try {
