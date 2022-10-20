@@ -31,7 +31,7 @@ class Feedback {
   Feedback.fromJson(Map<String, dynamic> json)
       : comment = json['comment'],
         rating = Rating.fromValue(json['rating']) {
-    List<dynamic> newTags = json['tags'];
+    List<dynamic> newTags = json['tags'] ?? [];
     tags.addAll(newTags.cast<String>().toList(growable: false));
   }
 
@@ -51,8 +51,8 @@ class AgentFeedback extends Feedback {
   AgentFeedback(): super();
 
   AgentFeedback.fromJson(Map<String, dynamic> json)
-      : requestReview = json['requestReview'],
-        shareKudos = json['shareKudos'],
+      : requestReview = json['requestReview'] ?? false,
+        shareKudos = json['shareKudos'] ?? false,
         super.fromJson(json);
 
   @override

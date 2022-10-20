@@ -1,6 +1,6 @@
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/account.dart' show Account, AccountType;
-export 'src/models/call_history.dart' show CallSession;
+export 'src/models/call_history.dart' show CallSession, SessionFeedback;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;
