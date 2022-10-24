@@ -10,62 +10,46 @@ DateTime? _parseDate(String? inputDate) {
 }
 
 class PlanUsageBreakdown {
-  String firstName; //*
-  bool isPaused; //*
-  String? lastName; //*
-  int minutesUsed; //*
-  int? siteMinutesUsed;
+  String firstName;
+  bool isPaused;
+  String? lastName;
+  int minutesUsed;
   int userId;
-  String userType; //*
+  String userType;
 
   PlanUsageBreakdown.fromJson(Map<String, dynamic> json)
       : firstName = json['firstName'],
         isPaused = json['isPaused'],
         lastName = json['lastName'],
         minutesUsed = json['minutesUsed'],
-        siteMinutesUsed = json['siteMinutesUsed'],
         userId = json['userId'],
         userType = json['userType'];
 }
 
 class Usage {
-  String? planName; //*
-  int? totalMinutes; //*
-  int? totalMinutesLeft; //*
-  int? totalPrimaryMinutes; //*
+  String? planName;
+  int? totalMinutes;
+  int? totalMinutesLeft;
+  int? totalPrimaryMinutes;
   int? totalPrimaryMinutesUsed;
-  int? totalAccessMinutesUsed; //*
-  int? totalProductMinutesUsed;
-  int? totalPromotionMinutesUsed;
-  int? totalSiteMinutesUsed;
-  int? totalMinutesUsed; //*
-  int? totalMinutesRolledOver;
-  int? totalCreditMinutes; //*
+  int? totalAccessMinutesUsed;
+  int? totalMinutesUsed;
+  int? totalCreditMinutes;
   int? totalCreditMinutesUsed;
-  int? totalPrivateSiteMinutes;
-  int? totalPrivateSiteMinutesUsed;
-  int? totalFixedMinutes; //*
+  int? totalFixedMinutes;
   int? totalFixedMinutesUsed;
   DateTime? billingCycleStart;
-  DateTime? billingCycleEnd; //*
-  String? billingCycleStartDate;
-  String? billingCycleEndDate;
-  bool? canPurchaseMinutes;
-  bool? canModifyPlan;
-  bool? hasFreeCall; //*
-  DateTime? timeUntilNextFreeCall; //*
+  DateTime? billingCycleEnd;
+  bool? hasFreeCall;
+  DateTime? timeUntilNextFreeCall;
   bool primary;
-  bool? planUnlimited; //*
+  bool? planUnlimited;
 
-  List<PlanUsageBreakdown>? planUsageBreakdownList; //*
+  List<PlanUsageBreakdown>? planUsageBreakdownList;
 
   Usage.fromJson(Map<String, dynamic> json)
       : billingCycleEnd = null == json['billingCycleEnd'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),
-        billingCycleEndDate = json['billingCycleEndDate'],
         billingCycleStart = null == json['billingCycleStart'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleStart']),
-        billingCycleStartDate = json['billingCycleStartDate'],
-        canModifyPlan = json['canModifyPlan'],
-        canPurchaseMinutes = json['canPurchaseMinutes'],
         hasFreeCall = json['hasFreeCall'],
         planName = json['planName'],
         planUnlimited = json['planUnlimited'],
@@ -79,13 +63,7 @@ class Usage {
         totalFixedMinutesUsed = json['totalFixedMinutesUsed'],
         totalMinutes = json['totalMinutes'],
         totalMinutesLeft = json['totalMinutesLeft'],
-        totalMinutesRolledOver = json['totalMinutesRolledOver'],
         totalMinutesUsed = json['totalMinutesUsed'],
         totalPrimaryMinutes = json['totalPrimaryMinutes'],
-        totalPrimaryMinutesUsed = json['totalPrimaryMinutesUsed'],
-        totalPrivateSiteMinutes = json['totalPrivateSiteMinutes'],
-        totalPrivateSiteMinutesUsed = json['totalPrivateSiteMinutesUsed'],
-        totalProductMinutesUsed = json['totalProductMinutesUsed'],
-        totalPromotionMinutesUsed = json['totalPromotionMinutesUsed'],
-        totalSiteMinutesUsed = json['totalSiteMinutesUsed'];
+        totalPrimaryMinutesUsed = json['totalPrimaryMinutesUsed'];
 }

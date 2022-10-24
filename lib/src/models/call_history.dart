@@ -32,7 +32,6 @@ class CallSession {
   CallSession.fromJson(Map<String, dynamic> json)
       : agentId = json['agentId'],
         agentFirstName = json['agentfirstname'],
-        callCount = json['callCount'],
         cannotTalk = json['cannotTalk'],
         durationMinutes = json['durationMinutes'],
         endTimeStamp = _parseDate(json['endTimeStamp'])!,
@@ -47,18 +46,17 @@ class CallSession {
         userFeedback = null == json['userFeedback'] ? null : SessionFeedback.fromJson(json['userFeedback']);
 
   int? agentId;
-  String? agentFirstName; //*
-  int? callCount;
+  String? agentFirstName;
   bool cannotTalk;
-  int? durationMinutes; //*
-  DateTime endTimeStamp; //*
+  int? durationMinutes;
+  DateTime endTimeStamp;
   String? requestSource;
-  DateTime? requestTimeStamp; //*
+  DateTime? requestTimeStamp;
   String requestType;
-  int? serviceId; //*
-  DateTime startTimeStamp; //*
+  int? serviceId;
+  DateTime startTimeStamp;
   String status;
   String? userFirstname;
   int userId;
-  SessionFeedback? userFeedback; //*
+  SessionFeedback? userFeedback;
 }
