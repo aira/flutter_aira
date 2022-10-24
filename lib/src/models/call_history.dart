@@ -12,12 +12,12 @@ DateTime? _parseDate(String? dateToParse) {
 class SessionFeedback {
   SessionFeedback.fromJson(Map<String, dynamic> json)
       : id = json['id'],
-  userId = json['userId'],
-  submittedBy = json['submittedBy'],
-  serviceId = json['serviceId'],
-  comment = json['comment'],
-  stars = json['stars'],
-  taskSuccess = json['taskSuccess'];
+        userId = json['userId'],
+        submittedBy = json['submittedBy'],
+        serviceId = json['serviceId'],
+        comment = json['comment'],
+        stars = json['stars'],
+        taskSuccess = json['taskSuccess'];
 
   int id;
   int userId;

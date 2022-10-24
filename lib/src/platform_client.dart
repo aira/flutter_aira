@@ -13,7 +13,7 @@ import 'package:flutter_aira/src/models/paged.dart';
 import 'package:flutter_aira/src/models/photo.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
-import 'package:flutter_aira/src/models/plan_usage.dart';
+import 'package:flutter_aira/src/models/usage.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';

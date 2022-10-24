@@ -11,19 +11,21 @@ DateTime? _parseDate(String? inputDate) {
 
 class PlanUsageBreakdown {
   String firstName; //*
-  int userId;
-  String userType; //*
+  bool isPaused; //*
+  String? lastName; //*
   int minutesUsed; //*
   int? siteMinutesUsed;
-  bool isPaused; //*
+  int userId;
+  String userType; //*
 
   PlanUsageBreakdown.fromJson(Map<String, dynamic> json)
-      : isPaused = json['isPaused'],
+      : firstName = json['firstName'],
+        isPaused = json['isPaused'],
+        lastName = json['lastName'],
         minutesUsed = json['minutesUsed'],
         siteMinutesUsed = json['siteMinutesUsed'],
         userId = json['userId'],
-        userType = json['userType'],
-        firstName = json['firstName'];
+        userType = json['userType'];
 }
 
 class Usage {
@@ -52,7 +54,7 @@ class Usage {
   bool? canModifyPlan;
   bool? hasFreeCall; //*
   DateTime? timeUntilNextFreeCall; //*
-  bool? primary;
+  bool primary;
   bool? planUnlimited; //*
 
   List<PlanUsageBreakdown>? planUsageBreakdownList; //*

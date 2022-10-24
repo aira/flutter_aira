@@ -13,7 +13,7 @@ export 'src/models/service_request.dart' show ServiceRequest, ServiceRequestStat
 export 'src/models/session.dart' show Session;
 export 'src/models/track.dart' show Track;
 export 'src/models/user.dart' show User;
-export 'src/models/plan_usage.dart' show Usage, PlanUsageBreakdown;
+export 'src/models/usage.dart' show Usage, PlanUsageBreakdown;
 export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'
     show PlatformLocalizedException, PlatformInvalidTokenException, PlatformUnknownException;
