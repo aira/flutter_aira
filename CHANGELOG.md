@@ -6,7 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- `PlatformClient.getCallHistory`, `PlatformClient.getUsage` and
+  `PlatformClient.pauseSecondaryUser`(#49).
 - `PlatformClient.registerPushToken` (#50).
+
+### Changed
+- **BREAKING:** `PlatformClient.getSharedPhotos` now returns a `Paged<Photo>` instead of a
+  `PhotosPage` (#49).
+- **BREAKING:** `PlatformClient.saveFeedback` now accepts a single `SessionFeedback` instead of
+  individual `Feedback` objects (#49).
+
+### Removed
+- **BREAKING:** `PhotosPage` (#49).
 
 ## [0.0.26] - 2022-09-27
 ### Added
