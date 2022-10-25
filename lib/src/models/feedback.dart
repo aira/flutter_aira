@@ -1,28 +1,39 @@
 enum Rating {
-  positive,
-  neutral,
-  negative,
-}
+  positive(1),
+  neutral(0),
+  negative(-1);
 
-extension RatingExtension on Rating {
-  get name => toString().split('.').last;
+  final int _value;
+  const Rating(this._value);
 
-  int get value {
-    switch (this) {
-      case Rating.positive:
-        return 1;
-      case Rating.negative:
-        return -1;
-      default:
-        return 0;
+  int get value => _value;
+  static Rating? fromValue(int? value) {
+    if (null == value) {
+      return null;
     }
+    switch(value) {
+      case 1: return positive;
+      case 0: return neutral;
+      case -1: return negative;
+    }
+    throw 'Unsupported Rating value: $value';
   }
+  String get name => toString().split('.').last;
 }
 
 class Feedback {
   String? comment;
   Rating? rating;
   final Set<String> tags = {};
+
+  Feedback();
+
+  Feedback.fromJson(Map<String, dynamic> json)
+      : comment = json['comment'],
+        rating = Rating.fromValue(json['rating']) {
+    List<dynamic> newTags = json['tags'] ?? [];
+    tags.addAll(newTags.cast<String>().toList(growable: false));
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -34,14 +45,18 @@ class Feedback {
 }
 
 class AgentFeedback extends Feedback {
-  bool requestReview = false;
   bool shareKudos = false;
+
+  AgentFeedback(): super();
+
+  AgentFeedback.fromJson(Map<String, dynamic> json)
+      : shareKudos = json['shareKudos'] ?? false,
+        super.fromJson(json);
 
   @override
   Map<String, dynamic> toJson() {
     return {
       ...super.toJson(),
-      'requestReview': requestReview,
       'shareKudos': shareKudos,
     };
   }

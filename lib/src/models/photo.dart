@@ -38,15 +38,3 @@ class Photo {
   /// Creation Date.
   final DateTime createdDate;
 }
-
-class PhotosPage {
-  PhotosPage({
-    required this.page,
-    required this.hasMore,
-    required this.photos,
-  });
-
-  final int page;
-  final bool hasMore;
-  final List<Photo> photos;
-}

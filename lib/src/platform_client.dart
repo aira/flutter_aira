@@ -7,23 +7,15 @@ import 'dart:typed_data';
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/photo.dart';
-import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'models/credentials.dart';
-import 'models/feedback.dart';
 import 'models/participant.dart';
 import 'models/profile.dart';
-import 'models/service_request.dart';
-import 'models/session.dart';
-import 'models/track.dart';
-import 'models/user.dart';
-import 'platform_exceptions.dart';
 import 'room.dart';
 
 /// The Platform client.
@@ -351,18 +343,22 @@ class PlatformClient {
   }
 
   /// Saves feedback for a service request.
-  Future<void> saveFeedback(int serviceRequestId,
-      {AgentFeedback? agentFeedback, Feedback? appFeedback, Feedback? offerFeedback}) async {
+  Future<void> saveFeedback(SessionFeedback feedback) async {
     _verifyIsLoggedIn();
 
+    Map<String, dynamic>? agentFeedback = feedback.agentFeedback?.toJson();
+    agentFeedback?['requestReview'] = feedback.requestReview;
     String body = jsonEncode({
-      'serviceId': serviceRequestId,
+      'serviceId': feedback.serviceId,
       'comment': jsonEncode({
         'schemaVersion': 2,
-        'agent': agentFeedback?.toJson(),
-        'app': appFeedback?.toJson(),
-        'offer': offerFeedback?.toJson(),
+        'agent': agentFeedback,
+        'app': feedback.appFeedback?.toJson(),
       }),
+      // This is to avoid the legacy logic to show non representative feedback data:
+      //   if none of the rating is negative, consider the call to be a success.
+      'taskSuccess':
+          Rating.negative != feedback.agentFeedback?.rating && Rating.negative != feedback.appFeedback?.rating,
     });
 
     await _httpPost('/api/smartapp/feedback', body);
@@ -415,23 +411,61 @@ class PlatformClient {
   /// Retrieves a page of photos shared with the user.
   ///
   /// A page can contain up to 25 photos. If there are more photos available, [PhotosPage.hasMore] will be `true`.
-  Future<PhotosPage> getSharedPhotos(int page) async {
+  Future<Paged<Photo>> getSharedPhotos(int page) async {
+    _verifyIsLoggedIn();
+
     Map<String, dynamic> response = await _httpGet(
       '/api/smartapp/photos/$_userId',
       queryParameters: {'page': page.toString()},
     );
-    return PhotosPage(
+    return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
-      photos: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
+      items: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
     );
   }
 
   /// Deletes the photos with the specified IDs.
-  Future<void> deleteSharedPhotos(List<int> ids) => _httpDelete(
-        '/api/smartapp/photos',
-        body: jsonEncode({'userId': _userId, 'photoIds': ids}),
-      );
+  Future<void> deleteSharedPhotos(List<int> ids) {
+    _verifyIsLoggedIn();
+    return _httpDelete(
+      '/api/smartapp/photos',
+      body: jsonEncode({'userId': _userId, 'photoIds': ids}),
+    );
+  }
+
+  Future<Usage> getUsage() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet('/api/smartapp/usage/$_userId/v3');
+    return Usage.fromJson(response);
+  }
+
+  Future<Paged<CallSession>> getCallHistory(int page) async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet(
+      '/api/user/service/history/bu',
+      queryParameters: {'pg': page.toString(), 'userId': _userId.toString()},
+    );
+    return Paged(
+      page: page,
+      hasMore: response['response']['hasMore'],
+      items: (response['requests'] as List<dynamic>)
+          .where((json) => null != json['startTimeStamp'])
+          .where((json) => null != json['endTimeStamp'])
+          .map((p) => CallSession.fromJson(p))
+          .toList(growable: false),
+    );
+  }
+
+  Future<bool> pauseSecondaryUser(int secondaryUserId, bool isPaused) async {
+    Map<String, dynamic> response = await _httpPut(
+      '/api/smartapp/sharing/pause/',
+      body: jsonEncode({'userId': secondaryUserId, 'pauseUser': isPaused}),
+    );
+    return response['pauseUser'];
+  }
 
   /// Registers the device's push token so that it can receive push notifications.
   ///
