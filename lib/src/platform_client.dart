@@ -7,26 +7,15 @@ import 'dart:typed_data';
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/call_history.dart';
-import 'package:flutter_aira/src/models/paged.dart';
-import 'package:flutter_aira/src/models/photo.dart';
-import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
-import 'package:flutter_aira/src/models/usage.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'models/credentials.dart';
-import 'models/feedback.dart';
 import 'models/participant.dart';
 import 'models/profile.dart';
-import 'models/service_request.dart';
-import 'models/session.dart';
-import 'models/track.dart';
-import 'models/user.dart';
-import 'platform_exceptions.dart';
 import 'room.dart';
 
 /// The Platform client.
@@ -354,18 +343,22 @@ class PlatformClient {
   }
 
   /// Saves feedback for a service request.
-  Future<void> saveFeedback(int serviceRequestId,
-      {AgentFeedback? agentFeedback, Feedback? appFeedback, Feedback? offerFeedback}) async {
+  Future<void> saveFeedback(SessionFeedback feedback) async {
     _verifyIsLoggedIn();
 
+    Map<String, dynamic>? agentFeedback = feedback.agentFeedback?.toJson();
+    agentFeedback?['requestReview'] = feedback.requestReview;
     String body = jsonEncode({
-      'serviceId': serviceRequestId,
+      'serviceId': feedback.serviceId,
       'comment': jsonEncode({
         'schemaVersion': 2,
-        'agent': agentFeedback?.toJson(),
-        'app': appFeedback?.toJson(),
-        'offer': offerFeedback?.toJson(),
+        'agent': agentFeedback,
+        'app': feedback.appFeedback?.toJson(),
       }),
+      // This is to avoid the legacy logic to show non representative feedback data:
+      //   if none of the rating is negative, consider the call to be a success.
+      'taskSuccess':
+          Rating.negative != feedback.agentFeedback?.rating && Rating.negative != feedback.appFeedback?.rating,
     });
 
     await _httpPost('/api/smartapp/feedback', body);

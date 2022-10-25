@@ -45,21 +45,18 @@ class Feedback {
 }
 
 class AgentFeedback extends Feedback {
-  bool requestReview = false;
   bool shareKudos = false;
 
   AgentFeedback(): super();
 
   AgentFeedback.fromJson(Map<String, dynamic> json)
-      : requestReview = json['requestReview'] ?? false,
-        shareKudos = json['shareKudos'] ?? false,
+      : shareKudos = json['shareKudos'] ?? false,
         super.fromJson(json);
 
   @override
   Map<String, dynamic> toJson() {
     return {
       ...super.toJson(),
-      'requestReview': requestReview,
       'shareKudos': shareKudos,
     };
   }
