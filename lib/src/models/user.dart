@@ -19,18 +19,20 @@ enum LanguageType {
 
 class User {
   final int id;
+  final String? email;
   final String firstName;
   final List<Language> languages;
   final String lastName;
+  final String? phoneNumber;
   final List<Profile> profiles;
-  final bool isGuest;
 
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
+        email = json['email'],
         firstName = json['firstName'],
         languages =
             (json['language'] ?? [] as List<String>).map((v) => LanguageType.fromString(v)).toList(growable: false),
         lastName = json['lastName'] ?? '',
-        isGuest = json['guest'] ?? true, // This information comes from table `user_property_value` and defaults to true in platform (see SubscriptionManager.isGuestSafe(userId))
+        phoneNumber = json['phoneNumber'],
         profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
 }

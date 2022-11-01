@@ -41,26 +41,33 @@ class PlanUsageBreakdown {
 
 /// Contains main information about usage.
 class Usage {
+
+  /// End date of a billing cycle.
+  DateTime? billingCycleEnd;
+
+  /// Start date of a billing cycle.
+  DateTime? billingCycleStart;
+
+  /// Indicator if the Explorer has access to a 5 min free call.
+  bool? hasFreeCall;
+
   /// Name of the plan.
   String? planName;
 
-  /// Total available minutes in the plan.
-  int? totalMinutes;
+  /// Indicates if the plan is unlimited.
+  bool? planUnlimited;
 
-  /// Total of used minutes in the plan.
-  int? totalMinutesLeft;
+  /// Indicates if the User is Primary.
+  bool primary;
 
-  /// Total amount of primary minutes in the plan. These primary minutes are personal minutes.
-  int? totalPrimaryMinutes;
+  /// Breakdown of the usage by Primary and Secondary users.
+  List<PlanUsageBreakdown>? planUsageBreakdownList;
 
-  /// Total amount of used primary minutes in the plan.
-  int? totalPrimaryMinutesUsed;
+  /// Delay before next free 5 min call.
+  DateTime? timeUntilNextFreeCall;
 
   /// Total amount of free access minutes used.
   int? totalAccessMinutesUsed;
-
-  /// Grand total of minutes used.
-  int? totalMinutesUsed;
 
   /// Total of credited minutes.
   int? totalCreditMinutes;
@@ -74,26 +81,20 @@ class Usage {
   /// Total amount of used add-on minutes.
   int? totalFixedMinutesUsed;
 
-  /// Start date of a billing cycle.
-  DateTime? billingCycleStart;
+  /// Total available minutes in the plan.
+  int? totalMinutes;
 
-  /// End date of a billing cycle.
-  DateTime? billingCycleEnd;
+  /// Total of used minutes in the plan.
+  int? totalMinutesLeft;
 
-  /// Indicator if the Explorer has access to a 5 min free call.
-  bool? hasFreeCall;
+  /// Grand total of minutes used.
+  int? totalMinutesUsed;
 
-  /// Delay before next free 5 min call.
-  DateTime? timeUntilNextFreeCall;
+  /// Total amount of primary minutes in the plan. These primary minutes are personal minutes.
+  int? totalPrimaryMinutes;
 
-  /// Indicates if the User is Primary.
-  bool primary;
-
-  /// Indicates if the plan is unlimited.
-  bool? planUnlimited;
-
-  /// Breakdown of the usage by Primary and Secondary users.
-  List<PlanUsageBreakdown>? planUsageBreakdownList;
+  /// Total amount of used primary minutes in the plan.
+  int? totalPrimaryMinutesUsed;
 
   Usage.fromJson(Map<String, dynamic> json)
       : billingCycleEnd = null == json['billingCycleEnd'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),

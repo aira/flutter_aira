@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.28] - 2022-11-01
+### Added
+- `User.email` and `User.phoneNumber` (#52).
+
 ### [0.0.27] - 2022-10-25
 ### Added
 - `PlatformClient.getCallHistory`, `PlatformClient.getUsage` and
