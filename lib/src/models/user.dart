@@ -14,6 +14,7 @@ enum LanguageType {
       default: throw UnimplementedError('Unsupported language: $value');
     }
   }
+  String get name => toString().split('.').last;
 }
 
 class User {
