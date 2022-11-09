@@ -6,10 +6,17 @@ enum Language {
   English,
   French,
   Spanish,
-}
+  ;
 
-extension LanguageExtension on Language {
-  get name => toString().split('.').last;
+  static Language fromString(String value) {
+    switch (value.toUpperCase()) {
+      case 'ENGLISH': return Language.English;
+      case 'FRENCH': return Language.French;
+      case 'SPANISH': return Language.Spanish;
+      default: throw UnimplementedError('Unsupported language: $value');
+    }
+  }
+  String get name => toString().split('.').last;
 }
 
 enum ProfileType {
@@ -42,4 +49,5 @@ class Profile {
         durationAllowed = _convertSecondsToMinutes(json['durationAllowed']),
         durationUsed = _convertSecondsToMinutes(json['durationUsed']);
 }
+
 int _convertSecondsToMinutes(int seconds) => -1 == seconds ? -1 : Duration(seconds: seconds).inMinutes;

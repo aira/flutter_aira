@@ -12,7 +12,7 @@ export 'src/models/profile.dart' show Language, Profile, ProfileType;
 export 'src/models/service_request.dart' show ServiceRequest, ServiceRequestState;
 export 'src/models/session.dart' show Session;
 export 'src/models/track.dart' show Track;
-export 'src/models/user.dart' show User, LanguageType;
+export 'src/models/user.dart' show User;
 export 'src/models/usage.dart' show Usage, PlanUsageBreakdown;
 export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'

@@ -1,22 +1,5 @@
 import 'profile.dart';
 
-enum LanguageType {
-  english,
-  french,
-  spanish,
-  ;
-
-  static LanguageType fromString(String value) {
-    switch (value.toUpperCase()) {
-      case 'ENGLISH': return LanguageType.english;
-      case 'FRENCH': return LanguageType.french;
-      case 'SPANISH': return LanguageType.spanish;
-      default: throw UnimplementedError('Unsupported language: $value');
-    }
-  }
-  String get name => toString().split('.').last;
-}
-
 class User {
   final int id;
   final String? email;
@@ -26,13 +9,42 @@ class User {
   final String? phoneNumber;
   final List<Profile> profiles;
 
+  User({
+    required this.id,
+    this.email,
+    required this.firstName,
+    required this.languages,
+    required this.lastName,
+    this.phoneNumber,
+    required this.profiles,
+  });
+
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         email = json['email'],
-        firstName = json['firstName'],
-        languages =
-            (json['language'] ?? [] as List<String>).map((v) => LanguageType.fromString(v)).toList(growable: false),
+        firstName = json['firstName'] ?? '',
+        languages = (json['language'] ?? [] as List<String>).map((v) => Language.fromString(v)).cast<Language>().toList(),
         lastName = json['lastName'] ?? '',
         phoneNumber = json['phoneNumber'],
         profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
+
+  /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
+  User cloneWith({
+    int? id,
+    String? email,
+    String? firstName,
+    List<Language>? languages,
+    String? lastName,
+    String? phoneNumber,
+    List<Profile>? profiles,
+  }) =>
+      User(
+        id: id ?? this.id,
+        email: email ?? this.email,
+        firstName: firstName ?? this.firstName,
+        languages: languages ?? this.languages,
+        lastName: lastName ?? this.lastName,
+        phoneNumber: phoneNumber ?? this.phoneNumber,
+        profiles: profiles ?? this.profiles,
+      );
 }
