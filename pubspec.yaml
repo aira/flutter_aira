@@ -3,6 +3,8 @@ description: The Aira Flutter SDK.
 version: 0.0.28
 homepage: https://github.com/aira-collab/flutter_aira
 
+publish_to: none
+
 environment:
   flutter: ">=3.0.0"
   sdk: ">=2.17.0 <3.0.0"
@@ -12,7 +14,10 @@ dependencies:
   device_info_plus: ^4.0.2
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.9.6
+  flutter_webrtc:
+    git:
+      url: git@github.com:aira/flutter-webrtc.git
+      ref: fix/setSpeakerphoneOn
   http: ^0.13.4
   intl: ^0.17.0
   logging: ^1.0.2

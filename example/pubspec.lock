@@ -91,7 +91,7 @@ packages:
       name: dart_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.8"
+    version: "1.0.11"
   device_info_plus:
     dependency: transitive
     description:
@@ -201,10 +201,12 @@ packages:
   flutter_webrtc:
     dependency: "direct main"
     description:
-      name: flutter_webrtc
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.9.6"
+      path: "."
+      ref: "fix/setSpeakerphoneOn"
+      resolved-ref: "1e7910f1e8ef425867161a7d45118f13ff5c06c5"
+      url: "git@github.com:aira/flutter-webrtc.git"
+    source: git
+    version: "0.9.16"
   form_data:
     dependency: transitive
     description:
@@ -503,7 +505,7 @@ packages:
       name: webrtc_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.8"
+    version: "1.0.10"
   win32:
     dependency: transitive
     description:
