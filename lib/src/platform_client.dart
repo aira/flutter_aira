@@ -15,7 +15,6 @@ import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/participant.dart';
-import 'models/profile.dart';
 import 'room.dart';
 
 /// The Platform client.
@@ -368,35 +367,31 @@ class PlatformClient {
   Future<void> uploadPhoto(int serviceRequestId, ByteBuffer photo) async {
     _verifyIsLoggedIn();
 
-    try {
-      Uri uri = Uri.https(_platformHost, '/api/files/upload');
-      int traceId = _nextTraceId();
-      Map<String, String> headers = await _getHeaders(traceId);
+    Uri uri = Uri.https(_platformHost, '/api/files/upload');
+    int traceId = _nextTraceId();
+    Map<String, String> headers = await _getHeaders(traceId);
 
-      Map<String, String> fields = {
-        'category': 'sr_trigger',
-        'entityid': _userId.toString(),
-        'entitytype': 'user',
-        'serviceid': serviceRequestId.toString(),
-      };
-      http.MultipartFile file = http.MultipartFile.fromBytes(
-        'file',
-        photo.asUint8List(),
-        filename: 'photo', // Unused but required.
-      );
+    Map<String, String> fields = {
+      'category': 'sr_trigger',
+      'entityid': _userId.toString(),
+      'entitytype': 'user',
+      'serviceid': serviceRequestId.toString(),
+    };
+    http.MultipartFile file = http.MultipartFile.fromBytes(
+      'file',
+      photo.asUint8List(),
+      filename: 'photo', // Unused but required.
+    );
 
-      _log.finest('trace_id=$traceId method=POST uri=$uri fields=$fields');
+    _log.finest('trace_id=$traceId method=POST uri=$uri fields=$fields');
 
-      http.MultipartRequest request = http.MultipartRequest('POST', uri)
-        ..fields.addAll(fields)
-        ..files.add(file)
-        ..headers.addAll(headers);
+    http.MultipartRequest request = http.MultipartRequest('POST', uri)
+      ..fields.addAll(fields)
+      ..files.add(file)
+      ..headers.addAll(headers);
 
-      http.StreamedResponse response = await _httpClient.send(request);
-      _parseResponse(response.statusCode, await response.stream.bytesToString());
-    } on SocketException catch (e) {
-      throw PlatformUnknownException(e.message);
-    }
+    http.StreamedResponse response = await _httpClient.send(request);
+    _parseResponse(response.statusCode, await response.stream.bytesToString());
   }
 
   /// Returns the logged-in [User].
@@ -406,6 +401,55 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
 
     return User.fromJson(response);
+  }
+
+  /// Used to update the [firstName] or [lastName] or both of a user.
+  Future<void> updateName(String firstName, String lastName) async {
+    await Future.wait([
+      _updatePropertyValue('firstName', [firstName]),
+      _updatePropertyValue('lastName', [lastName]),
+    ]);
+  }
+
+  /// Used to update the preferred languages of a user.
+  Future<void> updatePreferredLanguages(List<Language> languages) async {
+    await Future.wait([
+      _updatePropertyValue('preferredLang', languages.map((l) => l.name).toList(growable: false)),
+    ]);
+  }
+
+  Future<Map<String, dynamic>> _updatePropertyValue(String propertyName, List<String> propertyValues) async =>
+    _httpPut(
+      '/api/user/$_userId/property/$propertyName/value',
+      body: jsonEncode(propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false)),
+    );
+
+  /// Used to start the process to update and verify a user's [email] address.
+  /// This process is completed by visiting a verification link sent to [email].
+  /// There is no way to get a instantaneous confirmation of the success of the update.
+  Future<void> verifyEmailUpdate(String email) async {
+    await _httpPut(
+      '/api/user/$_userId/email',
+      body: jsonEncode({'email': email}),
+    );
+  }
+
+  /// Used to start the process to update and verify a user's phone number.
+  /// The Explorer will get a code sent through SMS at [phoneNumber] and the user will have to send this code through
+  /// [confirmPhoneNumberUpdate] to complete the phoneNumber update.
+  Future<void> verifyPhoneNumberUpdate(String countryIsoCode, String fullPhoneNumber) async {
+    await _httpPost(
+      '/api/user/$_userId/verify',
+      jsonEncode({'phoneNumber': fullPhoneNumber, 'countryCode': countryIsoCode, 'eventType': 'RESET'}),
+    );
+  }
+
+  /// Confirms the phone number change by sending the received SMS Code back to the backend.
+  Future<void> confirmPhoneNumberUpdate(String fullPhoneNumber, String smsCode) async {
+    await _httpPost(
+      '/api/user/$_userId/verify/confirm',
+      jsonEncode({'authCode': smsCode, 'phoneNumber': fullPhoneNumber, 'eventType': 'RESET'}),
+    );
   }
 
   /// Retrieves a page of photos shared with the user.
