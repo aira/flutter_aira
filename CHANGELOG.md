@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.30] - 2022-11-17
+### Added
+- `User.languages` and `User.cloneWith` (#54)
+- `PlatformClient.updateName`, `PlatformClient.updatePreferredLanguages`,
+  `PlatformClient.verifyEmailUpdate`, `PlatformClient.verifyPhoneNumberUpdate` and
+  `PlatformClient.confirmPhoneNumberUpdate` (#54).
+
 ### [0.0.28] - 2022-11-01
 ### Added
 - `User.email` and `User.phoneNumber` (#52).
