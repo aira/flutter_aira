@@ -65,6 +65,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   User? _user;
   int? _accountId;
   Room? _room;
+  bool _isTorchOn = false;
 
   bool get _isMessagingEnabled =>
       _messagingSendKeyController.text.isNotEmpty && _messagingReceiveKeyController.text.isNotEmpty;
@@ -379,6 +380,17 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   @override
   Future<ByteBuffer> takePhoto() async {
     return _localStream!.getVideoTracks()[0].captureFrame();
+  }
+
+  @override
+  Future<void> toggleFlashlight() async {
+    if (kIsWeb) return Future.value(null);
+
+    MediaStream stream = _localStream!;
+    _isTorchOn = !_isTorchOn;
+    for (MediaStreamTrack track in stream.getVideoTracks()) {
+      await track.setTorch(_isTorchOn);
+    }
   }
 
   Future<void> _login() async {

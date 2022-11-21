@@ -24,6 +24,9 @@ abstract class RoomHandler {
 
   /// Takes a photo.
   Future<ByteBuffer> takePhoto();
+
+  /// Toggle on and off the flashlight (torch). This API doesn't check if it is running on WEB or mobile.
+  Future<void> toggleFlashlight();
 }
 
 abstract class Room implements Listenable {
@@ -357,7 +360,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   Future<void> _handleParticipantEventMessage(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
-    if (json['type'] == 'PHOTO') {
+    if (json['type'] == 'FLASHLIGHT') {
+      await _roomHandler.toggleFlashlight();
+    } else if (json['type'] == 'PHOTO') {
       if (_isVideoMuted) {
         _log.warning('cannot take photo when video is muted');
         return;
