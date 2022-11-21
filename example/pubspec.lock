@@ -202,8 +202,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "fix/setSpeakerphoneOn"
-      resolved-ref: "1e7910f1e8ef425867161a7d45118f13ff5c06c5"
+      ref: d3df2f8e047d90a57481e23dfdec5effbb907485
+      resolved-ref: d3df2f8e047d90a57481e23dfdec5effbb907485
       url: "git@github.com:aira/flutter-webrtc.git"
     source: git
     version: "0.9.16"
