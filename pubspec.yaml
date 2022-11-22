@@ -17,7 +17,7 @@ dependencies:
   flutter_webrtc:
     git:
       url: git@github.com:aira/flutter-webrtc.git
-      ref: d3df2f8e047d90a57481e23dfdec5effbb907485 # fix/setSpeakerphoneOn
+      ref: b8613e093474db035fa1f9e0ba3df42da1905c70 # fix/setSpeakerphoneOn
   http: ^0.13.4
   intl: ^0.17.0
   logging: ^1.0.2

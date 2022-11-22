@@ -202,8 +202,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: d3df2f8e047d90a57481e23dfdec5effbb907485
-      resolved-ref: d3df2f8e047d90a57481e23dfdec5effbb907485
+      ref: b8613e093474db035fa1f9e0ba3df42da1905c70
+      resolved-ref: b8613e093474db035fa1f9e0ba3df42da1905c70
       url: "git@github.com:aira/flutter-webrtc.git"
     source: git
     version: "0.9.16"
