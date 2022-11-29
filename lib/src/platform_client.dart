@@ -478,6 +478,7 @@ class PlatformClient {
     );
   }
 
+  /// Get Usage Information (Minutes used and available by profile, next free call availability, secondary users, etc.)
   Future<Usage> getUsage() async {
     _verifyIsLoggedIn();
 
@@ -485,6 +486,7 @@ class PlatformClient {
     return Usage.fromJson(response);
   }
 
+  /// Get information about all calls in history. These [CallSession] comes in batch of 25 by page.
   Future<Paged<CallSession>> getCallHistory(int page) async {
     _verifyIsLoggedIn();
 
@@ -503,6 +505,7 @@ class PlatformClient {
     );
   }
 
+  /// This function pauses or resumes minutes sharing with secondary users.
   Future<bool> pauseSecondaryUser(int secondaryUserId, bool isPaused) async {
     Map<String, dynamic> response = await _httpPut(
       '/api/smartapp/sharing/pause/',
@@ -720,9 +723,8 @@ class PlatformClient {
 enum PlatformEnvironment {
   dev,
   prod,
-}
+  ;
 
-extension PlatformEnvironmentExtension on PlatformEnvironment {
   get name => toString().split('.').last;
 }
 
