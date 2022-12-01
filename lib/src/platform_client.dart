@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'models/access_offer.dart';
 import 'models/participant.dart';
 import 'room.dart';
 
@@ -215,6 +216,7 @@ class PlatformClient {
     Map<String, List<int>>? fileMap,
     String? message,
     Position? position,
+    AccessOfferDetails? accessOffer,
   }) async {
     _verifyIsLoggedIn();
 
@@ -237,7 +239,51 @@ class PlatformClient {
       'message': preCallMessage,
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
+      if(null != accessOffer) 'accessOffer': {'access': {'id': accessOffer.id, 'class': accessOffer.type}},
     };
+
+    /*
+   {"agentid":0,
+      "hasMessage":false, <<<<<<
+      "access":{
+        "initiatedUserId":null,"serviceRequestId":null,
+        "access":{
+            "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,"id":38,"class":"promotion","renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
+            "account":{
+              "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
+            },
+            "activated":true
+          },
+          "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true},
+          "requestType":"AIRA", <<<<<<<
+          "transferUsername":null,
+          "latitude":33.08025856393743, <<<<<<
+          "requestSource":"IOSSMART", <<<<<<<<
+          "useWebrtcRoom":true, <<<<<<
+          "message":"", <<<<<<
+          "userid":0,
+          "accountId":null, <<<<<<<
+          "streamType":null,"agentUsername":null,"clientIP":null,
+          "accessOffer":{ <<<<<<
+            "initiatedUserId":null,"serviceRequestId":null,
+            "access":{ <<<<<<<
+              "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,
+              "id":38, <<<<<<
+              "class":"promotion", <<<<<<
+              "renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
+              "account":{
+                "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
+              },
+              "activated":true
+            },
+            "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true
+          },
+          "context":"{\"permissions\":{\"location\":\"authorizedWhenInUse\"}}",
+          "cannotTalk":false, <<<<<<
+          "action":"REQUEST","serviceid":0,"teamviewer":false,
+          "longitude":-117.29448238390808 <<<<<<
+       }
+     */
 
     if (position != null) {
       params['latitude'] = position.latitude;
@@ -513,6 +559,135 @@ class PlatformClient {
     );
     return response['pauseUser'];
   }
+
+  Future<Paged<AccessOfferDetails>> getAccessOfferSites(
+    int page, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    _verifyIsLoggedIn();
+
+    return _processAccessOfferResponse(await _httpGet(
+      '/api/access/site/search',
+      queryParameters: {
+        'lat': latitude.toString(),
+        'lng': longitude.toString(),
+        'limit': '20',
+        'pg': page.toString(),
+      },
+    ), page);
+  }
+
+  Future<Paged<AccessOfferDetails>> getAccessOfferPromotions(
+      int page, {
+        required double latitude,
+        required double longitude,
+      }) => _getAccessOffers('promotion', page, latitude: latitude, longitude: longitude);
+
+  Future<Paged<AccessOfferDetails>> getAccessOfferProducts(
+      int page, {
+        required double latitude,
+        required double longitude,
+      }) => _getAccessOffers('products', page, latitude: latitude, longitude: longitude);
+
+  Future<Paged<AccessOfferDetails>> _getAccessOffers(
+    String type,
+    int page, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    _verifyIsLoggedIn();
+
+    return _processAccessOfferResponse(await _httpGet(
+      '/api/user/$_userId/access/$type',
+      queryParameters: {
+        'lat': latitude.toString(),
+        'lng': longitude.toString(),
+        'limit': '25',
+        'pg': page.toString(),
+      },
+    ), page);
+  }
+
+  Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
+      int page, {
+        required double latitude,
+        required double longitude,
+        required String searchPattern,
+      }) async {
+    _verifyIsLoggedIn();
+
+    return _processAccessOfferResponse(await _httpGet(
+      '/api/access/site/search/v2',
+      queryParameters: {
+        'q': searchPattern,
+        'lat': latitude.toString(),
+        'lng': longitude.toString(),
+        'limit': '10',
+        'pg': page.toString(),
+      },
+    ), page);
+  }
+
+  Future<Paged<AccessOfferDetails>> searchAccessOfferPromotions(
+      int page, {
+        required String searchPattern,
+      }) => _searchAccessOffers('promotion', page, searchPattern: searchPattern);
+
+  Future<Paged<AccessOfferDetails>> searchAccessOfferProducts(
+      int page, {
+        required String searchPattern,
+      }) => _searchAccessOffers('product', page, searchPattern: searchPattern);
+
+  Future<Paged<AccessOfferDetails>> _searchAccessOffers(
+      String type,
+      int page, {
+        required String searchPattern,
+      }) async {
+    _verifyIsLoggedIn();
+
+    return _processAccessOfferResponse(await _httpGet(
+      '/api/access/$type/search',
+      queryParameters: {
+        'q': searchPattern,
+        'limit': '15',
+        'pg': page.toString(),
+      },
+    ), page);
+  }
+
+  Future<Paged<AccessOfferDetails>> getRecentlyUsedAccessOffers(int page) async {
+    _verifyIsLoggedIn();
+
+    return _processAccessOfferResponse(await _httpGet(
+      '/api/user/$_userId/access/recently-used',
+      queryParameters: {
+        'limit': '3',
+        'pg': page.toString(),
+      },
+    ), page);
+  }
+
+  Paged<AccessOfferDetails> _processAccessOfferResponse(Map<String, dynamic> response, int page) => Paged(
+        page: page,
+        hasMore: response['response']['hasMore'],
+        items: (response['payload'] as List<dynamic>)
+            .map((json) => AccessOfferDetails.fromJson(json))
+            .toList(growable: false),
+      );
+
+  // X uri: /api/access/site/search get locations close by.
+  // X uri: /api/user/6281/access/promotion get a list of promotions
+  // X uri: /api/user/6281/access/product get a list of products
+  // X uri: /api/access/site/search/v2 search through locations
+  // X uri: /api/access/promotion/search search through promotions
+  // X uri: /api/access/product/search search through promotions
+  // X uri: /api/user/6281/access/recently-used to get the list of recently used access offers
+
+  // uri: /api/user/6281/access/promotion/6/valid display promotion
+
+
+  // uri: /api/user/6256/access/default >>>> what is this?
 
   /// Registers the device's push token so that it can receive push notifications.
   ///
