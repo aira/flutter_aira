@@ -618,7 +618,7 @@ class PlatformClient {
     _verifyIsLoggedIn();
 
     return _processAccessOfferResponse(await _httpGet(
-      '/api/access/site/search/v2',
+      '/api/site/search/v2',
       queryParameters: {
         'q': searchPattern,
         'lat': latitude.toString(),
@@ -626,7 +626,7 @@ class PlatformClient {
         'limit': '10',
         'pg': page.toString(),
       },
-    ), page);
+    ), page, payloadTag: 'sites',);
   }
 
   Future<Paged<AccessOfferDetails>> searchAccessOfferPromotions(
@@ -668,10 +668,15 @@ class PlatformClient {
     ), page);
   }
 
-  Paged<AccessOfferDetails> _processAccessOfferResponse(Map<String, dynamic> response, int page) => Paged(
+  Paged<AccessOfferDetails> _processAccessOfferResponse(
+    Map<String, dynamic> response,
+    int page, {
+    String payloadTag = 'payload',
+  }) =>
+      Paged(
         page: page,
         hasMore: response['response']['hasMore'],
-        items: (response['payload'] as List<dynamic>)
+        items: (response[payloadTag] as List<dynamic>)
             .map((json) => AccessOfferDetails.fromJson(json))
             .toList(growable: false),
       );
@@ -679,7 +684,7 @@ class PlatformClient {
   // X uri: /api/access/site/search get locations close by.
   // X uri: /api/user/6281/access/promotion get a list of promotions
   // X uri: /api/user/6281/access/product get a list of products
-  // X uri: /api/access/site/search/v2 search through locations
+  // X uri: /api/site/search/v2 search through locations
   // X uri: /api/access/promotion/search search through promotions
   // X uri: /api/access/product/search search through promotions
   // X uri: /api/user/6281/access/recently-used to get the list of recently used access offers

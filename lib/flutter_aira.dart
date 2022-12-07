@@ -1,4 +1,5 @@
 export 'src/messaging_client.dart' show MessagingClient;
+export 'src/models/access_offer.dart' show AccessOfferDetails, AccountDetails, SiteAddress;
 export 'src/models/account.dart' show Account, AccountType;
 export 'src/models/call_history.dart' show CallSession, SessionFeedback;
 export 'src/models/credentials.dart' show Credentials;

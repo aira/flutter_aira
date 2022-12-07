@@ -1,8 +1,9 @@
 import 'package:flutter_aira/src/models/account.dart';
+import 'package:flutter_aira/src/models/convertion_extension.dart';
 
 class AccessOfferDetails {
   AccessOfferDetails.fromJson(Map<String, dynamic> json) :
-    account = AccountDetails.fromJson(json['account']),
+    account = null == json['account'] ? null : AccountDetails.fromJson(json['account']),
     activated = json['activated'],
     activatedEffectiveSeconds = json['activatedEffectiveSeconds'],
     availableToGuests = json['availableToGuests'],
@@ -11,8 +12,8 @@ class AccessOfferDetails {
     durationAllowed = json['durationAllowed'],
     durationPerCall = json['durationPerCall'],
     durationUsed = json['durationUsed'],
-    effectiveFrom = json['effectiveFrom'],
-    effectiveTo = json['effectiveTo'],
+    effectiveFrom = (json['effectiveFrom'] as String?)?.dateTimeZ,
+    effectiveTo = (json['effectiveTo'] as String?)?.dateTimeZ,
     enabled = json['enabled'],
     expired = json['expired'],
     id = json['id'],
@@ -20,7 +21,7 @@ class AccessOfferDetails {
     message = json['message'],
     name = json['name'],
     requireAgentApproval = json['requireAgentApproval'],
-    siteAddress = SiteAddress.fromJson(json['siteAddress']),
+    siteAddress = null == json['siteAddress'] ? null : SiteAddress.fromJson(json['siteAddress']),
     siteId = json['siteId'],
     sticky = json['sticky'],
     // tasks = json['tasks'],
@@ -53,7 +54,7 @@ class AccessOfferDetails {
   int? id;
   String? key;
   String? message;
-  String? name;
+  String name;
   bool? requireAgentApproval;
   SiteAddress? siteAddress;
   int? siteId;
@@ -102,7 +103,7 @@ class SiteAddress {
         city = json['city'],
         country = json['country'],
         county = json['county'],
-        latitudeLongitude = json['latitudeLongitude'] as List<double>,
+        latitudeLongitude = (json['latitudeLongitude'] as List<dynamic>).cast<double>().toList(growable: false),
         state = json['state'],
         zip = json['zip'];
 

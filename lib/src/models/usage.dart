@@ -1,13 +1,4 @@
-import 'package:intl/intl.dart';
-
-DateTime? _parseDate(String? inputDate) {
-  if (null == inputDate) {
-    return null;
-  } else {
-    DateTime date = DateFormat('yyyy-MM-dd\'T\'HH:mm:ssZ').parse(inputDate);
-    return date.add(date.timeZoneOffset);
-  }
-}
+import 'package:flutter_aira/src/models/convertion_extension.dart';
 
 /// Some plans are shared by primary Explorer to secondary Explorers.
 /// This Object contains details on who can use minutes within a Plan.
@@ -104,7 +95,7 @@ class Usage {
         planUnlimited = json['planUnlimited'],
         planUsageBreakdownList = (json['usageBreakdown'] as List<dynamic>).map((e) => PlanUsageBreakdown.fromJson(e)).toList(growable: false),
         primary = json['primary'],
-        timeUntilNextFreeCall = _parseDate(json['timeUntilNextFreeCall']),
+        timeUntilNextFreeCall = (json['timeUntilNextFreeCall'] as String?)?.dateTimeZ,
         totalAccessMinutesUsed = json['totalAccessMinutesUsed'],
         totalCreditMinutes = json['totalCreditMinutes'],
         totalCreditMinutesUsed = json['totalCreditMinutesUsed'],
