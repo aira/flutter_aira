@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'models/access_offer.dart';
 import 'models/participant.dart';
 import 'room.dart';
 
