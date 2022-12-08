@@ -588,7 +588,7 @@ class PlatformClient {
       int page, {
         required double latitude,
         required double longitude,
-      }) => _getAccessOffers('products', page, latitude: latitude, longitude: longitude);
+      }) => _getAccessOffers('product', page, latitude: latitude, longitude: longitude);
 
   Future<Paged<AccessOfferDetails>> _getAccessOffers(
     String type,
