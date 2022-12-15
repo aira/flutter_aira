@@ -215,7 +215,8 @@ class PlatformClient {
     Map<String, List<int>>? fileMap,
     String? message,
     Position? position,
-    AccessOfferDetails? accessOffer,
+    int? accessOfferId,
+    AccessOfferType? accessOfferType,
   }) async {
     _verifyIsLoggedIn();
 
@@ -238,7 +239,13 @@ class PlatformClient {
       'message': preCallMessage,
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
-      if(null != accessOffer) 'accessOffer': {'access': {'id': accessOffer.id, 'class': accessOffer.type}},
+      if (null != accessOfferId && null != accessOfferType)
+        'accessOffer': {
+          'access': {
+            'id': accessOfferId,
+            'class': accessOfferType,
+          }
+        },
     };
 
     /*
