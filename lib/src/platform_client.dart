@@ -559,6 +559,7 @@ class PlatformClient {
     return response['pauseUser'];
   }
 
+  /// Returns, page by page, the closest available Site Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferSites(
     int page, {
     required double latitude,
@@ -577,12 +578,14 @@ class PlatformClient {
     ), page);
   }
 
+  /// Returns, page by page, all available Promotion Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferPromotions(
       int page, {
         required double latitude,
         required double longitude,
       }) => _getAccessOffers('promotion', page, latitude: latitude, longitude: longitude);
 
+  /// Returns, page by page, all available Product Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferProducts(
       int page, {
         required double latitude,
@@ -608,6 +611,7 @@ class PlatformClient {
     ), page);
   }
 
+  /// Search for all applicable Site access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
       int page, {
         required double latitude,
@@ -628,25 +632,27 @@ class PlatformClient {
     ), page, payloadTag: 'sites',);
   }
 
+  /// Search for all applicable Promotion access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferPromotions(
       int page, {
         required String searchPattern,
-      }) => _searchAccessOffers('promotion', page, searchPattern: searchPattern);
+      }) => _searchAccessOffers(AccessOfferType.promotion, page, searchPattern: searchPattern);
 
+  /// Search for all applicable Product access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferProducts(
       int page, {
         required String searchPattern,
-      }) => _searchAccessOffers('product', page, searchPattern: searchPattern);
+      }) => _searchAccessOffers(AccessOfferType.product, page, searchPattern: searchPattern);
 
   Future<Paged<AccessOfferDetails>> _searchAccessOffers(
-      String type,
+      AccessOfferType type,
       int page, {
         required String searchPattern,
       }) async {
     _verifyIsLoggedIn();
 
     return _processAccessOfferResponse(await _httpGet(
-      '/api/access/$type/search',
+      '/api/access/${type.name}/search',
       queryParameters: {
         'q': searchPattern,
         'limit': '15',
@@ -655,6 +661,7 @@ class PlatformClient {
     ), page);
   }
 
+  /// Returns the list of recently used AccessOffer for the current user.
   Future<Paged<AccessOfferDetails>> getRecentlyUsedAccessOffers(int page) async {
     _verifyIsLoggedIn();
 
@@ -680,6 +687,34 @@ class PlatformClient {
             .toList(growable: false),
       );
 
+  /// Returns the [AccessOfferDetails] if the access offer is valid, otherwise throws a [PlatformLocalizedException] containing the rational explaining why this is not valid or a [PlatformUnknownException] in case anything else goes wrong.
+  Future<AccessOfferDetails> getValidOffer(AccessOfferType type, int id, {Position? position}) async {
+    try {
+      Map<String, String>? queryParameters;
+      if (null != position) {
+        queryParameters = {
+          'lat': position.latitude.toString(),
+          'lng': position.longitude.toString(),
+        };
+      }
+      Map<String, dynamic> json = await _httpGet(
+        '/api/user/$_userId/access/${type.name}/$id/valid',
+        queryParameters: queryParameters,
+      );
+      // The validation endpoint doesn't provide the 'class'... let's add this bit of information.
+      json['class'] ??= type.name;
+
+      // Returns 204 if the offer is still valid.
+      return AccessOfferDetails.fromJson(json);
+    } on PlatformLocalizedException {
+      _log.finest('Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}');
+      rethrow;
+    } catch (e) {
+      _log.shout('Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}');
+      rethrow;
+    }
+  }
+
   // X uri: /api/access/site/search get locations close by.
   // X uri: /api/user/6281/access/promotion get a list of promotions
   // X uri: /api/user/6281/access/product get a list of products
@@ -688,7 +723,7 @@ class PlatformClient {
   // X uri: /api/access/product/search search through promotions
   // X uri: /api/user/6281/access/recently-used to get the list of recently used access offers
 
-  // uri: /api/user/6281/access/promotion/6/valid display promotion
+  // uri: /api/user/6281/access/promotion/6/valid validate if an offer is still valid
 
 
   // uri: /api/user/6256/access/default >>>> what is this?
@@ -722,22 +757,24 @@ class PlatformClient {
 
       _log.finest('trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}');
 
+      http.Response response;
       switch (method) {
         case 'DELETE':
-          http.Response response = await _httpClient.delete(uri, headers: headers, body: body);
-          return _parseResponse(response.statusCode, response.body);
+          response = await _httpClient.delete(uri, headers: headers, body: body);
+          break;
         case 'GET':
-          http.Response response = await _httpClient.get(uri, headers: headers);
-          return _parseResponse(response.statusCode, response.body);
+          response = await _httpClient.get(uri, headers: headers);
+          break;
         case 'POST':
-          http.Response response = await _httpClient.post(uri, headers: headers, body: body);
-          return _parseResponse(response.statusCode, response.body);
+          response = await _httpClient.post(uri, headers: headers, body: body);
+          break;
         case 'PUT':
-          http.Response response = await _httpClient.put(uri, headers: headers, body: body);
-          return _parseResponse(response.statusCode, response.body);
+          response = await _httpClient.put(uri, headers: headers, body: body);
+          break;
         default:
           throw UnsupportedError(method);
       }
+      return _parseResponse(response.statusCode, response.body);
     } on SocketException catch (e) {
       throw PlatformUnknownException(e.message);
     }
