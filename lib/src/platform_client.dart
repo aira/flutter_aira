@@ -243,11 +243,10 @@ class PlatformClient {
         'accessOffer': {
           'access': {
             'id': accessOfferId,
-            'class': accessOfferType,
+            'class': accessOfferType.name,
           }
         },
     };
-
     /*
    {"agentid":0,
       "hasMessage":false, <<<<<<
