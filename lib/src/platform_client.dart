@@ -568,49 +568,53 @@ class PlatformClient {
   /// Returns, page by page, the closest available Site Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferSites(
     int page, {
-    required double latitude,
-    required double longitude,
+    double? latitude,
+    double? longitude,
   }) async {
     _verifyIsLoggedIn();
 
-    return _processAccessOfferResponse(await _httpGet(
-      '/api/access/site/search',
-      queryParameters: {
-        'lat': latitude.toString(),
-        'lng': longitude.toString(),
-        'limit': '20',
-        'pg': page.toString(),
-      },
-    ), page);
+    if (null == latitude || null == longitude) {
+      return _processAccessOfferResponse(await _httpGet(
+        '/api/access/site/search',
+        queryParameters: {
+          'lat': latitude.toString(),
+          'lng': longitude.toString(),
+          'limit': '20',
+          'pg': page.toString(),
+        },
+      ), page);
+    } else {
+      return searchAccessOfferSites(page, searchPattern: '', latitude: latitude, longitude: longitude);
+    }
   }
 
   /// Returns, page by page, all available Promotion Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferPromotions(
       int page, {
-        required double latitude,
-        required double longitude,
+        double? latitude,
+        double? longitude,
       }) => _getAccessOffers('promotion', page, latitude: latitude, longitude: longitude);
 
   /// Returns, page by page, all available Product Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferProducts(
       int page, {
-        required double latitude,
-        required double longitude,
+        double? latitude,
+        double? longitude,
       }) => _getAccessOffers('product', page, latitude: latitude, longitude: longitude);
 
   Future<Paged<AccessOfferDetails>> _getAccessOffers(
     String type,
     int page, {
-    required double latitude,
-    required double longitude,
+    double? latitude,
+    double? longitude,
   }) async {
     _verifyIsLoggedIn();
 
     return _processAccessOfferResponse(await _httpGet(
       '/api/user/$_userId/access/$type',
       queryParameters: {
-        'lat': latitude.toString(),
-        'lng': longitude.toString(),
+        if (null != latitude) 'lat': latitude.toString(),
+        if (null != longitude) 'lng': longitude.toString(),
         'limit': '25',
         'pg': page.toString(),
       },
@@ -620,8 +624,8 @@ class PlatformClient {
   /// Search for all applicable Site access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
       int page, {
-        required double latitude,
-        required double longitude,
+        double? latitude,
+        double? longitude,
         required String searchPattern,
       }) async {
     _verifyIsLoggedIn();
@@ -630,8 +634,8 @@ class PlatformClient {
       '/api/site/search/v2',
       queryParameters: {
         'q': searchPattern,
-        'lat': latitude.toString(),
-        'lng': longitude.toString(),
+        if (null != latitude) 'lat': latitude.toString(),
+        if (null != longitude) 'lng': longitude.toString(),
         'limit': '10',
         'pg': page.toString(),
       },
@@ -688,7 +692,7 @@ class PlatformClient {
       Paged(
         page: page,
         hasMore: response['response']['hasMore'],
-        items: (response[payloadTag] as List<dynamic>)
+        items: ((response[payloadTag] as List<dynamic>?) ?? [])
             .map((json) => AccessOfferDetails.fromJson(json))
             .toList(growable: false),
       );
