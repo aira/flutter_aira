@@ -688,14 +688,18 @@ class PlatformClient {
     Map<String, dynamic> response,
     int page, {
     String payloadTag = 'payload',
-  }) =>
-      Paged(
-        page: page,
-        hasMore: response['response']['hasMore'],
-        items: ((response[payloadTag] as List<dynamic>?) ?? [])
-            .map((json) => AccessOfferDetails.fromJson(json))
-            .toList(growable: false),
-      );
+  }) {
+    Set<String> handledAccessOfferTypes = AccessOfferType.values.map((aot) => aot.name).toSet();
+    return Paged(
+      page: page,
+      hasMore: response['response']['hasMore'],
+      items: ((response[payloadTag] as List<dynamic>?) ?? [])
+          // We currently only handle the Promotions, Products and Sites.
+          .where((json) => handledAccessOfferTypes.contains(json['class']))
+          .map((json) => AccessOfferDetails.fromJson(json))
+          .toList(growable: false),
+    );
+  }
 
   /// Returns the [AccessOfferDetails] if the access offer is valid, otherwise throws a [PlatformLocalizedException] containing the rational explaining why this is not valid or a [PlatformUnknownException] in case anything else goes wrong.
   Future<AccessOfferDetails> getValidOffer(AccessOfferType type, int id, {Position? position}) async {
