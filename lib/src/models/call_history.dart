@@ -1,16 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_aira/src/models/convertion_extension.dart';
 import 'package:flutter_aira/src/models/feedback.dart';
-import 'package:intl/intl.dart';
-
-DateTime? _parseDate(String? dateToParse) {
-  if (null == dateToParse) {
-    return null;
-  } else {
-    DateTime date = DateFormat('MM/dd/yyyy HH:mm:ss').parse(dateToParse);
-    return date.add(date.timeZoneOffset);
-  }
-}
 
 /// Object containing all the Feedback Information.
 class SessionFeedback {
@@ -61,11 +52,11 @@ class CallSession {
   CallSession.fromJson(Map<String, dynamic> json)
       : agentId = json['agentId'],
         agentFirstName = json['agentfirstname'],
-        endTimeStamp = _parseDate(json['endTimeStamp'])!,
+        endTimeStamp = (json['endTimeStamp']! as String).dateTime,
         requestSource = json['requestSource'],
-        requestTimeStamp = _parseDate(json['requestTimeStamp']),
+        requestTimeStamp = (json['requestTimeStamp'] as String?)?.dateTime,
         serviceId = json['serviceid'],
-        startTimeStamp = _parseDate(json['startTimeStamp'])!,
+        startTimeStamp = (json['startTimeStamp'] as String).dateTime,
         status = json['status'],
         userFirstname = json['firstname'],
         userId = json['userId'],
