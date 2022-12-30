@@ -32,6 +32,7 @@ class AccessOfferDetails {
     message = json['message'],
     name = json['name'],
     offerType = AccessOfferType.from(json['class']!)!,
+    renewalTimestamp = (json['renewalTimestamp'] as String?)?.dateTimeZ,
     requireAgentApproval = json['requireAgentApproval'],
     siteAddress = null == json['siteAddress'] ? null : SiteAddress.fromJson(json['siteAddress']),
     siteId = json['siteId'],
@@ -59,6 +60,7 @@ class AccessOfferDetails {
   String? message;
   String name;
   AccessOfferType offerType;
+  DateTime? renewalTimestamp;
   bool? requireAgentApproval;
   SiteAddress? siteAddress;
   int? siteId;
