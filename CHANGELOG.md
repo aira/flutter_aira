@@ -6,12 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [0.0.32] - 2022-12-19
-### Changed
-- `MessagingClient` now automatically handles the `sendStart` message (#61)
-
+### [0.0.33] - 2023-01-19
 ### Removed
-- **BREAKING:** `MessagingClient` doesn't have a `sendStart` function anymore (#61)
+- **BREAKING:** `MessagingClient.sendStart` (#61).
+
+### Fixed
+- No `start` message sent when call is not started with a message or file (#61).
 
 ### [0.0.32] - 2022-12-19
 ### Added

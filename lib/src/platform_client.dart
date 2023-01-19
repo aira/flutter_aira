@@ -46,6 +46,7 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
+    messagingClient?.dispose();
   }
 
   /// Sends a verification code to a phone number.
@@ -129,6 +130,8 @@ class PlatformClient {
 
       _session = Session(token, userId);
 
+      await _initMessagingClient();
+
       return _session!;
     } on PlatformLocalizedException catch (e) {
       // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
@@ -151,6 +154,8 @@ class PlatformClient {
     });
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
+
+    await _initMessagingClient();
 
     return _session!;
   }
@@ -249,6 +254,13 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
+    // HACK: The "start" message is a legacy concept used to organize messages in Dash. It gets sent every time an
+    // Explorer calls Aira, even if the call was canceled or the call didn't use messaging. Eventually, we should find a
+    // solution with fewer shortcomings.
+    if (messagingClient != null) {
+      await (messagingClient as MessagingClientPubNub).sendStart();
+    }
+
     if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
     }
@@ -258,7 +270,6 @@ class PlatformClient {
 
     messagingClient?.serviceRequestId = serviceRequest.id;
 
-    await _initMessagingClient();
     return KurentoRoom.create(_config.environment, this, _session!, messagingClient, serviceRequest, roomHandler);
   }
 
@@ -896,7 +907,6 @@ class PlatformClient {
 
   Future<void> _initMessagingClient() async {
     if (_config.messagingKeys != null) {
-      await messagingClient?.dispose();
       // Initialize the PubNub client.
       String token = (await _httpPost('/api/pubnub/token', null))['payload'];
       messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
