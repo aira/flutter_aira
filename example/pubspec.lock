@@ -180,7 +180,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.31"
+    version: "0.0.33"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -204,7 +204,7 @@ packages:
       name: flutter_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.9.18"
+    version: "0.9.19"
   form_data:
     dependency: transitive
     description:
@@ -281,7 +281,7 @@ packages:
       name: mqtt_client
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "9.7.3"
+    version: "9.7.4"
   package_info_plus:
     dependency: transitive
     description:
@@ -365,7 +365,7 @@ packages:
       name: path_provider_macos
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.6"
+    version: "2.0.7"
   path_provider_platform_interface:
     dependency: transitive
     description:
@@ -531,7 +531,7 @@ packages:
       name: xdg_directories
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0+2"
+    version: "0.2.0+3"
   xml:
     dependency: transitive
     description:

@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### [0.0.32] - 2022-12-19
+### Changed
+- `MessagingClient` now automatically handles the `sendStart` message (#61)
+
 ### Removed
-- **BREAKING:** `MessagingClient` doesn't have a `sendStart` function anymore (#58)
+- **BREAKING:** `MessagingClient` doesn't have a `sendStart` function anymore (#61)
 
 ### [0.0.32] - 2022-12-19
 ### Added
