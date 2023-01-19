@@ -247,48 +247,6 @@ class PlatformClient {
           }
         },
     };
-    /*
-   {"agentid":0,
-      "hasMessage":false, <<<<<<
-      "access":{
-        "initiatedUserId":null,"serviceRequestId":null,
-        "access":{
-            "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,"id":38,"class":"promotion","renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
-            "account":{
-              "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
-            },
-            "activated":true
-          },
-          "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true},
-          "requestType":"AIRA", <<<<<<<
-          "transferUsername":null,
-          "latitude":33.08025856393743, <<<<<<
-          "requestSource":"IOSSMART", <<<<<<<<
-          "useWebrtcRoom":true, <<<<<<
-          "message":"", <<<<<<
-          "userid":0,
-          "accountId":null, <<<<<<<
-          "streamType":null,"agentUsername":null,"clientIP":null,
-          "accessOffer":{ <<<<<<
-            "initiatedUserId":null,"serviceRequestId":null,
-            "access":{ <<<<<<<
-              "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,
-              "id":38, <<<<<<
-              "class":"promotion", <<<<<<
-              "renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
-              "account":{
-                "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
-              },
-              "activated":true
-            },
-            "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true
-          },
-          "context":"{\"permissions\":{\"location\":\"authorizedWhenInUse\"}}",
-          "cannotTalk":false, <<<<<<
-          "action":"REQUEST","serviceid":0,"teamviewer":false,
-          "longitude":-117.29448238390808 <<<<<<
-       }
-     */
 
     if (position != null) {
       params['latitude'] = position.latitude;
@@ -313,7 +271,6 @@ class PlatformClient {
     }
     _log.finest('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})');
     String? message = text?.trim();
-    await messagingClient!.sendStart();
     if (null != fileMap && fileMap.isNotEmpty) {
       if (fileMap.length == 1) {
         // If we have only one file, send it with the file.

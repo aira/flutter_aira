@@ -16,8 +16,6 @@ abstract class MessagingClient {
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
 
-  Future<void> sendStart();
-
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
@@ -62,6 +60,7 @@ class MessagingClientPubNub implements MessagingClient {
 
   final int _userId;
   int? _serviceRequestId;
+  bool _isStartMsgSent = false;
 
   String get _messageChannel => 'user-room-$_userId';
 
@@ -98,8 +97,9 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     });
   }
 
-  @override
-  Future<void> sendStart() async {
+  Future<void> _sendStart() async {
+    if (_isStartMsgSent) return;
+
     Map<String, dynamic> content = {
       'senderId': _userId,
       'start': true,
@@ -109,12 +109,14 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     if (result.isError) {
       throw PlatformUnknownException(result.description);
     }
+    _isStartMsgSent = true;
 
     _log.finest('Sent start message. Content=$content');
   }
 
   @override
   Future<void> sendMessage(String text) async {
+    await _sendStart();
     Map<String, dynamic> content = {
       'senderId': _userId,
       'serviceId': _serviceRequestId,
@@ -131,6 +133,7 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
 
   @override
   Future<SentFileInfo> sendFile(String fileName, List<int> file, {String? text}) async {
+    await _sendStart();
     Map<String, dynamic> content = {
       'senderId': _userId,
       'serviceId': _serviceRequestId,
