@@ -51,16 +51,18 @@ class MessagingClientPubNub implements MessagingClient {
     _pubnub.setToken(token);
 
     _messageSubscription = _pubnub.subscribe(channels: {_messageChannel});
+
+    _startMessageFuture = _sendStart();
   }
 
   final Logger _log = Logger('MessagingClientPubNub');
 
   late final pn.PubNub _pubnub;
   late final pn.Subscription? _messageSubscription;
+  late final Future<void> _startMessageFuture;
 
   final int _userId;
   int? _serviceRequestId;
-  bool _isStartMsgSent = false;
 
   String get _messageChannel => 'user-room-$_userId';
 
@@ -98,8 +100,6 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   }
 
   Future<void> _sendStart() async {
-    if (_isStartMsgSent) return;
-
     Map<String, dynamic> content = {
       'senderId': _userId,
       'start': true,
@@ -109,14 +109,13 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     if (result.isError) {
       throw PlatformUnknownException(result.description);
     }
-    _isStartMsgSent = true;
 
     _log.finest('Sent start message. Content=$content');
   }
 
   @override
   Future<void> sendMessage(String text) async {
-    await _sendStart();
+    await _startMessageFuture;
     Map<String, dynamic> content = {
       'senderId': _userId,
       'serviceId': _serviceRequestId,
@@ -133,7 +132,7 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
 
   @override
   Future<SentFileInfo> sendFile(String fileName, List<int> file, {String? text}) async {
-    await _sendStart();
+    await _startMessageFuture;
     Map<String, dynamic> content = {
       'senderId': _userId,
       'serviceId': _serviceRequestId,
