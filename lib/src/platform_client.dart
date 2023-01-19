@@ -29,11 +29,13 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  MessagingClient? messagingClient;
+  MessagingClientPubNub? _messagingClient;
 
   int get _userId => _session!.userId;
 
   String get _token => _session!.token;
+
+  MessagingClient? get messagingClient => _messagingClient;
 
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
   ///
@@ -46,7 +48,7 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
-    messagingClient?.dispose();
+    _messagingClient?.dispose();
   }
 
   /// Sends a verification code to a phone number.
@@ -257,9 +259,7 @@ class PlatformClient {
     // HACK: The "start" message is a legacy concept used to organize messages in Dash. It gets sent every time an
     // Explorer calls Aira, even if the call was canceled or the call didn't use messaging. Eventually, we should find a
     // solution with fewer shortcomings.
-    if (messagingClient != null) {
-      await (messagingClient as MessagingClientPubNub).sendStart();
-    }
+    await _messagingClient?.sendStart();
 
     if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
@@ -268,13 +268,13 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
-    messagingClient?.serviceRequestId = serviceRequest.id;
+    _messagingClient?.serviceRequestId = serviceRequest.id;
 
-    return KurentoRoom.create(_config.environment, this, _session!, messagingClient, serviceRequest, roomHandler);
+    return KurentoRoom.create(_config.environment, this, _session!, _messagingClient, serviceRequest, roomHandler);
   }
 
   Future<List<String>> _sendPreCallMessage(String? text, Map<String, List<int>>? fileMap) async {
-    if (null == messagingClient) {
+    if (null == _messagingClient) {
       throw UnsupportedError('The application does not support messaging');
     }
     _log.finest('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})');
@@ -283,24 +283,24 @@ class PlatformClient {
       if (fileMap.length == 1) {
         // If we have only one file, send it with the file.
         var fileEntry = fileMap.entries.first;
-        SentFileInfo fileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
+        SentFileInfo fileInfo = await _messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
         return [fileInfo.id];
       } else {
         // if we have multiple files, send them separately from teh message
         if (null != message && message.isNotEmpty) {
           // Waiting on first message separately to insure it gets to the server first.
-          await messagingClient!.sendMessage(message);
+          await _messagingClient!.sendMessage(message);
         }
 
         List<Future<SentFileInfo>> futureFileInfo =
-            fileMap.entries.map((e) => messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
+            fileMap.entries.map((e) => _messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
         List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
 
         List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
         return fileIds;
       }
     } else if (null != text && text.isNotEmpty) {
-      await messagingClient!.sendMessage(text);
+      await _messagingClient!.sendMessage(text);
     }
     return [];
   }
@@ -909,7 +909,7 @@ class PlatformClient {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
       String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
+      _messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }
