@@ -36,6 +36,7 @@ abstract class MessagingClient {
 
 class MessagingClientPubNub implements MessagingClient {
   MessagingClientPubNub(PlatformMessagingKeys messagingKeys, int userId, String token) : _userId = userId {
+    _log.finest('Initializing PubNub...');
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
         // TODO: Setting the `authKey` shouldn't be necessary, but there is a bug in the PubNub SDK where
@@ -105,12 +106,13 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
       'start': true,
     };
 
+    _log.finest('Sending start message... Content=$content');
     pn.PublishResult result = await _pubnub.publish(_messageChannel, content);
     if (result.isError) {
       throw PlatformUnknownException(result.description);
     }
 
-    _log.finest('Sent start message. Content=$content');
+    _log.finest('Start message sent!');
   }
 
   @override
