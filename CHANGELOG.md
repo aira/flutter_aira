@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.33] - 2023-01-19
+### Removed
+- **BREAKING:** `MessagingClient.sendStart` (#61).
+
+### Fixed
+- No `start` message sent when call is not started with a message or file (#61).
+
 ### [0.0.32] - 2022-12-19
 ### Added
 - Added API for Access Offers (#58)

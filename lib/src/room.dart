@@ -6,7 +6,6 @@ import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:pubnub/pubnub.dart' as pn;
 
 import 'messaging_client.dart';
 import 'models/participant.dart';
@@ -124,7 +123,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String? _agentName;
   MediaStream? _localStream;
   int? _localTrackId;
-  pn.Subscription? _messageSubscription;
 
   // Private constructor.
   KurentoRoom._(
@@ -338,8 +336,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   @override
   Future<void> dispose() async {
     _isDisposed = true;
-
-    await _messageSubscription?.dispose();
 
     _mq.dispose();
 

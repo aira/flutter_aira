@@ -29,11 +29,13 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  MessagingClient? messagingClient;
+  MessagingClientPubNub? _messagingClient;
 
   int get _userId => _session!.userId;
 
   String get _token => _session!.token;
+
+  MessagingClient? get messagingClient => _messagingClient;
 
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
   ///
@@ -46,6 +48,7 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
+    _messagingClient?.dispose();
   }
 
   /// Sends a verification code to a phone number.
@@ -247,53 +250,16 @@ class PlatformClient {
           }
         },
     };
-    /*
-   {"agentid":0,
-      "hasMessage":false, <<<<<<
-      "access":{
-        "initiatedUserId":null,"serviceRequestId":null,
-        "access":{
-            "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,"id":38,"class":"promotion","renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
-            "account":{
-              "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
-            },
-            "activated":true
-          },
-          "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true},
-          "requestType":"AIRA", <<<<<<<
-          "transferUsername":null,
-          "latitude":33.08025856393743, <<<<<<
-          "requestSource":"IOSSMART", <<<<<<<<
-          "useWebrtcRoom":true, <<<<<<
-          "message":"", <<<<<<
-          "userid":0,
-          "accountId":null, <<<<<<<
-          "streamType":null,"agentUsername":null,"clientIP":null,
-          "accessOffer":{ <<<<<<
-            "initiatedUserId":null,"serviceRequestId":null,
-            "access":{ <<<<<<<
-              "entireCall":true,"termsAndConditionsUrl":null,"renewalTimestamp":null,"description":"5-minute calls for short everyday tasks","type":"PRIVATE","enabled":true,"availableToGuests":true,"enforcedOnExplorers":true,"termsAndConditions":null,"effectiveTo":null,"durationUsed":768,"expired":false,
-              "id":38, <<<<<<
-              "class":"promotion", <<<<<<
-              "renewalDurationAllowed":null,"key":"FMF_GUEST","tasks":null,"agentMessage":null,"visible":true,"requireAgentApproval":true,"callPeriodLength":86400,"message":"You can now make short calls to Aira agents for free, every day. Great for doing those short tasks around the house. Try it now!","enforcedOnDuration":0,"site":null,"callsPerPeriod":-1,"name":"Free Daily Calls","sticky":false,"activatedEffectiveSeconds":-1,"durationAllowed":-1,"durationPerCall":300,"validationUserProperties":[],"effectiveFrom":null,
-              "account":{
-                "accountId":2579,"allowRecording":true,"accountCode":"","acceptBusinessUsers":null,"createdTimestamp":null,"accountType":null,"name":"Aira Tech Corp","modifiedTimestamp":null,"id":null,"businessType":null
-              },
-              "activated":true
-            },
-            "initiatedUserType":null,"agentVerified":false,"startTime":null,"id":null,"endTime":null,"enabled":true
-          },
-          "context":"{\"permissions\":{\"location\":\"authorizedWhenInUse\"}}",
-          "cannotTalk":false, <<<<<<
-          "action":"REQUEST","serviceid":0,"teamviewer":false,
-          "longitude":-117.29448238390808 <<<<<<
-       }
-     */
 
     if (position != null) {
       params['latitude'] = position.latitude;
       params['longitude'] = position.longitude;
     }
+
+    // HACK: The "start" message is a legacy concept used to organize messages in Dash. It gets sent every time an
+    // Explorer calls Aira, even if the call was canceled or the call didn't use messaging. Eventually, we should find a
+    // solution with fewer shortcomings.
+    await _messagingClient?.sendStart();
 
     if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
@@ -302,40 +268,39 @@ class PlatformClient {
     ServiceRequest serviceRequest =
         ServiceRequest.fromJson(await _httpPost('/api/user/$_userId/service-request', jsonEncode(params)));
 
-    messagingClient?.serviceRequestId = serviceRequest.id;
+    _messagingClient?.serviceRequestId = serviceRequest.id;
 
-    return KurentoRoom.create(_config.environment, this, _session!, messagingClient, serviceRequest, roomHandler);
+    return KurentoRoom.create(_config.environment, this, _session!, _messagingClient, serviceRequest, roomHandler);
   }
 
   Future<List<String>> _sendPreCallMessage(String? text, Map<String, List<int>>? fileMap) async {
-    if (null == messagingClient) {
+    if (null == _messagingClient) {
       throw UnsupportedError('The application does not support messaging');
     }
     _log.finest('Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})');
     String? message = text?.trim();
-    await messagingClient!.sendStart();
     if (null != fileMap && fileMap.isNotEmpty) {
       if (fileMap.length == 1) {
         // If we have only one file, send it with the file.
         var fileEntry = fileMap.entries.first;
-        SentFileInfo fileInfo = await messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
+        SentFileInfo fileInfo = await _messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
         return [fileInfo.id];
       } else {
         // if we have multiple files, send them separately from teh message
         if (null != message && message.isNotEmpty) {
           // Waiting on first message separately to insure it gets to the server first.
-          await messagingClient!.sendMessage(message);
+          await _messagingClient!.sendMessage(message);
         }
 
         List<Future<SentFileInfo>> futureFileInfo =
-            fileMap.entries.map((e) => messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
+            fileMap.entries.map((e) => _messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
         List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
 
         List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
         return fileIds;
       }
     } else if (null != text && text.isNotEmpty) {
-      await messagingClient!.sendMessage(text);
+      await _messagingClient!.sendMessage(text);
     }
     return [];
   }
@@ -944,7 +909,7 @@ class PlatformClient {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
       String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
+      _messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }

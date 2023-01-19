@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_aira/src/platform_exceptions.dart';
@@ -15,8 +17,6 @@ abstract class MessagingClient {
   ///
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
-
-  Future<void> sendStart();
 
   /// Sends the provided message to the Agent.
   ///
@@ -41,7 +41,8 @@ class MessagingClientPubNub implements MessagingClient {
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
         // TODO: Setting the `authKey` shouldn't be necessary, but there is a bug in the PubNub SDK where
-        // [PubNub.files.getFileUrl] does not use the value configured with [PubNub.setToken].
+        // [PubNub.files.getFileUrl] does not use the value configured with [PubNub.setToken]
+        // (https://github.com/pubnub/dart/issues/103).
         authKey: token,
         // Eventually, instead of passing the publish and subscribe keys through configuration, we should return them
         // from Platform when logging in so: 1) we don't have to provide them to partners; and 2) they can be rotated.
@@ -98,35 +99,29 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     });
   }
 
-  @override
   Future<void> sendStart() async {
-    Map<String, dynamic> content = {
+    return _sendMessage({
       'senderId': _userId,
       'start': true,
-    };
-
-    pn.PublishResult result = await _pubnub.publish(_messageChannel, content);
-    if (result.isError) {
-      throw PlatformUnknownException(result.description);
-    }
-
-    _log.finest('Sent start message. Content=$content');
+    });
   }
 
   @override
   Future<void> sendMessage(String text) async {
-    Map<String, dynamic> content = {
+    return _sendMessage({
       'senderId': _userId,
       'serviceId': _serviceRequestId,
       'text': text,
-    };
+    });
+  }
 
-    pn.PublishResult result = await _pubnub.publish(_messageChannel, content);
+  Future<void> _sendMessage(Map<String, dynamic> message) async {
+    pn.PublishResult result = await _pubnub.publish(_messageChannel, message);
     if (result.isError) {
       throw PlatformUnknownException(result.description);
     }
 
-    _log.finest('Sent message. Content=$content');
+    _log.finest('sent message=$message');
   }
 
   @override
