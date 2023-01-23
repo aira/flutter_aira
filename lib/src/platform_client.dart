@@ -9,6 +9,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/secondaryUser.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -565,6 +566,37 @@ class PlatformClient {
     return response['pauseUser'];
   }
 
+  /// This function returns the list of both pending invitations and secondary users information.
+  Future<MinuteSharingInformation> getMinuteSharingInformation() async {
+    Map<String, dynamic> response = await _httpGet(
+      '/api/account/sharing/$_userId',
+    );
+    return MinuteSharingInformation.fromJson(response);
+  }
+
+  /// Creates and sends an email invitation to a secondary account user.
+  Future<void> sendMinuteSharingInvite(String email) async {
+    await _httpPost(
+      '/api/account/sharing/invite',
+      jsonEncode({'userId': _userId, 'invitee': email}),
+    );
+  }
+
+  /// Cancels a pending secondary account user invitation.
+  Future<void> invalidateMinuteSharingInvite(String email) async {
+    await _httpDelete(
+      '/api/account/sharing/invite',
+      body: jsonEncode({'userId': _userId, 'invitee': email}),
+    );
+  }
+
+  /// Removes a secondary account user from the primary account.
+  Future<void> removeMinuteSharingMember(int secUserId) async {
+    await _httpDelete(
+      '/api/account/sharing/$secUserId',
+    );
+  }
+
   /// Returns, page by page, the closest available Site Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferSites(
     int page, {
@@ -728,19 +760,6 @@ class PlatformClient {
       rethrow;
     }
   }
-
-  // X uri: /api/access/site/search get locations close by.
-  // X uri: /api/user/6281/access/promotion get a list of promotions
-  // X uri: /api/user/6281/access/product get a list of products
-  // X uri: /api/site/search/v2 search through locations
-  // X uri: /api/access/promotion/search search through promotions
-  // X uri: /api/access/product/search search through promotions
-  // X uri: /api/user/6281/access/recently-used to get the list of recently used access offers
-
-  // uri: /api/user/6281/access/promotion/6/valid validate if an offer is still valid
-
-
-  // uri: /api/user/6256/access/default >>>> what is this?
 
   /// Registers the device's push token so that it can receive push notifications.
   ///
