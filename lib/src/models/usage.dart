@@ -1,5 +1,5 @@
 import 'package:flutter_aira/src/models/convertion_extension.dart';
-import 'package:flutter_aira/src/models/secondaryUser.dart';
+import 'package:flutter_aira/src/models/minute_sharing.dart';
 
 /// Some plans are shared by primary Explorer to secondary Explorers.
 /// This Object contains details on who can use minutes within a Plan.

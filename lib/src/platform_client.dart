@@ -9,7 +9,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/secondaryUser.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
