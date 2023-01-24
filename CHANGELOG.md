@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.34] - 2023-01-24
+### Changed
+- Bump dependencies.
+
 ### [0.0.33] - 2023-01-19
 ### Removed
 - **BREAKING:** `MessagingClient.sendStart` (#61).

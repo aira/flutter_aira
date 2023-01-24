@@ -850,7 +850,7 @@ class PlatformClient {
     } else {
       return {
         'id': (await _deviceId) ?? '',
-        'model': (await DeviceInfoPlugin().deviceInfo).toMap()['model'],
+        'model': (await DeviceInfoPlugin().deviceInfo).data['model'],
         'platform': Platform.operatingSystem.toString().split('.').last,
         'platformVersion': Platform.operatingSystemVersion,
       };
