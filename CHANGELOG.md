@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.35] - 2023-01-24
+### Fixed
+- Downgrade `intl` from `0.18.0` to `0.17.0`, as the former is incompatible with
+  `flutter_localizations`.
+
+### [0.0.34] - 2023-01-24
+### Changed
+- Bump dependencies.
+
+### [0.0.33] - 2023-01-19
+### Removed
+- **BREAKING:** `MessagingClient.sendStart` (#61).
+
+### Fixed
+- No `start` message sent when call is not started with a message or file (#61).
+
 ### [0.0.32] - 2022-12-19
 ### Added
 - Added API for Access Offers (#58)
