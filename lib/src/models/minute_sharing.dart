@@ -44,6 +44,9 @@ class MinuteSharingInformation {
   /// List of all secondary users who currently have access to primary account minutes.
   List<MinuteSharingMember> members;
 
+  /// Total number of additional members who can share minutes with primary user.
+  int? maxAdditionalShared;
+
   MinuteSharingInformation.fromJson(Map<String, dynamic> json)
       : inviteeEmails = (json['invites'] as List<dynamic>)
             .map((invitee) => invitee['invitee'])
@@ -51,7 +54,8 @@ class MinuteSharingInformation {
             .toList(growable: false),
         members = (json['users'] as List<dynamic>)
             .map((pUsage) => MinuteSharingMember.fromJson(pUsage))
-            .toList(growable: false);
+            .toList(growable: false),
+        maxAdditionalShared = json['maxAdditionalShared'];
 }
 //{
 // "code":"3400706fc7604b3eb662171faad897da",

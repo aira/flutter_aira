@@ -532,10 +532,17 @@ class PlatformClient {
 
   /// This function returns the list of both pending invitations and secondary users information.
   Future<MinuteSharingInformation> getMinuteSharingInformation() async {
-    Map<String, dynamic> response = await _httpGet(
+    Future<Map<String, dynamic>> planResponseFuture = _httpGet(
+      '/api/user/plan',
+      queryParameters: {'userId': _userId.toString()},
+    );
+    Future<Map<String, dynamic>> minuteSharingResponseFuture = _httpGet(
       '/api/account/sharing/$_userId',
     );
-    return MinuteSharingInformation.fromJson(response);
+    Map<String, dynamic> planResponse = await planResponseFuture;
+    Map<String, dynamic> minuteSharingResponse = await minuteSharingResponseFuture;
+    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'];
+    return MinuteSharingInformation.fromJson(minuteSharingResponse);
   }
 
   /// Creates and sends an email invitation to a secondary account user.
