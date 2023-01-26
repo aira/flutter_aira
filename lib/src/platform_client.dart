@@ -532,16 +532,25 @@ class PlatformClient {
 
   /// This function returns the list of both pending invitations and secondary users information.
   Future<MinuteSharingInformation> getMinuteSharingInformation() async {
-    Future<Map<String, dynamic>> planResponseFuture = _httpGet(
-      '/api/user/plan',
-      queryParameters: {'userId': _userId.toString()},
-    );
+    Map<String, dynamic> planResponse = {};
+    bool isGuest = false;
+    try {
+      Future<Map<String, dynamic>> planResponseFuture = _httpGet(
+        '/api/user/plan',
+        queryParameters: {'userId': _userId.toString()},
+      );
+      planResponse = await planResponseFuture;
+    } catch (e) {
+      // Guest if we don't have a plan.
+      isGuest = true;
+      _log.finest('User $_userId doesn\'t have a primary subscription', e);
+    }
     Future<Map<String, dynamic>> minuteSharingResponseFuture = _httpGet(
       '/api/account/sharing/$_userId',
     );
-    Map<String, dynamic> planResponse = await planResponseFuture;
     Map<String, dynamic> minuteSharingResponse = await minuteSharingResponseFuture;
-    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'];
+    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'] ?? 0;
+    minuteSharingResponse['isGuest'] = isGuest;
     return MinuteSharingInformation.fromJson(minuteSharingResponse);
   }
 

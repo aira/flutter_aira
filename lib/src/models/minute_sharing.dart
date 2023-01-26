@@ -45,7 +45,10 @@ class MinuteSharingInformation {
   List<MinuteSharingMember> members;
 
   /// Total number of additional members who can share minutes with primary user.
-  int? maxAdditionalShared;
+  int maxAdditionalShared;
+
+  /// Returns true if the user is a Guest.
+  bool isGuest;
 
   MinuteSharingInformation.fromJson(Map<String, dynamic> json)
       : inviteeEmails = (json['invites'] as List<dynamic>)
@@ -55,70 +58,6 @@ class MinuteSharingInformation {
         members = (json['users'] as List<dynamic>)
             .map((pUsage) => MinuteSharingMember.fromJson(pUsage))
             .toList(growable: false),
-        maxAdditionalShared = json['maxAdditionalShared'];
+        maxAdditionalShared = json['maxAdditionalShared'],
+        isGuest = json['isGuest'];
 }
-//{
-// "code":"3400706fc7604b3eb662171faad897da",
-// "invitedBy":6256,
-// "invitedByFirstName":"Israel",
-// "hasAiraAccount":false,
-// "invitee":"israel.painchaud+3@gmail.com"
-//}
-
-//{
-// "entireCall":true,
-//> "lastName":"Painchaud",
-// "termsAndConditionsUrl":null,
-// "renewalTimestamp":null,
-// "description":null,
-// "type":"PRIVATE",
-//> "enabled":true,
-// "availableToGuests":true,
-// "enforcedOnExplorers":true,
-// "termsAndConditions":null,
-//- "effectiveTo":null,
-//> "durationUsed":0,
-// "expired":true,
-// "consumeOnSite":false,
-// "id":218565,
-// "class":"account",
-// "renewalDurationAllowed":null,
-// "key":"",
-// "agentMessage":null,
-// "visible":false,
-//- "accountType":"PRIMARY",
-// "requireAgentApproval":false,
-// "createdTimestamp":"2022-06-23T21:34:29Z",
-// "callPeriodLength":86400,
-// "defaultProfile":true,
-// "message":null,
-//> "userId":6256,
-// "enforcedOnDuration":0,
-// "firstName":"Israel",
-// "accountId":5628,
-// "createdDate":1656020069000,
-// "callsPerPeriod":-1,
-// "modifiedDate":1666982903000,
-// "name":"",
-// "activatedEffectiveSeconds":-1,
-// "modifiedTimestamp":"2022-10-28T18:48:23Z",
-//> "userType":"primary",
-// "durationAllowed":-1,
-// "durationPerCall":-1,
-// "validationUserProperties":null,
-// "effectiveFrom":null,
-// "account":{
-//   "accountId":5628,
-//   "allowRecording":true,
-//   "accountCode":"203965",
-//   "acceptBusinessUsers":false,
-//   "createdTimestamp":"2022-06-23T21:34:27Z",
-//   "accountType":"INDIVIDUAL",
-//   "name":"Explorer",
-//   "modifiedTimestamp":"2022-06-23T21:34:27Z",
-//   "id":5628,
-//   "businessType":null
-// },
-// "status":"ACTIVE",
-// "activated":true
-//}
