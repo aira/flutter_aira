@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.36] - 2023-01-26
+### Added
+- Added API for MinuteSharing (#64)
+
 ### [0.0.35] - 2023-01-24
 ### Fixed
 - Downgrade `intl` from `0.18.0` to `0.17.0`, as the former is incompatible with

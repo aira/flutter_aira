@@ -1,33 +1,21 @@
 import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/minute_sharing.dart';
 
 /// Some plans are shared by primary Explorer to secondary Explorers.
 /// This Object contains details on who can use minutes within a Plan.
-class PlanUsageBreakdown {
-  /// Explorer's first name.
-  String firstName;
-
-  /// When secondary Explorer, your usage can be paused by the primary user.
-  bool isPaused;
-
-  /// Explorer's last name.
-  String? lastName;
-
+class PlanUsageBreakdown extends MinuteSharingMember {
   /// Minutes used by the Explorer in the plan.
   int minutesUsed;
 
-  /// Explorer's user Id.
-  int userId;
-
-  /// Type of user.
-  String userType;
-
   PlanUsageBreakdown.fromJson(Map<String, dynamic> json)
-      : firstName = json['firstName'],
-        isPaused = json['isPaused'],
-        lastName = json['lastName'],
-        minutesUsed = json['minutesUsed'],
-        userId = json['userId'],
-        userType = json['userType'];
+      : minutesUsed = json['minutesUsed'],
+        super(
+          firstName: json['firstName'],
+          isPaused: json['isPaused'],
+          lastName: json['lastName'],
+          userId: json['userId'],
+          userType: json['userType'],
+        );
 }
 
 /// Contains main information about usage.

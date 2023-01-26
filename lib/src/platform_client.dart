@@ -530,6 +530,53 @@ class PlatformClient {
     return response['pauseUser'];
   }
 
+  /// This function returns the list of both pending invitations and secondary users information.
+  Future<MinuteSharingInformation> getMinuteSharingInformation() async {
+    Map<String, dynamic> planResponse = {};
+    bool isGuest = false;
+    try {
+      Future<Map<String, dynamic>> planResponseFuture = _httpGet(
+        '/api/user/plan',
+        queryParameters: {'userId': _userId.toString()},
+      );
+      planResponse = await planResponseFuture;
+    } catch (e) {
+      // Guest if we don't have a plan.
+      isGuest = true;
+      _log.finest('User $_userId doesn\'t have a primary subscription', e);
+    }
+    Future<Map<String, dynamic>> minuteSharingResponseFuture = _httpGet(
+      '/api/account/sharing/$_userId',
+    );
+    Map<String, dynamic> minuteSharingResponse = await minuteSharingResponseFuture;
+    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'] ?? 0;
+    minuteSharingResponse['isGuest'] = isGuest;
+    return MinuteSharingInformation.fromJson(minuteSharingResponse);
+  }
+
+  /// Creates and sends an email invitation to a secondary account user.
+  Future<void> sendMinuteSharingInvite(String email) async {
+    await _httpPost(
+      '/api/account/sharing/invite',
+      jsonEncode({'userId': _userId, 'invitee': email}),
+    );
+  }
+
+  /// Cancels a pending secondary account user invitation.
+  Future<void> invalidateMinuteSharingInvite(String email) async {
+    await _httpDelete(
+      '/api/account/sharing/invite',
+      body: jsonEncode({'userId': _userId, 'invitee': email}),
+    );
+  }
+
+  /// Removes a secondary account user from the primary account.
+  Future<void> removeMinuteSharingMember(int secUserId) async {
+    await _httpDelete(
+      '/api/account/sharing/$secUserId',
+    );
+  }
+
   /// Returns, page by page, the closest available Site Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferSites(
     int page, {
@@ -693,19 +740,6 @@ class PlatformClient {
       rethrow;
     }
   }
-
-  // X uri: /api/access/site/search get locations close by.
-  // X uri: /api/user/6281/access/promotion get a list of promotions
-  // X uri: /api/user/6281/access/product get a list of products
-  // X uri: /api/site/search/v2 search through locations
-  // X uri: /api/access/promotion/search search through promotions
-  // X uri: /api/access/product/search search through promotions
-  // X uri: /api/user/6281/access/recently-used to get the list of recently used access offers
-
-  // uri: /api/user/6281/access/promotion/6/valid validate if an offer is still valid
-
-
-  // uri: /api/user/6256/access/default >>>> what is this?
 
   /// Registers the device's push token so that it can receive push notifications.
   ///
