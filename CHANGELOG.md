@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [0.0.37] - 2023-01-26
+### [0.0.37] - 2023-01-30
 ### Fixed
 - Fixed Null Pointer Exception when searching access sites without a location (#65)
 
