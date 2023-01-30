@@ -580,24 +580,12 @@ class PlatformClient {
   /// Returns, page by page, the closest available Site Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferSites(
     int page, {
-    double? latitude,
-    double? longitude,
+    required double latitude,
+    required double longitude,
   }) async {
     _verifyIsLoggedIn();
 
-    if (null == latitude || null == longitude) {
-      return _processAccessOfferResponse(await _httpGet(
-        '/api/access/site/search',
-        queryParameters: {
-          'lat': latitude.toString(),
-          'lng': longitude.toString(),
-          'limit': '20',
-          'pg': page.toString(),
-        },
-      ), page);
-    } else {
-      return searchAccessOfferSites(page, searchPattern: '', latitude: latitude, longitude: longitude);
-    }
+    return searchAccessOfferSites(page, searchPattern: '', latitude: latitude, longitude: longitude);
   }
 
   /// Returns, page by page, all available Promotion Access Offers for the current user.
@@ -634,6 +622,8 @@ class PlatformClient {
   }
 
   /// Search for all applicable Site access offers matching the [searchPattern] for the current User.
+  /// Although [latitude] and [longitude] are nullable, the backend will throw an exception if [searPattern] is empty
+  /// and either [longitude] or [latitude] is null.
   Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
       int page, {
         double? latitude,
