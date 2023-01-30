@@ -622,7 +622,7 @@ class PlatformClient {
   }
 
   /// Search for all applicable Site access offers matching the [searchPattern] for the current User.
-  /// Although [latitude] and [longitude] are nullable, the backend will throw an exception if [searPattern] is empty
+  /// Although [latitude] and [longitude] are nullable, the backend will throw an exception if [searchPattern] is empty
   /// and either [longitude] or [latitude] is null.
   Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
       int page, {
