@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [0.0.37] - 2023-01-30
 ### Fixed
-- Fixed Null Pointer Exception when searching access sites without a location (#65)
+- **BREAKING:** `getAccessOfferSites` doesn't accept null longitude or latitude anymore (#65)
 
 ### [0.0.36] - 2023-01-26
 ### Added
