@@ -731,6 +731,59 @@ class PlatformClient {
     }
   }
 
+  /// Returns a URL to be used to link the Lyft account to Aira.
+  Future<String> getLyftUrl() async {
+    // FIXME: This endpoint doesn't return a "classic" `response` with `status`, `errorCode` or `errorMessage`.
+    // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
+    //     json['response']?['status']
+    //     json['response']?['errorCode']
+    //     json['response']?['errorMessage']
+    // Map<String, dynamic> json = await _httpGet('api/lyft/oauth/$_userId');
+
+    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/$_userId');
+    _log.finest('>>>> get uri $uri');
+    int traceId = _nextTraceId();
+    Map<String, String> headers = await _getHeaders(traceId);
+    http.Response response = await _httpClient.get(uri, headers: headers);
+    _log.finest('>>>> response is $response');
+    Map<String, dynamic> json = jsonDecode(response.body);
+    _log.finest('>>>> body is $json');
+    return json['url'];
+  }
+
+  /// Sends the confirmation code to lyft to seal the deal.
+  Future<void> sendLyftAuthorizationCode(String code) async {
+    // FIXME: This endpoint doesn't return a "classic" `response` when successful. Here is a sample of success response:
+    //   {"has_taken_a_ride":true,"last_name":"Painchaud","id":"1169165473615850134","first_name":"Israël"}
+    // Here is a sample of an error:
+    //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Provider Error: invalid_grant: The supplied \"code\" is not valid.","hasMore":false,"messageCode":"","errorCode":"KN-SP-003","status":"FAILURE"}}
+    // If this is ever fixed, it would be nice to use a call to `_httpPost` instead of directly using `_httpClient`.
+    int traceId = _nextTraceId();
+    Map<String, String> headers = await _getHeaders(traceId);
+    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/redirect');
+    http.Response response = await _httpClient.post(
+      uri,
+      body: jsonEncode({
+        'userId': _userId,
+        'authorizationCode': code,
+      }),
+      headers: headers,
+    );
+    if (response.statusCode != 200) {
+      Map<String, dynamic> json = jsonDecode(response.body);
+      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
+    }
+  }
+
+  /// Unregisters LYFT from the user's account.
+  Future<void> detachLyftAccount() {
+    _verifyIsLoggedIn();
+    return _httpDelete('/api/user/services/provider/access', queryParameters: {
+      'userId': _userId.toString(),
+      'serviceName': 'LYFT',
+    });
+  }
+
   /// Registers the device's push token so that it can receive push notifications.
   ///
   /// `token` is the Base64-encoded Apple Push Notification service (APNs) device token on iOS or the Firebase Cloud
@@ -787,8 +840,9 @@ class PlatformClient {
     String unencodedPath, {
     Map<String, String>? additionalHeaders,
     Object? body,
+    Map<String, String>? queryParameters,
   }) async =>
-      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body);
+      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body, queryParameters: queryParameters);
 
   Future<Map<String, dynamic>> _httpGet(
     String unencodedPath, {

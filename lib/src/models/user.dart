@@ -6,6 +6,7 @@ class User {
   final String firstName;
   final List<Language> languages;
   final String lastName;
+  final List<LinkedAccount>? linkedAccounts;
   final String? phoneNumber;
   final List<Profile> profiles;
 
@@ -15,6 +16,7 @@ class User {
     required this.firstName,
     required this.languages,
     required this.lastName,
+    this.linkedAccounts,
     this.phoneNumber,
     required this.profiles,
   });
@@ -23,8 +25,9 @@ class User {
       : id = json['id'],
         email = json['email'],
         firstName = json['firstName'] ?? '',
-        languages = (json['language'] ?? [] as List<String>).map((v) => Language.fromString(v)).cast<Language>().toList(),
+        languages = (json['language'] ?? [] as List<String>).map((v) => Language.fromString(v)).cast<Language>().toList(growable: false),
         lastName = json['lastName'] ?? '',
+        linkedAccounts = (json['providers'] as List<dynamic>).map((e) => LinkedAccount.fromJson(e)).toList(growable: false),
         phoneNumber = json['phoneNumber'],
         profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
 
@@ -35,6 +38,7 @@ class User {
     String? firstName,
     List<Language>? languages,
     String? lastName,
+    List<LinkedAccount>? linkedAccounts,
     String? phoneNumber,
     List<Profile>? profiles,
   }) =>
@@ -44,7 +48,36 @@ class User {
         firstName: firstName ?? this.firstName,
         languages: languages ?? this.languages,
         lastName: lastName ?? this.lastName,
+        linkedAccounts: linkedAccounts ?? this.linkedAccounts,
         phoneNumber: phoneNumber ?? this.phoneNumber,
         profiles: profiles ?? this.profiles,
+      );
+}
+
+class LinkedAccount {
+  String name;
+  String? accessToken;
+  String? refreshToken;
+  String? externalId;
+
+  LinkedAccount({required this.name, this.accessToken, this.refreshToken, this.externalId,});
+
+  LinkedAccount.fromJson(Map<String, dynamic> json)
+      : name = json['serviceName'],
+        accessToken = json['accessToken'],
+        refreshToken = json['refreshToken'],
+        externalId = json['externalId'];
+
+  LinkedAccount cloneWith({
+    String? name,
+    String? accessToken,
+    String? refreshToken,
+    String? externalId,
+  }) =>
+      LinkedAccount(
+        name: name ?? this.name,
+        accessToken: accessToken ?? this.accessToken,
+        refreshToken: refreshToken ?? this.refreshToken,
+        externalId: externalId ?? this.externalId,
       );
 }
