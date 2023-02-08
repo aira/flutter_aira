@@ -741,22 +741,21 @@ class PlatformClient {
   // Lyft uses `oauth2` to provides the code through a redirection's query parameter. The redirection URL can be
   // customized through Lyft's website. More information here: https://developer.lyft.com/docs/authentication.
   Future<String> getLyftAuthorizationUrl() async {
+    _verifyIsLoggedIn();
     // FIXME: This endpoint doesn't return a "classic" `response` with `status`, `errorCode` or `errorMessage`.
     // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
 
     Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/$_userId');
-    _log.finest('>>>> get uri $uri');
     int traceId = _nextTraceId();
     Map<String, String> headers = await _getHeaders(traceId);
     http.Response response = await _httpClient.get(uri, headers: headers);
-    _log.finest('>>>> response is $response');
     Map<String, dynamic> json = jsonDecode(response.body);
-    _log.finest('>>>> body is $json');
     return json['url'];
   }
 
   /// Sends the confirmation code to lyft to seal the deal. The code can be obtained through the use of [getLyftAuthorizationUrl].
   Future<void> sendLyftAuthorizationCode(String code) async {
+    _verifyIsLoggedIn();
     // FIXME: This endpoint doesn't return a "classic" `response` when successful. Here is a sample of success response:
     //   {"has_taken_a_ride":true,"last_name":"Painchaud","id":"1169165473615850134","first_name":"Israël"}
     // Here is a sample of an error:
@@ -782,6 +781,10 @@ class PlatformClient {
   /// Unregisters LYFT from the user's account.
   Future<void> revokeLyftAuthorization() {
     _verifyIsLoggedIn();
+
+    // This endpoint doesn't return a body when successful, but does return a classic body when there is an error:
+    //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Invalid Param","hasMore":false,"messageCode":"","errorCode":"BIZ-GEN-001","status":"FAILURE"}}
+    // No need to use [_httpClient.delete] directly.
     return _httpDelete('/api/user/services/provider/access', queryParameters: {
       'userId': _userId.toString(),
       'serviceName': 'LYFT',
