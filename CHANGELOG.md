@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.0.38] - 2023-02-08
+### Added
+- Added functions to setup ride shares with Lyft: `getLyftAuthorizationUrl`, `sendLyftAuthorizationCode` and `revokeLyftAuthorization` (#67)
+- Added `User.linkedAccounts` to provide linked account information (#67)
+
+### Changed
+- **BREAKING:** `User.language` is now an immutable list like all other lists (#67)
+
 ### [0.0.37] - 2023-01-30
 ### Fixed
 - **BREAKING:** `getAccessOfferSites` doesn't accept null longitude or latitude anymore (#65)

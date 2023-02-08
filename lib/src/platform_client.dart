@@ -734,8 +734,8 @@ class PlatformClient {
   /// Returns a URL to be used to link the Lyft account to Aira.
   ///
   /// That URL should be used to obtain the code to use with [sendLyftAuthorizationCode]. Lyft will ask the proper
-  /// authorizations to the user and then redirect to `` which contains the code to extract. The redirection url is
-  /// now a dummy link which can be analyzed through a webview.
+  /// authorizations to the user and then redirect to `aira://io.aira.smart/lyft?code=s6U7dSRXMYmJ_Q-p&state=6256` which
+  /// contains the code to extract. The redirection url is now a dummy link which can be analyzed through a webview.
   ///
   /// Support for Web will be added soon.
   // Lyft uses `oauth2` to provides the code through a redirection's query parameter. The redirection URL can be
