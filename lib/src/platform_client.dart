@@ -732,13 +732,17 @@ class PlatformClient {
   }
 
   /// Returns a URL to be used to link the Lyft account to Aira.
-  Future<String> getLyftUrl() async {
+  ///
+  /// That URL should be used to obtain the code to use with [sendLyftAuthorizationCode]. Lyft will ask the proper
+  /// authorizations to the user and then redirect to `` which contains the code to extract. The redirection url is
+  /// now a dummy link which can be analyzed through a webview.
+  ///
+  /// Support for Web will be added soon.
+  // Lyft uses `oauth2` to provides the code through a redirection's query parameter. The redirection URL can be
+  // customized through Lyft's website. More information here: https://developer.lyft.com/docs/authentication.
+  Future<String> getLyftAuthorizationUrl() async {
     // FIXME: This endpoint doesn't return a "classic" `response` with `status`, `errorCode` or `errorMessage`.
     // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
-    //     json['response']?['status']
-    //     json['response']?['errorCode']
-    //     json['response']?['errorMessage']
-    // Map<String, dynamic> json = await _httpGet('api/lyft/oauth/$_userId');
 
     Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/$_userId');
     _log.finest('>>>> get uri $uri');
@@ -751,7 +755,7 @@ class PlatformClient {
     return json['url'];
   }
 
-  /// Sends the confirmation code to lyft to seal the deal.
+  /// Sends the confirmation code to lyft to seal the deal. The code can be obtained through the use of [getLyftAuthorizationUrl].
   Future<void> sendLyftAuthorizationCode(String code) async {
     // FIXME: This endpoint doesn't return a "classic" `response` when successful. Here is a sample of success response:
     //   {"has_taken_a_ride":true,"last_name":"Painchaud","id":"1169165473615850134","first_name":"Israël"}
@@ -776,7 +780,7 @@ class PlatformClient {
   }
 
   /// Unregisters LYFT from the user's account.
-  Future<void> detachLyftAccount() {
+  Future<void> revokeLyftAuthorization() {
     _verifyIsLoggedIn();
     return _httpDelete('/api/user/services/provider/access', queryParameters: {
       'userId': _userId.toString(),
