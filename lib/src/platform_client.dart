@@ -731,6 +731,66 @@ class PlatformClient {
     }
   }
 
+  /// Returns a URL to be used to link the Lyft account to Aira.
+  ///
+  /// That URL should be used to obtain the code to use with [sendLyftAuthorizationCode]. Lyft will ask the proper
+  /// authorizations to the user and then redirect to `aira://io.aira.smart/lyft?code=s6U7dSRXMYmJ_Q-p&state=6256` which
+  /// contains the code to extract. The redirection url is now a dummy link which can be analyzed through a webview.
+  ///
+  /// Support for Web will be added soon.
+  // Lyft uses `oauth2` to provides the code through a redirection's query parameter. The redirection URL can be
+  // customized through Lyft's website. More information here: https://developer.lyft.com/docs/authentication.
+  Future<String> getLyftAuthorizationUrl() async {
+    _verifyIsLoggedIn();
+    // FIXME: This endpoint doesn't return a "classic" `response` with `status`, `errorCode` or `errorMessage`.
+    // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
+
+    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/$_userId');
+    int traceId = _nextTraceId();
+    Map<String, String> headers = await _getHeaders(traceId);
+    http.Response response = await _httpClient.get(uri, headers: headers);
+    Map<String, dynamic> json = jsonDecode(response.body);
+    return json['url'];
+  }
+
+  /// Sends the confirmation code to lyft to seal the deal. The code can be obtained through the use of [getLyftAuthorizationUrl].
+  Future<void> sendLyftAuthorizationCode(String code) async {
+    _verifyIsLoggedIn();
+    // FIXME: This endpoint doesn't return a "classic" `response` when successful. Here is a sample of success response:
+    //   {"has_taken_a_ride":true,"last_name":"Painchaud","id":"1169165473615850134","first_name":"Israël"}
+    // Here is a sample of an error:
+    //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Provider Error: invalid_grant: The supplied \"code\" is not valid.","hasMore":false,"messageCode":"","errorCode":"KN-SP-003","status":"FAILURE"}}
+    // If this is ever fixed, it would be nice to use a call to `_httpPost` instead of directly using `_httpClient`.
+    int traceId = _nextTraceId();
+    Map<String, String> headers = await _getHeaders(traceId);
+    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/redirect');
+    http.Response response = await _httpClient.post(
+      uri,
+      body: jsonEncode({
+        'userId': _userId,
+        'authorizationCode': code,
+      }),
+      headers: headers,
+    );
+    if (response.statusCode != 200) {
+      Map<String, dynamic> json = jsonDecode(response.body);
+      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
+    }
+  }
+
+  /// Unregisters LYFT from the user's account.
+  Future<void> revokeLyftAuthorization() {
+    _verifyIsLoggedIn();
+
+    // This endpoint doesn't return a body when successful, but does return a classic body when there is an error:
+    //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Invalid Param","hasMore":false,"messageCode":"","errorCode":"BIZ-GEN-001","status":"FAILURE"}}
+    // No need to use [_httpClient.delete] directly.
+    return _httpDelete('/api/user/services/provider/access', queryParameters: {
+      'userId': _userId.toString(),
+      'serviceName': 'LYFT',
+    });
+  }
+
   /// Registers the device's push token so that it can receive push notifications.
   ///
   /// `token` is the Base64-encoded Apple Push Notification service (APNs) device token on iOS or the Firebase Cloud
@@ -787,8 +847,9 @@ class PlatformClient {
     String unencodedPath, {
     Map<String, String>? additionalHeaders,
     Object? body,
+    Map<String, String>? queryParameters,
   }) async =>
-      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body);
+      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body, queryParameters: queryParameters);
 
   Future<Map<String, dynamic>> _httpGet(
     String unencodedPath, {
