@@ -117,6 +117,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _isAudioMuted = false;
   bool _isVideoMuted = false;
   bool _isPresentationMuted = false;
+  bool _isReconnecting = false;
   MediaStreamTrack? _presentationVideoTrack;
 
   bool get _isPresenting => null != _presentationVideoTrack;
@@ -630,6 +631,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _reconnect() async {
+    if (_isReconnecting) {
+      _log.warning('a reconnect is already in progress');
+      return;
+    }
+    _isReconnecting = true;
+
     try {
       _log.info('reconnecting');
 
@@ -664,6 +671,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } catch (e, s) {
       _log.shout('failed to reconnect', e, s);
     } finally {
+      _isReconnecting = false;
       onReconnected?.call();
     }
   }
