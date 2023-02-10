@@ -110,12 +110,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final RoomHandler _roomHandler;
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
+  final Map<int, int> _incomingTrackIdByOutgoingTrackId = {};
   DateTime _lastLocationUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   bool _isDisposed = false;
   bool _isAudioMuted = false;
   bool _isVideoMuted = false;
   bool _isPresentationMuted = false;
+  bool _isReconnecting = false;
   MediaStreamTrack? _presentationVideoTrack;
 
   bool get _isPresenting => null != _presentationVideoTrack;
@@ -408,6 +410,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
         }
         break;
 
+      case ParticipantMessageType.INCOMING_TRACK_REMOVE:
+        await _removeIncomingTrack(participantMessage.trackId);
+        break;
+
       case ParticipantMessageType.SDP_ANSWER:
         RTCSessionDescription answer =
             RTCSessionDescription(participantMessage.payload['sdp'], participantMessage.payload['type']);
@@ -602,12 +608,34 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId, outgoingTrackId);
     _log.info('created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId');
 
+    _incomingTrackIdByOutgoingTrackId[outgoingTrackId] = track.id;
+
     await _connectTrack(track.id);
   }
 
+  Future<void> _removeIncomingTrack(int outgoingTrackId) async {
+    int? incomingTrackId = _incomingTrackIdByOutgoingTrackId.remove(outgoingTrackId);
+    if (incomingTrackId == null) {
+      _log.warning('');
+      return;
+    }
+
+    SfuConnection? connection = _connectionByTrackId.remove(incomingTrackId);
+    if (connection != null) {
+      await connection.dispose();
+    }
+
+    await _client.deleteTrack(_serviceRequest.roomId, _serviceRequest.participantId, incomingTrackId);
+  }
+
   Future<void> _reconnect() async {
+    if (_isReconnecting) {
+      return;
+    }
+
     try {
       _log.info('reconnecting');
+      _isReconnecting = true;
 
       onReconnect?.call();
 
@@ -615,7 +643,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await _client.deleteTracks(_serviceRequest.roomId, _serviceRequest.participantId);
 
       // Close the old connections.
-      for (SfuConnection connection in _connectionByTrackId.values) {
+      // https://aira-io.sentry.io/share/issue/34fe6fb73a204a1b9507e020201cad69/
+      for (SfuConnection connection in _connectionByTrackId.values.toList(growable: false)) {
         await connection.dispose();
       }
       _connectionByTrackId.clear();
@@ -639,6 +668,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } catch (e, s) {
       _log.shout('failed to reconnect', e, s);
     } finally {
+      _isReconnecting = false;
       onReconnected?.call();
     }
   }
