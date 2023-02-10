@@ -117,7 +117,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _isAudioMuted = false;
   bool _isVideoMuted = false;
   bool _isPresentationMuted = false;
-  bool _isReconnecting = false;
   MediaStreamTrack? _presentationVideoTrack;
 
   bool get _isPresenting => null != _presentationVideoTrack;
@@ -613,10 +612,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _connectTrack(track.id);
   }
 
+  /// Disconnects and disposes a track receiving a remote stream from Kurento.
   Future<void> _removeIncomingTrack(int outgoingTrackId) async {
     int? incomingTrackId = _incomingTrackIdByOutgoingTrackId.remove(outgoingTrackId);
     if (incomingTrackId == null) {
-      _log.warning('');
+      _log.warning('incoming track not found outgoing_track_id=$outgoingTrackId');
       return;
     }
 
@@ -626,16 +626,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     await _client.deleteTrack(_serviceRequest.roomId, _serviceRequest.participantId, incomingTrackId);
+    _log.info('removed incoming track id=$incomingTrackId outgoing_track_id=$outgoingTrackId');
   }
 
   Future<void> _reconnect() async {
-    if (_isReconnecting) {
-      return;
-    }
-
     try {
       _log.info('reconnecting');
-      _isReconnecting = true;
 
       onReconnect?.call();
 
@@ -643,11 +639,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await _client.deleteTracks(_serviceRequest.roomId, _serviceRequest.participantId);
 
       // Close the old connections.
-      // https://aira-io.sentry.io/share/issue/34fe6fb73a204a1b9507e020201cad69/
-      for (SfuConnection connection in _connectionByTrackId.values.toList(growable: false)) {
+      for (SfuConnection connection in _connectionByTrackId.values) {
         await connection.dispose();
       }
       _connectionByTrackId.clear();
+      _incomingTrackIdByOutgoingTrackId.clear();
 
       // Create and connect new tracks to receive the remote streams from the other participant(s). (Do this before our
       // local stream, since we want to be able to hear the Agent ASAP.)
@@ -668,7 +664,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } catch (e, s) {
       _log.shout('failed to reconnect', e, s);
     } finally {
-      _isReconnecting = false;
       onReconnected?.call();
     }
   }
