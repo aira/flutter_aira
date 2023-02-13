@@ -12,6 +12,7 @@ import 'package:flutter_aira/src/messaging_client.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'package:meta/meta.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/participant.dart';
@@ -303,6 +304,24 @@ class PlatformClient {
       await _messagingClient!.sendMessage(text);
     }
     return [];
+  }
+
+  /// Gets the status of a service request.
+  ///
+  /// If the `status` is `ASSIGNED`, this will also return the `agentFirstName`.
+  ///
+  /// This API is not intended for public consumption and is subject to change.
+  @internal
+  Future<Map<String, String?>> getServiceRequestStatus(int serviceRequestId) async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response =
+        await _httpGet('/api/user/service', queryParameters: {'id': serviceRequestId.toString()});
+
+    return {
+      'agentFirstName': response['agentName']?.toString().split(' ').first, // Split the first name and last initial.
+      'status': response['serviceStatus'],
+    };
   }
 
   /// Cancels a service request.
