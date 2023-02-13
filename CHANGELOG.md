@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Debounce reconnects.
+- Debounce reconnects (#68).
 
 ### Fixed
-- Missed service request status messages.
+- Missed service request status messages (#70).
 
 ### [0.0.38] - 2023-02-08
 ### Added
