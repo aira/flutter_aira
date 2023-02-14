@@ -369,6 +369,13 @@ class PlatformClient {
     return Track.fromJson(await _httpPost('/api/webrtc/room/$roomId/participant/$participantId/track', body));
   }
 
+  /// Deletes the specified track for a participant in a room.
+  Future<void> deleteTrack(int roomId, int participantId, int trackId) async {
+    _verifyIsLoggedIn();
+
+    await _httpDelete('/api/webrtc/room/$roomId/participant/$participantId/track/$trackId');
+  }
+
   /// Deletes all tracks for a participant in a room.
   Future<void> deleteTracks(int roomId, int participantId) async {
     _verifyIsLoggedIn();
