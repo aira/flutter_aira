@@ -110,6 +110,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final RoomHandler _roomHandler;
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
+  final Map<int, int> _incomingTrackIdByOutgoingTrackId = {};
   DateTime _lastLocationUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   bool _isDisposed = false;
@@ -409,6 +410,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
         }
         break;
 
+      case ParticipantMessageType.INCOMING_TRACK_REMOVE:
+        await _removeIncomingTrack(participantMessage.trackId);
+        break;
+
       case ParticipantMessageType.SDP_ANSWER:
         RTCSessionDescription answer =
             RTCSessionDescription(participantMessage.payload['sdp'], participantMessage.payload['type']);
@@ -603,7 +608,26 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId, outgoingTrackId);
     _log.info('created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId');
 
+    _incomingTrackIdByOutgoingTrackId[outgoingTrackId] = track.id;
+
     await _connectTrack(track.id);
+  }
+
+  /// Disconnects and disposes a track receiving a remote stream from Kurento.
+  Future<void> _removeIncomingTrack(int outgoingTrackId) async {
+    int? incomingTrackId = _incomingTrackIdByOutgoingTrackId.remove(outgoingTrackId);
+    if (incomingTrackId == null) {
+      _log.warning('incoming track not found outgoing_track_id=$outgoingTrackId');
+      return;
+    }
+
+    SfuConnection? connection = _connectionByTrackId.remove(incomingTrackId);
+    if (connection != null) {
+      await connection.dispose();
+    }
+
+    await _client.deleteTrack(_serviceRequest.roomId, _serviceRequest.participantId, incomingTrackId);
+    _log.info('removed incoming track id=$incomingTrackId outgoing_track_id=$outgoingTrackId');
   }
 
   Future<void> _reconnect() async {
@@ -626,6 +650,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         await connection.dispose();
       }
       _connectionByTrackId.clear();
+      _incomingTrackIdByOutgoingTrackId.clear();
 
       // Create and connect new tracks to receive the remote streams from the other participant(s). (Do this before our
       // local stream, since we want to be able to hear the Agent ASAP.)

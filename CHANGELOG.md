@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Debounce reconnects.
+- Debounce reconnects (#68).
+- Handle `INCOMING_TRACK_REMOVE` messages (#69).
 
 ### [0.0.38] - 2023-02-08
 ### Added
