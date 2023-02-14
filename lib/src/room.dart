@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -125,6 +126,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String? _agentName;
   MediaStream? _localStream;
   int? _localTrackId;
+  Timer? _getServiceRequestStatusTimer;
 
   // Private constructor.
   KurentoRoom._(
@@ -142,6 +144,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
+
+    // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
+    // we're backing it up by periodically checking the status of the service request.
+    _getServiceRequestStatusTimer = Timer.periodic(const Duration(seconds: 3), (_) => _getServiceRequestStatus());
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
@@ -339,6 +345,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> dispose() async {
     _isDisposed = true;
 
+    _getServiceRequestStatusTimer?.cancel();
+
     _mq.dispose();
 
     if (_serviceRequestState != ServiceRequestState.ended) {
@@ -397,17 +405,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       case ParticipantMessageType.INCOMING_TRACK_CREATE:
         await _createIncomingTrack(participantMessage.trackId);
-
-        if (serviceRequestState == ServiceRequestState.queued) {
-          // HACK: If the Agent is sending audio and we still think we're queued, we're not receiving messages on the
-          // service request presence topic. Until we can figure out why this is happening, pretend we received a
-          // message and transition the service request status to started.
-          _log.shout('missed service request status message topic=$_serviceRequestPresenceTopic');
-          _agentName = '';
-          _serviceRequestState = ServiceRequestState.started;
-          await _updateParticipantStatus();
-          notifyListeners();
-        }
         break;
 
       case ParticipantMessageType.INCOMING_TRACK_REMOVE:
@@ -430,36 +427,61 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
+  Future<void> _getServiceRequestStatus() async {
+    Map<String, String?> response = await _client.getServiceRequestStatus(_serviceRequest.id);
+
+    await _updateServiceRequestStatus(response['status']!, response['agentFirstName']);
+  }
+
   Future<void> _handleServiceRequestPresenceMessage(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
-    if (json['id'] != _serviceRequest.id) {
-      // Ignore status updates for other service requests (right now, Platform enforces that an Explorer can only be in
-      // one session, but that may change in the future).
-      return;
-    }
+    if (json['id'] != _serviceRequest.id) return;
 
-    _log.info('service request status changed id=${json['id']} status=${json['status']}');
+    await _updateServiceRequestStatus(json['status'], json['agentFirstName']);
+  }
 
-    switch (json['status']) {
+  Future<void> _updateServiceRequestStatus(String status, String? agentFirstName) async {
+    _log.info('updating service request status=$status');
+
+    switch (status) {
+      case 'REQUEST':
+        // Nothing to do.
+        break;
+
       case 'ASSIGNED':
-        _serviceRequestState = ServiceRequestState.assigned;
-        _agentName = json['agentFirstName'];
+        if (_serviceRequestState == ServiceRequestState.queued) {
+          _serviceRequestState = ServiceRequestState.assigned;
+          _agentName = agentFirstName;
+          notifyListeners();
+        }
         break;
 
       case 'STARTED':
-        _serviceRequestState = ServiceRequestState.started;
+        if (_serviceRequestState == ServiceRequestState.queued) {
+          // HACK: If we still think we're queued, we missed a message. Notify listeners that we're assigned, and let
+          // our periodic timer change this to started the next time it fires.
+          _log.warning('missed service request status message topic=$_serviceRequestPresenceTopic');
+          await _updateServiceRequestStatus('ASSIGNED', agentFirstName);
+        } else if (_serviceRequestState == ServiceRequestState.assigned) {
+          _serviceRequestState = ServiceRequestState.started;
+          notifyListeners();
 
-        // Now that the Agent has joined the room, publish our participant status.
-        await _updateParticipantStatus();
+          // Once we've started, we no longer need the timer to consume resources. This means we may miss an
+          // Agent-initiated end message, but the impact of that is low (the Explorer can end the call themselves).
+          _getServiceRequestStatusTimer?.cancel();
 
+          // Now that the Agent has joined the room, publish our participant status.
+          await _updateParticipantStatus();
+        }
         break;
 
+      // All of the other status values -- END, CANCEL, etc. -- are end states.
       default:
-        _serviceRequestState = ServiceRequestState.ended;
+        if (_serviceRequestState != ServiceRequestState.ended) {
+          _serviceRequestState = ServiceRequestState.ended;
+          if (!_isDisposed) notifyListeners();
+        }
     }
-
-    // Notify listeners of the state change.
-    notifyListeners();
   }
 
   Future<void> _connectTrack(int trackId, [MediaStream? stream]) async {

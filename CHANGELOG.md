@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debounce reconnects (#68).
 - Handle `INCOMING_TRACK_REMOVE` messages (#69).
 
+### Fixed
+- Missed service request status messages (#70).
+
 ### [0.0.38] - 2023-02-08
 ### Added
 - Added functions to setup ride shares with Lyft: `getLyftAuthorizationUrl`, `sendLyftAuthorizationCode` and `revokeLyftAuthorization` (#67)
