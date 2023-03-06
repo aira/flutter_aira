@@ -274,7 +274,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> replaceStream(MediaStream mediaStream) async {
-    if (_serviceRequestState.index >= ServiceRequestState.assigned.index) {
+    if (_serviceRequestState == ServiceRequestState.queued) {
+      return; // NOOP: The connection is not initialized and this would fail.
+    } else {
       // Replace the stored local stream.
       _localStream = mediaStream;
 
@@ -287,8 +289,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       }
 
       await _updateParticipantStatus();
-    } else {
-      return; // NOOP: The connection is not initialized and this would fail.
     }
   }
 
