@@ -274,18 +274,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> replaceStream(MediaStream mediaStream) async {
-    // Replace the stored local stream.
-    _localStream = mediaStream;
+    if (_serviceRequestState.index >= ServiceRequestState.assigned.index) {
+      // Replace the stored local stream.
+      _localStream = mediaStream;
 
-    // Replace the tracks.
-    await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
-        _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]);
-    if (!_isPresenting) {
-      await _connectionByTrackId[_localTrackId]!
-          .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : mediaStream.getVideoTracks()[0]);
+      // Replace the tracks.
+      await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
+          _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]);
+      if (!_isPresenting) {
+        await _connectionByTrackId[_localTrackId]!
+            .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : mediaStream.getVideoTracks()[0]);
+      }
+
+      await _updateParticipantStatus();
+    } else {
+      return; // NOOP: The connection is not initialized and this would fail.
     }
-
-    await _updateParticipantStatus();
   }
 
   @override
