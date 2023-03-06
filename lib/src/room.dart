@@ -253,6 +253,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> startPresenting(MediaStream displayStream) async {
+    if (_localTrackId == null) {
+      return;
+    }
     // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
     // so for now, we start presenting by replacing the Explorer's video track with the display video track.
     _presentationVideoTrack = displayStream.getVideoTracks()[0];
@@ -263,6 +266,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> stopPresenting() async {
+    if (_localTrackId == null) {
+      return;
+    }
     // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
     // track.
     await _connectionByTrackId[_localTrackId]!
@@ -274,7 +280,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> replaceStream(MediaStream mediaStream) async {
-    if (_serviceRequestState == ServiceRequestState.queued) {
+    if (_localTrackId == null) {
       return; // NOOP: The connection is not initialized and this would fail.
     } else {
       // Replace the stored local stream.
