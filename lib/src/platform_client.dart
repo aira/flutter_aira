@@ -113,7 +113,7 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpPost(
       '/api/smartapp/verify/client',
       {'clientId': clientId},
-      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+      additionalHeaders: {HttpHeaders.contentTypeHeader: 'application/x-www-form-urlencoded'},
     );
 
     return response['payload'];
@@ -168,7 +168,7 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpPost(
       '/api/smartapp/verify/client/confirm',
       {'verificationCode': verificationCode},
-      additionalHeaders: {'Content-Type': 'application/x-www-form-urlencoded'},
+      additionalHeaders: {HttpHeaders.contentTypeHeader: 'application/x-www-form-urlencoded'},
     );
 
     Credentials credentials = Credentials(
@@ -917,11 +917,16 @@ class PlatformClient {
 
   Future<Map<String, String>> _getHeaders(int traceId, {Map<String, String>? additionalHeaders}) async {
     final headers = {
-      'Content-Type': 'application/json',
+      HttpHeaders.contentTypeHeader: 'application/json',
       'X-API-Key': _config.apiKey,
       'X-Client-Id': _config.clientId,
       'X-Trace-Id': traceId.toString(),
     };
+
+    if (!kIsWeb) {
+      // The http package does not automatically set the Accept-Language header on mobile.
+      headers[HttpHeaders.acceptLanguageHeader] = Platform.localeName.replaceAll('_', '-');
+    }
 
     if (_session != null) {
       headers['X-Aira-Token'] = _token;
