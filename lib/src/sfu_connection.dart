@@ -154,4 +154,8 @@ class SfuConnection {
 
     return configuration;
   }
+
+  Future<void> restartIce() {
+    return _peerConnection.restartIce();
+  }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/src/models/position.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -35,6 +36,13 @@ abstract class Room implements Listenable {
 
   /// Called when a reconnect has completed.
   VoidCallback? onReconnected;
+
+  /// Called when a reconnect has failed.
+  VoidCallback? onReconnectionFailed;
+
+  /// Called the connection to Aira Servers is lost. This will happen when the device can't connect through either:
+  /// wifi, mobile data, bluetooth, ethernet or any other communication means.
+  VoidCallback? onConnectionLost;
 
   /// The ID of the service request.
   int get serviceRequestId;
@@ -127,6 +135,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   MediaStream? _localStream;
   int? _localTrackId;
   Timer? _getServiceRequestStatusTimer;
+  StreamSubscription<ConnectivityResult>? _connectivityMonitoringSubscription;
+  ConnectivityResult? _currentlyUsedConnectionType;
 
   // Private constructor.
   KurentoRoom._(
@@ -148,6 +158,32 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
     _getServiceRequestStatusTimer = Timer.periodic(const Duration(seconds: 3), (_) => _getServiceRequestStatus());
+
+    if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android) {
+      _connectivityMonitoringSubscription = Connectivity().onConnectivityChanged.listen(_handleConnectionRecovery);
+    }
+  }
+
+  Future<void> _handleConnectionRecovery(ConnectivityResult result) async {
+    if (result != _currentlyUsedConnectionType) { // If status changed
+      if (ServiceRequestState.started == _serviceRequestState) { // If communication was previously established
+        if (ConnectivityResult.none == result) {
+          _log.info('Lost connection to Internet');
+          onConnectionLost?.call();
+        } else {
+          _log.info('Now using connection type: $result. '
+              'Restarting ice on ${_connectionByTrackId.length} webrtc connections!');
+          for (var element in _connectionByTrackId.values) {
+            await element.restartIce();
+          }
+          if (ConnectivityResult.none == _currentlyUsedConnectionType) {
+            await _reconnect();
+          }
+        }
+      }
+
+      _currentlyUsedConnectionType = result;
+    }
   }
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
@@ -169,6 +205,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   VoidCallback? onReconnected;
+
+  @override
+  VoidCallback? onReconnectionFailed;
+
+  @override
+  VoidCallback? onConnectionLost;
 
   @override
   int get serviceRequestId => _serviceRequest.id;
@@ -356,6 +398,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _isDisposed = true;
 
     _getServiceRequestStatusTimer?.cancel();
+    await _connectivityMonitoringSubscription?.cancel();
 
     _mq.dispose();
 
@@ -700,11 +743,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await _createOutgoingTrack();
 
       _log.info('reconnected');
+      onReconnected?.call();
     } catch (e, s) {
       _log.shout('failed to reconnect', e, s);
+      onReconnectionFailed?.call();
     } finally {
       _isReconnecting = false;
-      onReconnected?.call();
     }
   }
 }
