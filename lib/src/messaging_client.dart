@@ -4,6 +4,7 @@ import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_aira/src/platform_exceptions.dart';
 import 'package:logging/logging.dart';
+import 'package:pubnub/networking.dart';
 import 'package:pubnub/pubnub.dart' as pn;
 
 import 'models/message.dart';
@@ -50,6 +51,9 @@ class MessagingClientPubNub implements MessagingClient {
         subscribeKey: messagingKeys.receiveKey,
         userId: pn.UserId(userId.toString()),
       ),
+      networking: NetworkingModule(
+        retryPolicy: pn.RetryPolicy.exponential(maxRetries: 10),
+      )
     );
     _pubnub.setToken(token);
 
