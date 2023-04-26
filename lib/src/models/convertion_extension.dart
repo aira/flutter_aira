@@ -10,4 +10,10 @@ extension StringConversion on String {
     DateTime date = DateFormat('MM/dd/yyyy HH:mm:ss').parse(this);
     return date.add(date.timeZoneOffset);
   }
+
+  // https://www.iso.org/iso-8601-date-and-time-format.html
+  DateTime get dateTimeISO8601 {
+    DateTime date = DateFormat('yyyy-MM-dd HH:mm:ss.SSS').parse(this);
+    return date.add(date.timeZoneOffset);
+  }
 }
