@@ -1,8 +1,11 @@
+import 'dart:math';
+
+import 'package:equatable/equatable.dart';
 
 /// Model used to carry the Position information.
 ///
 /// If any information (other than the 3 required ones) is not available, set it to null.
-class Position {
+class Position extends Equatable {
   const Position({
     required this.longitude,
     required this.latitude,
@@ -56,4 +59,34 @@ class Position {
   ///
   /// The speedAccuracy is not available on all devices. In these cases the value should be null.
   final double? speedAccuracy;
+
+  @override
+  List<Object> get props => [longitude,latitude,heading ?? -1];
+
+  @override
+  bool get stringify => true;
+
+  double _degreesToRadians(degrees) => degrees * pi / 180;
+
+  /// Returns the distance in meters between this point and `p1`.
+  // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+  // http://www.movable-type.co.uk/scripts/latlong.html
+  double distanceInMetersWith(Position p1) {
+    int earthRadiusKm = 6371;
+
+    double dLat = _degreesToRadians(latitude - p1.latitude);
+    double dLon = _degreesToRadians(longitude - p1.longitude);
+
+    double lat1 = _degreesToRadians(p1.latitude);
+    double lat2 = _degreesToRadians(latitude);
+
+    double a = sin(dLat / 2) * sin(dLat / 2) + sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadiusKm * c * 1000;
+  }
+
+  /// Returns the amount of time which was spent since this Position was recorded in milliseconds.
+  int timeSinceInMs() => DateTime.now().difference(timestamp).inMilliseconds;
 }
+

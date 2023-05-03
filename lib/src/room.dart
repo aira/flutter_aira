@@ -360,7 +360,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     DateTime now = DateTime.now();
-    if (DateTime.now().difference(_lastLocationUpdate).inSeconds < 1) {
+    if (now.difference(_lastLocationUpdate).inSeconds < 1) {
+      // Same throttling delay as `PlatformClient.inquireForGPSActivatedOffer`.
       return;
     }
     _lastLocationUpdate = now;
