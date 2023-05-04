@@ -4,20 +4,18 @@ import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_aira/src/models/position.dart';
+import 'package:flutter_aira/flutter_aira.dart';
+import 'package:flutter_aira/src/models/convertion_extension.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
-import 'messaging_client.dart';
 import 'models/participant.dart';
 import 'models/participant_message.dart';
-import 'models/service_request.dart';
-import 'models/session.dart';
-import 'models/track.dart';
-import 'platform_client.dart';
 import 'platform_mq.dart';
 import 'sfu_connection.dart';
+
+typedef AccessOfferChangeCallback = void Function(AccessOfferDetails accessOffer, Duration? remainingTime);
 
 abstract class RoomHandler {
   /// Adds the remote stream to an [RTCVideoRenderer].
@@ -43,6 +41,9 @@ abstract class Room implements Listenable {
   /// Called the connection to Aira Servers is lost. This will happen when the device can't connect through either:
   /// wifi, mobile data, bluetooth, ethernet or any other communication means.
   VoidCallback? onConnectionLost;
+
+  /// AccessOffer Change Notification.
+  AccessOfferChangeCallback? onAccessOfferChange;
 
   /// The ID of the service request.
   int get serviceRequestId;
@@ -154,9 +155,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
+    await _mq.subscribe(_callEventsTopic, MqttQos.atLeastOnce, _handleTriggers);
 
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
+    // FIXME: This timer eats up the exceptions thrown by the '_getServiceRequestStatus()' function which is an issue when the token is not valid anymore.
     _getServiceRequestStatusTimer = Timer.periodic(const Duration(seconds: 3), (_) => _getServiceRequestStatus());
 
     if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android) {
@@ -213,6 +216,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   VoidCallback? onConnectionLost;
 
   @override
+  AccessOfferChangeCallback? onAccessOfferChange;
+
+  @override
   int get serviceRequestId => _serviceRequest.id;
 
   @override
@@ -241,6 +247,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   String get _roomTopic => '${_env.name}/webrtc/room/${_serviceRequest.roomId}';
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
+
+  String get _callEventsTopic => '${_env.name}/si/ts/${_serviceRequest.userId}';
 
   String get _serviceInfoTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
 
@@ -352,7 +360,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     DateTime now = DateTime.now();
-    if (DateTime.now().difference(_lastLocationUpdate).inSeconds < 1) {
+    if (now.difference(_lastLocationUpdate).inSeconds < 1) {
+      // Same throttling delay as `PlatformClient.inquireForGPSActivatedOffer`.
       return;
     }
     _lastLocationUpdate = now;
@@ -439,6 +448,25 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await _reconnect();
     } else {
       _log.warning('ignoring participant event message type=${json['type']}');
+    }
+  }
+
+  Future<void> _handleTriggers(String message) async {
+    Map<String, dynamic> json = jsonDecode(message);
+    _log.finest('Got following trigger: ${json['trigger']}');
+
+    // When a GPS Activated Offer is activated during a call, we get a 'SERVICE_ACCESS' message with the offer's details
+    if (json['trigger'] == 'SERVICE_ACCESS') {
+      Map<String, dynamic> value = json['value'] ?? [];
+      AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);
+      if (null == accessOffer.durationPerCall) {
+        onAccessOfferChange?.call(accessOffer, null);
+      } else {
+        DateTime? startTime = (value['startTime'] as String?)?.dateTimeZ;
+        DateTime? accessOfferValidUntil = startTime?.add(Duration(seconds: accessOffer.durationPerCall!));
+        Duration? remainingTime = accessOfferValidUntil?.difference(DateTime.now());
+        onAccessOfferChange?.call(accessOffer, remainingTime);
+      }
     }
   }
 

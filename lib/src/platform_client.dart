@@ -38,6 +38,9 @@ class PlatformClient {
 
   MessagingClient? get messagingClient => _messagingClient;
 
+  Position? _lastPositionUpdate;
+  AccessOfferDetails? _lastAccessOfferUpdate;
+
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
   ///
   /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
@@ -460,11 +463,10 @@ class PlatformClient {
     ]);
   }
 
-  Future<Map<String, dynamic>> _updatePropertyValue(String propertyName, List<String> propertyValues) async =>
-    _httpPut(
-      '/api/user/$_userId/property/$propertyName/value',
-      body: jsonEncode(propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false)),
-    );
+  Future<Map<String, dynamic>> _updatePropertyValue(String propertyName, List<String> propertyValues) async => _httpPut(
+        '/api/user/$_userId/property/$propertyName/value',
+        body: jsonEncode(propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false)),
+      );
 
   /// Used to start the process to update and verify a user's [email] address.
   /// This process is completed by visiting a verification link sent to [email].
@@ -616,17 +618,19 @@ class PlatformClient {
 
   /// Returns, page by page, all available Promotion Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferPromotions(
-      int page, {
-        double? latitude,
-        double? longitude,
-      }) => _getAccessOffers('promotion', page, latitude: latitude, longitude: longitude);
+    int page, {
+    double? latitude,
+    double? longitude,
+  }) =>
+      _getAccessOffers('promotion', page, latitude: latitude, longitude: longitude);
 
   /// Returns, page by page, all available Product Access Offers for the current user.
   Future<Paged<AccessOfferDetails>> getAccessOfferProducts(
-      int page, {
-        double? latitude,
-        double? longitude,
-      }) => _getAccessOffers('product', page, latitude: latitude, longitude: longitude);
+    int page, {
+    double? latitude,
+    double? longitude,
+  }) =>
+      _getAccessOffers('product', page, latitude: latitude, longitude: longitude);
 
   Future<Paged<AccessOfferDetails>> _getAccessOffers(
     String type,
@@ -636,80 +640,95 @@ class PlatformClient {
   }) async {
     _verifyIsLoggedIn();
 
-    return _processAccessOfferResponse(await _httpGet(
-      '/api/user/$_userId/access/$type',
-      queryParameters: {
-        if (null != latitude) 'lat': latitude.toString(),
-        if (null != longitude) 'lng': longitude.toString(),
-        'limit': '25',
-        'pg': page.toString(),
-      },
-    ), page);
+    return _processAccessOfferResponse(
+      await _httpGet(
+        '/api/user/$_userId/access/$type',
+        queryParameters: {
+          if (null != latitude) 'lat': latitude.toString(),
+          if (null != longitude) 'lng': longitude.toString(),
+          'limit': '25',
+          'pg': page.toString(),
+        },
+      ),
+      page,
+    );
   }
 
   /// Search for all applicable Site access offers matching the [searchPattern] for the current User.
   /// Although [latitude] and [longitude] are nullable, the backend will throw an exception if [searchPattern] is empty
   /// and either [longitude] or [latitude] is null.
   Future<Paged<AccessOfferDetails>> searchAccessOfferSites(
-      int page, {
-        double? latitude,
-        double? longitude,
-        required String searchPattern,
-      }) async {
+    int page, {
+    double? latitude,
+    double? longitude,
+    required String searchPattern,
+  }) async {
     _verifyIsLoggedIn();
 
-    return _processAccessOfferResponse(await _httpGet(
-      '/api/site/search/v2',
-      queryParameters: {
-        'q': searchPattern,
-        if (null != latitude) 'lat': latitude.toString(),
-        if (null != longitude) 'lng': longitude.toString(),
-        'limit': '10',
-        'pg': page.toString(),
-      },
-    ), page, payloadTag: 'sites',);
+    return _processAccessOfferResponse(
+      await _httpGet(
+        '/api/site/search/v2',
+        queryParameters: {
+          'q': searchPattern,
+          if (null != latitude) 'lat': latitude.toString(),
+          if (null != longitude) 'lng': longitude.toString(),
+          'limit': '10',
+          'pg': page.toString(),
+        },
+      ),
+      page,
+      payloadTag: 'sites',
+    );
   }
 
   /// Search for all applicable Promotion access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferPromotions(
-      int page, {
-        required String searchPattern,
-      }) => _searchAccessOffers(AccessOfferType.promotion, page, searchPattern: searchPattern);
+    int page, {
+    required String searchPattern,
+  }) =>
+      _searchAccessOffers(AccessOfferType.promotion, page, searchPattern: searchPattern);
 
   /// Search for all applicable Product access offers matching the [searchPattern] for the current User.
   Future<Paged<AccessOfferDetails>> searchAccessOfferProducts(
-      int page, {
-        required String searchPattern,
-      }) => _searchAccessOffers(AccessOfferType.product, page, searchPattern: searchPattern);
+    int page, {
+    required String searchPattern,
+  }) =>
+      _searchAccessOffers(AccessOfferType.product, page, searchPattern: searchPattern);
 
   Future<Paged<AccessOfferDetails>> _searchAccessOffers(
-      AccessOfferType type,
-      int page, {
-        required String searchPattern,
-      }) async {
+    AccessOfferType type,
+    int page, {
+    required String searchPattern,
+  }) async {
     _verifyIsLoggedIn();
 
-    return _processAccessOfferResponse(await _httpGet(
-      '/api/access/${type.name}/search',
-      queryParameters: {
-        'q': searchPattern,
-        'limit': '15',
-        'pg': page.toString(),
-      },
-    ), page);
+    return _processAccessOfferResponse(
+      await _httpGet(
+        '/api/access/${type.name}/search',
+        queryParameters: {
+          'q': searchPattern,
+          'limit': '15',
+          'pg': page.toString(),
+        },
+      ),
+      page,
+    );
   }
 
   /// Returns the list of recently used AccessOffer for the current user.
   Future<Paged<AccessOfferDetails>> getRecentlyUsedAccessOffers(int page) async {
     _verifyIsLoggedIn();
 
-    return _processAccessOfferResponse(await _httpGet(
-      '/api/user/$_userId/access/recently-used',
-      queryParameters: {
-        'limit': '3',
-        'pg': page.toString(),
-      },
-    ), page);
+    return _processAccessOfferResponse(
+      await _httpGet(
+        '/api/user/$_userId/access/recently-used',
+        queryParameters: {
+          'limit': '3',
+          'pg': page.toString(),
+        },
+      ),
+      page,
+    );
   }
 
   Paged<AccessOfferDetails> _processAccessOfferResponse(
@@ -749,10 +768,12 @@ class PlatformClient {
       // Returns 204 if the offer is still valid.
       return AccessOfferDetails.fromJson(json);
     } on PlatformLocalizedException {
-      _log.finest('Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}');
+      _log.finest(
+          'Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}');
       rethrow;
     } catch (e) {
-      _log.shout('Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}');
+      _log.shout(
+          'Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}');
       rethrow;
     }
   }
@@ -837,6 +858,35 @@ class PlatformClient {
     await _httpPost('/api/smartapp/token', body);
   }
 
+  /// Requests Platform if there is an available Site Offer at the current position.
+  ///
+  /// Returns null if there is no Site Offer available or an `AccessOfferDetails` of the available offer if within
+  /// geofence.
+  ///
+  /// WARNING! This function is Throttled to avoid overhead on the server side. If it is called more than every seconds,
+  /// it will return the latest valid AccessOfferDetails. This is done to simplify the handling of the function as now,
+  /// we only have to worry about nulls and valid AccessOfferDetails.
+  Future<AccessOfferDetails?> inquireForGPSActivatedOffer(Position position) async {
+    _verifyIsLoggedIn();
+
+    if (null != _lastPositionUpdate && _lastPositionUpdate!.timeSinceInMs() < 1000) {
+      // Same throttling delay as `KurrentoRoom.updateLocation`.
+      return _lastAccessOfferUpdate;
+    }
+    _lastPositionUpdate = position;
+
+    String body = jsonEncode({
+      'userId': _userId,
+      'lt': position.latitude,
+      'lg': position.longitude,
+    });
+
+    Map<String, dynamic> gpsResponse = await _httpPost('/api/user/location', body);
+    Map<String, dynamic>? site = gpsResponse['site'];
+    _lastAccessOfferUpdate = null == site ? null : AccessOfferDetails.fromJson(site);
+    return _lastAccessOfferUpdate;
+  }
+
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
       {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
     try {
@@ -875,7 +925,13 @@ class PlatformClient {
     Object? body,
     Map<String, String>? queryParameters,
   }) async =>
-      _httpSend('DELETE', unencodedPath, additionalHeaders: additionalHeaders, body: body, queryParameters: queryParameters);
+      _httpSend(
+        'DELETE',
+        unencodedPath,
+        additionalHeaders: additionalHeaders,
+        body: body,
+        queryParameters: queryParameters,
+      );
 
   Future<Map<String, dynamic>> _httpGet(
     String unencodedPath, {
