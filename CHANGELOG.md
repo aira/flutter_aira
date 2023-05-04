@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Position` can be now compared using the '==' operator to know if both positions have same longitude, latitude, heading and timestamp (#75).
 - `Position.toString` will now show longitude, latitude, heading and timestamp (#75).
 - `Position.timeSinceInMs` is now an available convenience to know the amount of time elapsed since `Position.timestamp` and now (#75).
-- `Position.distanceInMetersWith` is now an available convenience to know the between two Positions (#75).
+- `Position.distanceFrom` is now an available convenience to know the between two Positions (#75).
 
 ## [1.1.1] - 2023-03-31
 ### Added
