@@ -454,6 +454,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> _handleTriggers(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
     _log.finest('Got following trigger: ${json['trigger']}');
+
+    // When a GPS Activated Offer is activated during a call, we get a 'SERVICE_ACCESS' message with the offer's details
     if (json['trigger'] == 'SERVICE_ACCESS') {
       Map<String, dynamic> value = json['value'] ?? [];
       AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);

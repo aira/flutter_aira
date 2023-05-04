@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2023-04-04
+### Added
+- `RoomHandler.onAccessOfferChange` is now available to get notified of activated Site Offers (#75).
+- `PlatformClient.inquireForGPSActivatedOffer` is now available to inquire for available Site Offers when outside of a call (#75).
+- `Position` can be now compared using the '==' operator to know if both positions have same longitude, latitude and heading (#75).
+- `Position.timeSinceInMs` is now an available convenience to know the amount of time elapsed since `Position.timestamp` and now (#75).
+- `Position.distanceInMetersWith` is now an available convenience to know the between two Positions (#75).
+
 ## [1.1.1] - 2023-03-31
 ### Added
 - automatic PubNub reconnection when data connection fails or changes (#74).
