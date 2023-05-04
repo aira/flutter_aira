@@ -862,6 +862,10 @@ class PlatformClient {
   ///
   /// Returns null if there is no Site Offer available or an `AccessOfferDetails` of the available offer if within
   /// geofence.
+  ///
+  /// WARNING! This function is Throttled to avoid overhead on the server side. If it is called more than every seconds,
+  /// it will return the latest valid AccessOfferDetails. This is done to simplify the handling of the function as now,
+  /// we only have to worry about nulls and valid AccessOfferDetails.
   Future<AccessOfferDetails?> inquireForGPSActivatedOffer(Position position) async {
     _verifyIsLoggedIn();
 
@@ -875,7 +879,6 @@ class PlatformClient {
       'userId': _userId,
       'lt': position.latitude,
       'lg': position.longitude,
-      'p': Platform.isAndroid ? 'ANDROID' : 'IOS',
     });
 
     Map<String, dynamic> gpsResponse = await _httpPost('/api/user/location', body);

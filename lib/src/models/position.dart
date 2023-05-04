@@ -71,7 +71,7 @@ class Position extends Equatable {
   /// Returns the distance in meters between this point and `p1`.
   // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
   // http://www.movable-type.co.uk/scripts/latlong.html
-  double distanceInMetersWith(Position p1) {
+  double distanceFrom(Position p1) {
     int earthRadiusKm = 6371;
 
     double dLat = _degreesToRadians(latitude - p1.latitude);

@@ -155,7 +155,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
-    await _mq.subscribe(_triggerTopic, MqttQos.atLeastOnce, _handleTriggers);
+    await _mq.subscribe(_callEventsTopic, MqttQos.atLeastOnce, _handleTriggers);
 
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
@@ -248,7 +248,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   String get _serviceRequestPresenceTopic => '${_env.name}/user/${_serviceRequest.userId}/service-request/presence';
 
-  String get _triggerTopic => '${_env.name}/si/ts/${_serviceRequest.userId}';
+  String get _callEventsTopic => '${_env.name}/si/ts/${_serviceRequest.userId}';
 
   String get _serviceInfoTopic => '${_env.name}/si/fg/${_serviceRequest.userId}';
 
@@ -459,7 +459,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (json['trigger'] == 'SERVICE_ACCESS') {
       Map<String, dynamic> value = json['value'] ?? [];
       AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);
-      if (null == accessOffer.durationPerCall || accessOffer.durationPerCall! < 30) {
+      if (null == accessOffer.durationPerCall) {
         onAccessOfferChange?.call(accessOffer, null);
       } else {
         DateTime? startTime = (value['startTime'] as String?)?.dateTimeZ;
