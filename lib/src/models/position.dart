@@ -61,7 +61,7 @@ class Position extends Equatable {
   final double? speedAccuracy;
 
   @override
-  List<Object> get props => [longitude,latitude,heading ?? -1];
+  List<Object> get props => [longitude,latitude,heading ?? -1,timestamp];
 
   @override
   bool get stringify => true;
