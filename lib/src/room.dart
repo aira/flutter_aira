@@ -155,7 +155,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce, _handleParticipantEventMessage);
     await _mq.subscribe(_participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
     await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce, _handleServiceRequestPresenceMessage);
-    await _mq.subscribe(_callEventsTopic, MqttQos.atLeastOnce, _handleTriggers);
+    await _mq.subscribe(_callEventsTopic, MqttQos.atLeastOnce, _handleCallEvents);
 
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
@@ -451,12 +451,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  Future<void> _handleTriggers(String message) async {
+  Future<void> _handleCallEvents(String message) async {
     Map<String, dynamic> json = jsonDecode(message);
-    _log.finest('Got following trigger: ${json['trigger']}');
+    String? trigger = json['trigger'];
+    _log.finest('Got following trigger: $trigger');
 
     // When a GPS Activated Offer is activated during a call, we get a 'SERVICE_ACCESS' message with the offer's details
-    if (json['trigger'] == 'SERVICE_ACCESS') {
+    if (trigger == 'SERVICE_ACCESS') {
       Map<String, dynamic> value = json['value'] ?? [];
       AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);
       if (null == accessOffer.durationPerCall) {
