@@ -8,12 +8,14 @@ import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 
+SemanticsHandle? semanticsHandle;
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Auto-enable accessibility for our Blind and Low Vision customers (see
   // https://docs.flutter.dev/development/accessibility-and-localization/accessibility#screen-readers).
-  RendererBinding.instance.setSemanticsEnabled(true);
+  semanticsHandle = RendererBinding.instance.ensureSemantics();
 
   // Configure logging.
   Logger.root.level = Level.INFO;
