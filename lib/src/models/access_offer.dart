@@ -66,6 +66,33 @@ class AccessOfferDetails {
   // List<Task>? tasks;
   String? termsAndConditionsUrl;
   String? type;
+
+  Map<String, dynamic> toJson() => {
+        'account': account?.toJson(),
+        'activated': activated,
+        'activatedEffectiveSeconds': activatedEffectiveSeconds,
+        'availableToGuests': availableToGuests,
+        'description': description,
+        'distanceMiles': distanceMiles,
+        'durationAllowed': durationAllowed,
+        'durationPerCall': durationPerCall,
+        'durationUsed': durationUsed,
+        'effectiveFrom': effectiveFrom?.toIso8601String(),
+        'effectiveTo': effectiveTo?.toIso8601String(),
+        'enabled': enabled,
+        'expired': expired,
+        'id': id,
+        'key': key,
+        'message': message,
+        'name': name,
+        'class': offerType.name,
+        'requireAgentApproval': requireAgentApproval,
+        'siteAddress': siteAddress?.toJson(),
+        'siteId': siteId,
+        'sticky': sticky,
+        'termsAndConditionsUrl': termsAndConditionsUrl,
+        'type': type,
+  };
 }
 
 class AccountDetails {
@@ -87,6 +114,18 @@ class AccountDetails {
   String? firstname;
   String? name;
   String? type; // TODO: could be an enum! PUBLIC, PRIVATE, ???
+
+  Map<String, dynamic> toJson() =>
+      {
+        'acceptBusinessUsers': acceptBusinessUsers,
+        'accountCode': accountCode,
+        'accountId': accountId,
+        'accountType': accountType?.name,
+        'email': email,
+        'firstname': firstname,
+        'name': name,
+        'type': type,
+      };
 }
 
 class SiteAddress {
@@ -110,4 +149,17 @@ class SiteAddress {
   List<double> latitudeLongitude = [];
   String? state;
   String? zip;
+
+  Map<String, dynamic> toJson() =>
+      {
+        'address1': address1,
+        'address2': address2,
+        'address3': address3,
+        'city': city,
+        'country': country,
+        'county': county,
+        'latitudeLongitude': latitudeLongitude,
+        'state': state,
+        'zip': zip,
+      };
 }

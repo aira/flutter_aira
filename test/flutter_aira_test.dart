@@ -12,6 +12,12 @@ void main() {
     environment: PlatformEnvironment.dev,
   );
 
+  group('AccessOffer serialization', () {
+    test('should serialize and deserialize without alteration', () async {
+
+    });
+  });
+
   group('loginWithToken', () {
     test('should throw PlatformInvalidTokenException on KN-UM-056 error', () async {
       final httpClient = MockClient((request) async {
