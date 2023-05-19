@@ -460,7 +460,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (trigger == 'SERVICE_ACCESS') {
       Map<String, dynamic> value = json['value'] ?? [];
       AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);
-      if (null == accessOffer.durationPerCall) {
+      if (null == accessOffer.durationPerCall || accessOffer.durationPerCall! <= 0) {
         onAccessOfferChange?.call(accessOffer, null);
       } else {
         DateTime? startTime = (value['startTime'] as String?)?.dateTimeZ;
