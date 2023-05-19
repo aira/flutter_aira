@@ -8,6 +8,8 @@ enum AccountType {
   /// A reseller account.
   reseller;
 
+  String get name => toString().split('.').last;
+
   static AccountType fromName(String name) {
     return AccountType.values.byName(name.toLowerCase());
   }
