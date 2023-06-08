@@ -459,14 +459,19 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // When a GPS Activated Offer is activated during a call, we get a 'SERVICE_ACCESS' message with the offer's details
     if (trigger == 'SERVICE_ACCESS') {
       Map<String, dynamic> value = json['value'] ?? [];
-      AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(value['access']);
-      if (null == accessOffer.durationPerCall || accessOffer.durationPerCall! <= 0) {
-        onAccessOfferChange?.call(accessOffer, null);
-      } else {
-        DateTime? startTime = (value['startTime'] as String?)?.dateTimeZ;
-        DateTime? accessOfferValidUntil = startTime?.add(Duration(seconds: accessOffer.durationPerCall!));
-        Duration? remainingTime = accessOfferValidUntil?.difference(DateTime.now());
-        onAccessOfferChange?.call(accessOffer, remainingTime);
+
+      Map<String, dynamic> accessOfferJson = value['access'];
+      Set<String> handledAccessOfferTypes = AccessOfferType.values.map((aot) => aot.name).toSet();
+      if (handledAccessOfferTypes.contains(accessOfferJson['class'])) {
+        AccessOfferDetails accessOffer = AccessOfferDetails.fromJson(accessOfferJson);
+        if (null == accessOffer.durationPerCall || accessOffer.durationPerCall! <= 0) {
+          onAccessOfferChange?.call(accessOffer, null);
+        } else {
+          DateTime? startTime = (value['startTime'] as String?)?.dateTimeZ;
+          DateTime? accessOfferValidUntil = startTime?.add(Duration(seconds: accessOffer.durationPerCall!));
+          Duration? remainingTime = accessOfferValidUntil?.difference(DateTime.now());
+          onAccessOfferChange?.call(accessOffer, remainingTime);
+        }
       }
     }
   }
