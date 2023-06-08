@@ -85,8 +85,5 @@ class Position extends Equatable {
 
     return earthRadiusKm * c * 1000;
   }
-
-  /// Returns the amount of time which was spent since this Position was recorded in milliseconds.
-  int timeSinceInMs() => DateTime.now().difference(timestamp).inMilliseconds;
 }
 
