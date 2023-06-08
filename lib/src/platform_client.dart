@@ -38,7 +38,7 @@ class PlatformClient {
 
   MessagingClient? get messagingClient => _messagingClient;
 
-  Position? _lastPositionUpdate;
+  DateTime? _lastPositionUpdate;
   AccessOfferDetails? _lastAccessOfferUpdate;
 
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
@@ -869,11 +869,12 @@ class PlatformClient {
   Future<AccessOfferDetails?> inquireForGPSActivatedOffer(Position position) async {
     _verifyIsLoggedIn();
 
-    if (null != _lastPositionUpdate && _lastPositionUpdate!.timeSinceInMs() < 1000) {
+    DateTime now = DateTime.now();
+    if (null != _lastPositionUpdate && now.difference(_lastPositionUpdate!).inMilliseconds < 1000) {
       // Same throttling delay as `KurrentoRoom.updateLocation`.
       return _lastAccessOfferUpdate;
     }
-    _lastPositionUpdate = position;
+    _lastPositionUpdate = now;
 
     String body = jsonEncode({
       'userId': _userId,
