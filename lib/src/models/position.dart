@@ -60,6 +60,31 @@ class Position extends Equatable {
   /// The speedAccuracy is not available on all devices. In these cases the value should be null.
   final double? speedAccuracy;
 
+  Position.fromJson(Map<String, dynamic> json):
+        longitude = json['longitude'],
+        latitude = json['latitude'],
+        timestamp = json['timestamp'],
+        altitude = json['altitude'],
+        accuracy = json['accuracy'],
+        verticalAccuracy = json['verticalAccuracy'],
+        heading = json['heading'],
+        headingAccuracy = json['headingAccuracy'],
+        speed = json['speed'],
+        speedAccuracy = json['speedAccuracy'];
+
+  Map<String, dynamic> toJson() => {
+    'longitude': longitude,
+    'latitude': latitude,
+    'timestamp': timestamp,
+    'altitude': altitude,
+    'accuracy': accuracy,
+    'verticalAccuracy': verticalAccuracy,
+    'heading': heading,
+    'headingAccuracy': headingAccuracy,
+    'speed': speed,
+    'speedAccuracy': speedAccuracy,
+  };
+
   @override
   List<Object> get props => [longitude,latitude,heading ?? -1,timestamp];
 
@@ -71,13 +96,13 @@ class Position extends Equatable {
   /// Returns the distance in meters between this point and `p1`.
   // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
   // http://www.movable-type.co.uk/scripts/latlong.html
-  double distanceFrom(Position p1) {
+  double distanceFrom(Position other) {
     int earthRadiusKm = 6371;
 
-    double dLat = _degreesToRadians(latitude - p1.latitude);
-    double dLon = _degreesToRadians(longitude - p1.longitude);
+    double dLat = _degreesToRadians(latitude - other.latitude);
+    double dLon = _degreesToRadians(longitude - other.longitude);
 
-    double lat1 = _degreesToRadians(p1.latitude);
+    double lat1 = _degreesToRadians(other.latitude);
     double lat2 = _degreesToRadians(latitude);
 
     double a = sin(dLat / 2) * sin(dLat / 2) + sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
@@ -88,5 +113,16 @@ class Position extends Equatable {
 
   /// Returns the amount of time which was spent since this Position was recorded in milliseconds.
   int timeSinceInMs() => DateTime.now().difference(timestamp).inMilliseconds;
+
+  /// Returns the absolute value of the speed in meters per second (m/s) it took to travel between the two positions.
+  /// If the timestamps of both Positions are equal, we can't calculate speed to avoid division by zero. In that case,
+  /// we return -1.
+  double speedFrom(Position secondPosition) {
+    if (0 == timestamp.compareTo(secondPosition.timestamp)) {
+      // Avoiding division by 0!!! This is the only case where we can return a negative value
+      return -1;
+    }
+    return distanceFrom(secondPosition) * 1000 / secondPosition.timestamp.difference(timestamp).inMilliseconds.abs();
+  }
 }
 
