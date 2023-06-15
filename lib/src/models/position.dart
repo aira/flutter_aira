@@ -118,7 +118,7 @@ class Position extends Equatable {
   /// If the timestamps of both Positions are equal, we can't calculate speed to avoid division by zero. In that case,
   /// we return -1.
   double speedFrom(Position secondPosition) {
-    if (0 == timestamp.compareTo(secondPosition.timestamp)) {
+    if (timestamp.isAtSameMomentAs(secondPosition.timestamp)) {
       // Avoiding division by 0!!! This is the only case where we can return a negative value
       return -1;
     }
