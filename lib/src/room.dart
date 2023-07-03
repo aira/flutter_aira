@@ -128,9 +128,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _isVideoMuted = false;
   bool _isPresentationMuted = false;
   bool _isReconnecting = false;
-  MediaStream? _presentationStream;
+  MediaStreamTrack? _presentationVideoTrack;
 
-  bool get _isPresenting => null != _presentationStream;
+  bool get _isPresenting => null != _presentationVideoTrack;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
   String? _agentName;
   MediaStream? _localStream;
@@ -308,14 +308,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
     // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
     // so for now, we start presenting by replacing the Explorer's video track with the display video track.
-    _presentationStream = await displayStream.clone();
-    if ((_localStream?.getAudioTracks().isNotEmpty ?? false) && _presentationStream!.getAudioTracks().isEmpty) {
-      await _presentationStream?.addTrack(_localStream!.getAudioTracks()[0]);
-    }
-    MediaStreamTrack presentationTrack = displayStream.getVideoTracks()[0];
-    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_isPresentationMuted ? null : presentationTrack);
+    _presentationVideoTrack = displayStream.getVideoTracks()[0];
+    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_isPresentationMuted ? null : _presentationVideoTrack);
     await _updateParticipantStatus();
-    _log.info('started presenting track=${presentationTrack.label}');
+    _log.info('started presenting track=${_presentationVideoTrack!.label}');
   }
 
   @override
@@ -327,7 +323,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // track.
     await _connectionByTrackId[_localTrackId]!
         .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : _localStream!.getVideoTracks()[0]);
-    _presentationStream = null;
+    _presentationVideoTrack = null;
     await _updateParticipantStatus();
     _log.info('stopped presenting');
   }
@@ -701,7 +697,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       if (muted) {
         await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(null);
       } else {
-        await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_presentationStream!.getVideoTracks()[0]);
+        await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_presentationVideoTrack);
       }
     }
   }
@@ -713,7 +709,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     _localTrackId = track.id;
 
-    await _connectTrack(_localTrackId!, _isPresenting ? _presentationStream : _localStream);
+    await _connectTrack(_localTrackId!, _localStream);
   }
 
   /// Creates and connects a track to receive a remote stream from Kurento.
