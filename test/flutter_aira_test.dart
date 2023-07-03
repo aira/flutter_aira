@@ -70,4 +70,47 @@ void main() {
       expect(1234, userLogin.userId);
     });
   });
+
+  group('Position', () {
+    // 36.00282558105645, -78.93345583177252
+    // 36.00404070162735, -78.93306959369106
+    //
+    // according to Google, this is 474.08 ft or 144.4996 meters from each other, but we get 139.5 meters...
+    // is this close enough for now? Yes!
+    test('Calculated Distance', () {
+      var now = DateTime.now();
+      var p1 = Position(latitude: 36.00282558105645, longitude: -78.93345583177252, timestamp: now.subtract(const Duration(seconds: 10)));
+      var p2 = Position(latitude: 36.00404070162735, longitude: -78.93306959369106, timestamp: now);
+      var distanceFrom = p1.distanceFrom(p2);
+      expect(distanceFrom, lessThan(139.6));
+      expect(distanceFrom, greaterThan(139.5));
+    });
+    // This test was added to confirm that the distance delta we get with Google is not an implementation issue.
+    test('Calculated Distance according to https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates', () {
+      var now = DateTime.now();
+      var p1 = Position(latitude: 51.5, longitude: 0, timestamp: now.subtract(const Duration(seconds: 10)));
+      var p2 = Position(latitude: 38.8, longitude: -77.1, timestamp: now);
+      var distanceFrom = p1.distanceFrom(p2);
+      expect(distanceFrom, lessThan(5918185.1));
+      expect(distanceFrom, greaterThan(5918185.0));
+    });
+    // 139.5 meters in 30 seconds >>> 4.65m/s
+    test('Calculated Speed', () {
+      var now = DateTime.now();
+      var p1 = Position(latitude: 36.00282558105645, longitude: -78.93345583177252, timestamp: now.subtract(const Duration(seconds: 30)));
+      var p2 = Position(latitude: 36.00404070162735, longitude: -78.93306959369106, timestamp: now);
+      var speed1 = p1.speedFrom(p2);
+      var speed2 = p2.speedFrom(p1);
+      expect(speed1, greaterThan(4));
+      expect(speed1, lessThan(5));
+      expect(speed1, equals(speed2));
+    });
+    test('Same timestamp could cause a division by zero', () {
+      var now = DateTime.now();
+      var p1 = Position(latitude: 36.00282558105645, longitude: -78.93345583177252, timestamp: now);
+      var p2 = Position(latitude: 36.00404070162735, longitude: -78.93306959369106, timestamp: now);
+      var speed = p1.speedFrom(p2);
+      expect(speed, equals(-1));
+    });
+  });
 }
