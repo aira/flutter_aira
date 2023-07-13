@@ -769,11 +769,11 @@ class PlatformClient {
       return AccessOfferDetails.fromJson(json);
     } on PlatformLocalizedException {
       _log.finest(
-          'Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}');
+          'Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}',);
       rethrow;
     } catch (e) {
       _log.shout(
-          'Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}');
+          'Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}',);
       rethrow;
     }
   }
@@ -835,7 +835,7 @@ class PlatformClient {
     return _httpDelete('/api/user/services/provider/access', queryParameters: {
       'userId': _userId.toString(),
       'serviceName': 'LYFT',
-    });
+    },);
   }
 
   /// Registers the device's push token so that it can receive push notifications.
@@ -889,7 +889,7 @@ class PlatformClient {
   }
 
   Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
-      {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body}) async {
+      {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body,}) async {
     try {
       Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
       int traceId = _nextTraceId();
