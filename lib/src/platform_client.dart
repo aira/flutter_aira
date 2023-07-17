@@ -20,6 +20,13 @@ import 'room.dart';
 
 /// The Platform client.
 class PlatformClient {
+
+  /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
+  ///
+  /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
+  /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
+  PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
+
   final _log = Logger('PlatformClient');
 
   // Reuse the HTTP client as a performance optimization.
@@ -38,14 +45,8 @@ class PlatformClient {
 
   MessagingClient? get messagingClient => _messagingClient;
 
-  DateTime? _lastPositionUpdate;
+  DateTime _lastLocationUpdateTimestamp = DateTime.fromMillisecondsSinceEpoch(0);
   AccessOfferDetails? _lastAccessOfferUpdate;
-
-  /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
-  ///
-  /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
-  /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
-  PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
 
   /// Discards any resources associated with the [PlatformClient].
   ///
@@ -869,12 +870,10 @@ class PlatformClient {
   Future<AccessOfferDetails?> inquireForGPSActivatedOffer(Position position) async {
     _verifyIsLoggedIn();
 
-    DateTime now = DateTime.now();
-    if (null != _lastPositionUpdate && now.difference(_lastPositionUpdate!).inMilliseconds < 1000) {
+    if (shouldThrottlePositionUpdate) {
       // Same throttling delay as `KurrentoRoom.updateLocation`.
       return _lastAccessOfferUpdate;
     }
-    _lastPositionUpdate = now;
 
     String body = jsonEncode({
       'userId': _userId,
@@ -1124,4 +1123,18 @@ class PlatformMessagingKeys {
   final String receiveKey;
 
   PlatformMessagingKeys(this.sendKey, this.receiveKey);
+}
+
+/// This extension is a way for us to expose and share location update timestamp functionality internally only.
+extension LocationThrottling on PlatformClient {
+  DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateTimestamp;
+  bool get shouldThrottlePositionUpdate {
+    DateTime now = DateTime.now();
+    if (now.difference(_lastLocationUpdateTimestamp).inMilliseconds < 1500) {
+      // Same throttling delay as `KurrentoRoom.updateLocation`.
+      return true;
+    }
+    _lastLocationUpdateTimestamp = now;
+    return false;
+  }
 }
