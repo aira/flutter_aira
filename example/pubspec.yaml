@@ -36,8 +36,8 @@ dependencies:
 
   flutter_aira:
     path: ../
-  flutter_webrtc: ^0.9.6
-  logging: ^1.0.2
+  flutter_webrtc: ^0.9.36
+  logging: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -48,7 +48,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.1
+  flutter_lints: ^2.0.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
