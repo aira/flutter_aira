@@ -22,8 +22,11 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
+    # public_member_api_docs: true
     prefer_single_quotes: true
     unawaited_futures: true
-
+    require_trailing_commas: true
+    invalid_case_patterns: true
+    unnecessary_statements: true
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

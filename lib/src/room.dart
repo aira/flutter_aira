@@ -152,7 +152,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
   static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
-      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler) async {
+      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler,) async {
     KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
     try {
       await room._init(session);
@@ -343,7 +343,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       // Replace the tracks.
       await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
-          _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0]);
+          _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0],);
       if (!_isPresenting) {
         await _connectionByTrackId[_localTrackId]!
             .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : mediaStream.getVideoTracks()[0]);
@@ -484,7 +484,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     switch (participantMessage.type) {
       case ParticipantMessageType.ICE_CANDIDATE:
         RTCIceCandidate candidate = RTCIceCandidate(participantMessage.payload['candidate']!,
-            participantMessage.payload['sdpMid']!, participantMessage.payload['sdpMLineIndex']);
+            participantMessage.payload['sdpMid']!, participantMessage.payload['sdpMLineIndex'],);
         if (_connectionByTrackId.containsKey(participantMessage.trackId)) {
           await _connectionByTrackId[participantMessage.trackId]!.handleIceCandidate(candidate);
         } else {
@@ -623,13 +623,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
         ParticipantMessageType.ICE_CANDIDATE,
         trackId,
         _serviceRequest.participantId,
-        {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex});
+        {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex},);
     await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
   Future<void> _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) async {
     ParticipantMessage message = ParticipantMessage(ParticipantMessageType.SDP_OFFER, trackId,
-        _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp});
+        _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp},);
     await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 

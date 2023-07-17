@@ -53,7 +53,7 @@ class MessagingClientPubNub implements MessagingClient {
       ),
       networking: NetworkingModule(
         retryPolicy: pn.RetryPolicy.exponential(maxRetries: 10),
-      )
+      ),
     );
     _pubnub.setToken(token);
 
