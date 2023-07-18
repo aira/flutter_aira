@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -109,6 +110,17 @@ abstract class Room implements Listenable {
 }
 
 class KurentoRoom extends ChangeNotifier implements Room {
+
+  // Private constructor.
+  KurentoRoom._(
+      this._env,
+      this._client,
+      Session session,
+      this.messagingClient,
+      this._serviceRequest,
+      this._roomHandler,
+      );
+
   final Logger _log = Logger('KurentoRoom');
 
   final PlatformEnvironment _env;
@@ -121,7 +133,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
   final Map<int, int> _incomingTrackIdByOutgoingTrackId = {};
-  DateTime _lastLocationUpdate = DateTime.fromMillisecondsSinceEpoch(0);
 
   bool _isDisposed = false;
   bool _isAudioMuted = false;
@@ -139,15 +150,19 @@ class KurentoRoom extends ChangeNotifier implements Room {
   StreamSubscription<ConnectivityResult>? _connectivityMonitoringSubscription;
   ConnectivityResult? _currentlyUsedConnectionType;
 
-  // Private constructor.
-  KurentoRoom._(
-    this._env,
-    this._client,
-    Session session,
-    this.messagingClient,
-    this._serviceRequest,
-    this._roomHandler,
-  );
+  // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
+  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
+      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler,) async {
+    KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
+    try {
+      await room._init(session);
+      return room;
+    } catch (e) {
+      // If something went wrong, trash the room.
+      await room.dispose();
+      rethrow;
+    }
+  }
 
   Future<void> _init(Session session) async {
     _mq = await PlatformMQImpl.create(_env, session, lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
@@ -186,20 +201,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       }
 
       _currentlyUsedConnectionType = result;
-    }
-  }
-
-  // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
-  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
-      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler,) async {
-    KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
-    try {
-      await room._init(session);
-      return room;
-    } catch (e) {
-      // If something went wrong, trash the room.
-      await room.dispose();
-      rethrow;
     }
   }
 
@@ -363,12 +364,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
 
-    DateTime now = DateTime.now();
-    if (now.difference(_lastLocationUpdate).inSeconds < 1) {
+    if (_client.shouldThrottlePositionUpdate) {
       // Same throttling delay as `PlatformClient.inquireForGPSActivatedOffer`.
       return;
     }
-    _lastLocationUpdate = now;
 
     List<Map<String, dynamic>> serviceInfoData = [
       {'instrumentationType': 'TYPE_GPS', 'paramName': 'LAT', 'paramValue': position.latitude},
@@ -393,7 +392,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData})),
         _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
-      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData\n\tat ${_lastLocationUpdate.millisecondsSinceEpoch}');
+      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
     } catch (e) {
       _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
     }
