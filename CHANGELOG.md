@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2023-07-20
+### Changed
+- **BREAKING:** `Rating` enum now has a "Excellent" element (#86)
+
 ## [1.4.2] - 2023-07-17
 ### Fixed
 - Unified Location Update Throttling to prevent concurrent location update through different routes (#85)
