@@ -1,4 +1,5 @@
 enum Rating {
+  excellent(2),
   positive(1),
   neutral(0),
   negative(-1);
@@ -12,6 +13,7 @@ enum Rating {
       return null;
     }
     switch(value) {
+      case 2: return excellent;
       case 1: return positive;
       case 0: return neutral;
       case -1: return negative;
