@@ -51,8 +51,7 @@ class SfuConnection {
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
       ..onConnectionState = ((state) => onConnectionState.call(trackId, state))
-      ..onIceCandidate =
-          ((candidate) => onIceCandidate.call(trackId, candidate))
+      ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
     if (_isIncoming) {

@@ -110,16 +110,15 @@ abstract class Room implements Listenable {
 }
 
 class KurentoRoom extends ChangeNotifier implements Room {
-
   // Private constructor.
   KurentoRoom._(
-      this._env,
-      this._client,
-      Session session,
-      this.messagingClient,
-      this._serviceRequest,
-      this._roomHandler,
-      );
+    this._env,
+    this._client,
+    Session session,
+    this.messagingClient,
+    this._serviceRequest,
+    this._roomHandler,
+  );
 
   final Logger _log = Logger('KurentoRoom');
 
@@ -151,8 +150,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
   ConnectivityResult? _currentlyUsedConnectionType;
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
-  static Future<Room> create(PlatformEnvironment env, PlatformClient client, Session session,
-      MessagingClient? messagingClient, ServiceRequest serviceRequest, RoomHandler roomHandler,) async {
+  static Future<Room> create(
+    PlatformEnvironment env,
+    PlatformClient client,
+    Session session,
+    MessagingClient? messagingClient,
+    ServiceRequest serviceRequest,
+    RoomHandler roomHandler,
+  ) async {
     KurentoRoom room = KurentoRoom._(env, client, session, messagingClient, serviceRequest, roomHandler);
     try {
       await room._init(session);
@@ -183,8 +188,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _handleConnectionRecovery(ConnectivityResult result) async {
-    if (result != _currentlyUsedConnectionType) { // If status changed
-      if (ServiceRequestState.started == _serviceRequestState) { // If communication was previously established
+    if (result != _currentlyUsedConnectionType) {
+      // Status has changed
+      if (ServiceRequestState.started == _serviceRequestState) {
+        // Communication was previously established
         if (ConnectivityResult.none == result) {
           _log.info('Lost connection to Internet');
           onConnectionLost?.call();
@@ -310,13 +317,26 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // Eventually, we will create a separate connection for screen sharing. That requires changes to Platform and Dash,
     // so for now, we start presenting by replacing the Explorer's video track with the display video track.
     _presentationStream = await displayStream.clone();
+
+    // Since we don't show the localStream's video and the presentation simultaneously, disabled it to free up some CPU.
+    _localStream!.getVideoTracks()[0].enabled = false;
     if ((_localStream?.getAudioTracks().isNotEmpty ?? false) && _presentationStream!.getAudioTracks().isEmpty) {
-      await _presentationStream?.addTrack(_localStream!.getAudioTracks()[0]);
+      // Set the presentation audio track to keep audio.
+      await _presentationStream!.addTrack(_localStream!.getAudioTracks()[0]);
     }
-    MediaStreamTrack presentationTrack = displayStream.getVideoTracks()[0];
-    await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_isPresentationMuted ? null : presentationTrack);
+
+    if (kIsWeb) {
+      MediaStreamTrack presentationTrack = _presentationStream!.getVideoTracks()[0];
+      await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(_isPresentationMuted ? null : presentationTrack);
+    } else {
+      // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
+      // recreating the video track from scratch.
+      await _client.deleteTrack(_serviceRequest.roomId, _serviceRequest.participantId, _localTrackId!);
+      await _createOutgoingTrack();
+    }
+
     await _updateParticipantStatus();
-    _log.info('started presenting track=${presentationTrack.label}');
+    _log.info('started presenting track=${_presentationStream!.getVideoTracks()[0].label}');
   }
 
   @override
@@ -324,11 +344,36 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (_localTrackId == null) {
       return;
     }
-    // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
-    // track.
-    await _connectionByTrackId[_localTrackId]!
-        .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : _localStream!.getVideoTracks()[0]);
-    _presentationStream = null;
+
+    _localStream!.getVideoTracks()[0].enabled = true;
+    if (null != _presentationStream) {
+      // Properly disposing of the presentation tracks.
+      if (_presentationStream!.getAudioTracks().isNotEmpty) {
+        if (null != _localStream &&
+            _presentationStream!.getAudioTracks()[0].id == _localStream!.getAudioTracks()[0].id) {
+          // If we are using _localStream's audio track, don't destroy it!
+          await _presentationStream!.removeTrack(_localStream!.getAudioTracks()[0]);
+        } else {
+          await _presentationStream!.getAudioTracks()[0].stop();
+        }
+      }
+      await _presentationStream!.getVideoTracks()[0].stop();
+      await _presentationStream!.dispose();
+      _presentationStream = null;
+    }
+
+    if (kIsWeb) {
+      // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
+      // track.
+      await _connectionByTrackId[_localTrackId]!
+          .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : _localStream!.getVideoTracks()[0]);
+    } else {
+      // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
+      // recreating the video track from scratch.
+      await _client.deleteTrack(_serviceRequest.roomId, _serviceRequest.participantId, _localTrackId!);
+      await _createOutgoingTrack();
+    }
+
     await _updateParticipantStatus();
     _log.info('stopped presenting');
   }
@@ -343,7 +388,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       // Replace the tracks.
       await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
-          _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0],);
+        _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0],
+      );
       if (!_isPresenting) {
         await _connectionByTrackId[_localTrackId]!
             .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : mediaStream.getVideoTracks()[0]);
@@ -392,7 +438,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce, jsonEncode({'data': serviceInfoData})),
         _mq.publish(_gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
       ]);
-      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
+      _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData'
+          '\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
     } catch (e) {
       _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic', e);
     }
@@ -483,8 +530,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     ParticipantMessage participantMessage = ParticipantMessage.fromJson(jsonDecode(message));
     switch (participantMessage.type) {
       case ParticipantMessageType.ICE_CANDIDATE:
-        RTCIceCandidate candidate = RTCIceCandidate(participantMessage.payload['candidate']!,
-            participantMessage.payload['sdpMid']!, participantMessage.payload['sdpMLineIndex'],);
+        RTCIceCandidate candidate = RTCIceCandidate(
+          participantMessage.payload['candidate']!,
+          participantMessage.payload['sdpMid']!,
+          participantMessage.payload['sdpMLineIndex'],
+        );
         if (_connectionByTrackId.containsKey(participantMessage.trackId)) {
           await _connectionByTrackId[participantMessage.trackId]!.handleIceCandidate(candidate);
         } else {
@@ -620,16 +670,28 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   Future<void> _handleIceCandidate(int trackId, RTCIceCandidate candidate) async {
     ParticipantMessage message = ParticipantMessage(
-        ParticipantMessageType.ICE_CANDIDATE,
-        trackId,
-        _serviceRequest.participantId,
-        {'candidate': candidate.candidate, 'sdpMid': candidate.sdpMid, 'sdpMLineIndex': candidate.sdpMLineIndex},);
+      ParticipantMessageType.ICE_CANDIDATE,
+      trackId,
+      _serviceRequest.participantId,
+      {
+        'candidate': candidate.candidate,
+        'sdpMid': candidate.sdpMid,
+        'sdpMLineIndex': candidate.sdpMLineIndex,
+      },
+    );
     await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
   Future<void> _handleSdpOffer(int trackId, RTCSessionDescription sessionDescription) async {
-    ParticipantMessage message = ParticipantMessage(ParticipantMessageType.SDP_OFFER, trackId,
-        _serviceRequest.participantId, {'type': sessionDescription.type, 'sdp': sessionDescription.sdp},);
+    ParticipantMessage message = ParticipantMessage(
+      ParticipantMessageType.SDP_OFFER,
+      trackId,
+      _serviceRequest.participantId,
+      {
+        'type': sessionDescription.type,
+        'sdp': sessionDescription.sdp,
+      },
+    );
     await _mq.publish(_roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
   }
 
