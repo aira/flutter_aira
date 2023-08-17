@@ -43,7 +43,7 @@ class SessionFeedback {
         'agent': {
           'comment': json['comment'],
           'rating': json['taskSuccess'] ? 1 : -1,
-        }
+        },
       };
 }
 
