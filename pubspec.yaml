@@ -1,6 +1,6 @@
 name: flutter_aira
 description: The Aira Flutter SDK.
-version: 1.5.1
+version: 1.5.2
 homepage: https://github.com/aira-collab/flutter_aira
 
 environment:
@@ -14,9 +14,9 @@ dependencies:
   equatable: ^2.0.5
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.9.36
+  flutter_webrtc: ^0.9.40
   http: ^0.13.5
-  intl: any
+  intl: ^0.18.1
   logging: ^1.2.0
   meta: ^1.8.0
   mqtt_client: ^9.8.0

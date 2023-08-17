@@ -252,7 +252,7 @@ class PlatformClient {
           'access': {
             'id': accessOfferId,
             'class': accessOfferType.name,
-          }
+          },
         },
     };
 
