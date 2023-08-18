@@ -9,6 +9,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/billing_info.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -447,6 +448,15 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
 
     return User.fromJson(response);
+  }
+
+  /// Returns the current billing information for the current user.
+  Future<BillingInformation> getBillingInformation() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet('/api/user/$_userId/billing-info');
+
+    return BillingInformation.fromJson(response);
   }
 
   /// Used to update the [firstName] or [lastName] or both of a user.
