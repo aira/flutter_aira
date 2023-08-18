@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2023-08-18
 ### New
-- `PlatformClient.getBillingInformation()` to retrieve currently used billing information (partial information) (#89)
+- `PlatformClient.getPartialBillingInformation()` to retrieve currently used billing information (partial information) (#89)
 
 ## [1.5.2] - 2023-08-17
 ### Changed

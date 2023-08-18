@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-class BillingInformation extends Equatable {
+/// Class used to get partial Billing Information
+class PartialBillingInformation extends Equatable {
   /// Billing address: First line address
   final String? address1;
   /// Billing address: Second line address
@@ -26,7 +27,7 @@ class BillingInformation extends Equatable {
   /// Credit card: expiration year
   final int? year;
 
-  BillingInformation.fromJson(Map<String, dynamic> json)
+  PartialBillingInformation.fromJson(Map<String, dynamic> json)
       : address1 = json['address1'],
         address2 = json['address2'],
         cardType = json['cardType'],

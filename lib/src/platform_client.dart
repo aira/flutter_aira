@@ -451,12 +451,12 @@ class PlatformClient {
   }
 
   /// Returns the current billing information for the current user.
-  Future<BillingInformation> getBillingInformation() async {
+  Future<PartialBillingInformation> getPartialBillingInformation() async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> response = await _httpGet('/api/user/$_userId/billing-info');
 
-    return BillingInformation.fromJson(response);
+    return PartialBillingInformation.fromJson(response);
   }
 
   /// Used to update the [firstName] or [lastName] or both of a user.
