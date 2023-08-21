@@ -1,6 +1,7 @@
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/access_offer.dart' show AccessOfferDetails, AccessOfferType, AccountDetails, SiteAddress;
 export 'src/models/account.dart' show Account, AccountType;
+export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/call_history.dart' show CallSession, SessionFeedback;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
