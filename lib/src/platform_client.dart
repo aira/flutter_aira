@@ -449,6 +449,24 @@ class PlatformClient {
     return User.fromJson(response);
   }
 
+  /// Updates the user's terms of service and returns
+  /// the logged-in [User].
+  Future<User> updateTermsOfService(bool tosAccepted) async {
+    _verifyIsLoggedIn();
+
+    await _httpPut(
+      '/api/user/tos',
+      body: jsonEncode(
+        {
+          'userId': _userId,
+          'tosAccepted': tosAccepted,
+        },
+      ),
+    );
+
+    return getUser();
+  }
+
   /// Returns the current billing information for the current user.
   Future<PartialBillingInformation> getPartialBillingInformation() async {
     _verifyIsLoggedIn();
