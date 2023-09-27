@@ -30,6 +30,9 @@ class SfuConnection {
   late final RTCPeerConnection _peerConnection;
   late final RTCRtpTransceiver _audio;
   late final RTCRtpTransceiver _video;
+  RTCPeerConnectionState? _connectionState;
+
+  bool get isConnectionFailed => _connectionState == RTCPeerConnectionState.RTCPeerConnectionStateFailed;
 
   final Function(int trackId, RTCPeerConnectionState) onConnectionState;
   final Function(int trackId, RTCIceCandidate candidate) onIceCandidate;
@@ -45,12 +48,14 @@ class SfuConnection {
     MediaStreamTrack? outgoingAudioTrack,
     MediaStreamTrack? outgoingVideoTrack,
   }) async {
-    Map<String, dynamic> configuration =
-        _getConfiguration(stunServers, turnServers);
+    Map<String, dynamic> configuration = _getConfiguration(stunServers, turnServers);
 
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
-      ..onConnectionState = ((state) => onConnectionState.call(trackId, state))
+      ..onConnectionState = ((state) {
+        _connectionState = state;
+        onConnectionState.call(trackId, state);
+      })
       ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
@@ -127,12 +132,10 @@ class SfuConnection {
   }
 
   /// Handles an ICE candidate from the SFU.
-  Future<void> handleIceCandidate(RTCIceCandidate candidate) =>
-      _peerConnection.addCandidate(candidate);
+  Future<void> handleIceCandidate(RTCIceCandidate candidate) => _peerConnection.addCandidate(candidate);
 
   /// Handles an SDP answer from the SFU.
-  Future<void> handleSdpAnswer(RTCSessionDescription answer) =>
-      _peerConnection.setRemoteDescription(answer);
+  Future<void> handleSdpAnswer(RTCSessionDescription answer) => _peerConnection.setRemoteDescription(answer);
 
   /// Disconnects from the SFU.
   Future<void> dispose() {
@@ -140,7 +143,9 @@ class SfuConnection {
   }
 
   Map<String, dynamic> _getConfiguration(
-      List<dynamic> stunServers, List<dynamic> turnServers,) {
+    List<dynamic> stunServers,
+    List<dynamic> turnServers,
+  ) {
     Map<String, dynamic> configuration = {
       'sdpSemantics': 'unified-plan',
     };
