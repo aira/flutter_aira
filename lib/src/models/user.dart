@@ -9,6 +9,7 @@ class User {
   final List<String>? linkedAccounts;
   final String? phoneNumber;
   final List<Profile> profiles;
+  final bool tosAccepted;
 
   User({
     required this.id,
@@ -19,17 +20,26 @@ class User {
     this.linkedAccounts,
     this.phoneNumber,
     required this.profiles,
+    required this.tosAccepted,
   });
 
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         email = json['email'],
         firstName = json['firstName'] ?? '',
-        languages = (json['language'] ?? [] as List<String>).map((v) => Language.fromString(v)).cast<Language>().toList(growable: false),
+        languages = (json['language'] ?? [] as List<String>)
+            .map((v) => Language.fromString(v))
+            .cast<Language>()
+            .toList(growable: false),
         lastName = json['lastName'] ?? '',
-        linkedAccounts = (json['providers'] as List<dynamic>).map((json) => json['serviceName'] as String).toList(growable: false),
+        linkedAccounts = (json['providers'] as List<dynamic>)
+            .map((json) => json['serviceName'] as String)
+            .toList(growable: false),
         phoneNumber = json['phoneNumber'],
-        profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false);
+        tosAccepted = json['tosAccepted'],
+        profiles = (json['accounts'] as List<dynamic>)
+            .map((e) => Profile.fromJson(e))
+            .toList(growable: false);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
@@ -40,6 +50,7 @@ class User {
     String? lastName,
     List<String>? linkedAccounts,
     String? phoneNumber,
+    bool? tosAccepted,
     List<Profile>? profiles,
   }) =>
       User(
@@ -51,5 +62,6 @@ class User {
         linkedAccounts: linkedAccounts ?? this.linkedAccounts,
         phoneNumber: phoneNumber ?? this.phoneNumber,
         profiles: profiles ?? this.profiles,
+        tosAccepted: tosAccepted ?? this.tosAccepted,
       );
 }
