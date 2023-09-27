@@ -20,6 +20,7 @@ import 'room.dart';
 
 /// The Platform client.
 class PlatformClient {
+
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
   ///
   /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
@@ -778,13 +779,11 @@ class PlatformClient {
       return AccessOfferDetails.fromJson(json);
     } on PlatformLocalizedException {
       _log.finest(
-        'Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}',
-      );
+          'Access Offer $id ${type.name} is not valid the user $_userId with lat ${position?.latitude} and lng ${position?.longitude}',);
       rethrow;
     } catch (e) {
       _log.shout(
-        'Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}',
-      );
+          'Access Offer validation for $id ${type.name} failed with user: $_userId, lat: ${position?.latitude} and lng: ${position?.longitude}',);
       rethrow;
     }
   }
@@ -843,13 +842,10 @@ class PlatformClient {
     // This endpoint doesn't return a body when successful, but does return a classic body when there is an error:
     //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Invalid Param","hasMore":false,"messageCode":"","errorCode":"BIZ-GEN-001","status":"FAILURE"}}
     // No need to use [_httpClient.delete] directly.
-    return _httpDelete(
-      '/api/user/services/provider/access',
-      queryParameters: {
-        'userId': _userId.toString(),
-        'serviceName': 'LYFT',
-      },
-    );
+    return _httpDelete('/api/user/services/provider/access', queryParameters: {
+      'userId': _userId.toString(),
+      'serviceName': 'LYFT',
+    },);
   }
 
   /// Registers the device's push token so that it can receive push notifications.
@@ -900,13 +896,8 @@ class PlatformClient {
     return _lastAccessOfferUpdate;
   }
 
-  Future<Map<String, dynamic>> _httpSend(
-    String method,
-    String unencodedPath, {
-    Map<String, String>? additionalHeaders,
-    Map<String, String>? queryParameters,
-    Object? body,
-  }) async {
+  Future<Map<String, dynamic>> _httpSend(String method, String unencodedPath,
+      {Map<String, String>? additionalHeaders, Map<String, String>? queryParameters, Object? body,}) async {
     try {
       Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
       int traceId = _nextTraceId();
