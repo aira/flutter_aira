@@ -30,9 +30,6 @@ class SfuConnection {
   late final RTCPeerConnection _peerConnection;
   late final RTCRtpTransceiver _audio;
   late final RTCRtpTransceiver _video;
-  RTCPeerConnectionState? _connectionState;
-
-  bool get isConnectionFailed => _connectionState == RTCPeerConnectionState.RTCPeerConnectionStateFailed;
 
   final Function(int trackId, RTCPeerConnectionState) onConnectionState;
   final Function(int trackId, RTCIceCandidate candidate) onIceCandidate;
@@ -52,10 +49,7 @@ class SfuConnection {
 
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
-      ..onConnectionState = ((state) {
-        _connectionState = state;
-        onConnectionState.call(trackId, state);
-      })
+      ..onConnectionState = ((state) => onConnectionState.call(trackId, state))
       ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
