@@ -1267,7 +1267,7 @@ class PlatformClient {
       throw PlatformBusinessLoginRequiredException(
         json['response']['errorCode'],
         json['response']['errorMessage'],
-        json['metadata']?['connection'],
+        json['metadata']['connection'],
       );
     } else if (json['response']?['errorMessage'] != null) {
       throw PlatformLocalizedException(
