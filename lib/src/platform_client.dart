@@ -24,8 +24,7 @@ class PlatformClient {
   ///
   /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
   /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
-  PlatformClient(this._config, [http.Client? httpClient])
-      : _httpClient = httpClient ?? http.Client();
+  PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
 
   final _log = Logger('PlatformClient');
 
@@ -45,8 +44,7 @@ class PlatformClient {
 
   MessagingClient? get messagingClient => _messagingClient;
 
-  DateTime _lastLocationUpdateTimestamp =
-      DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastLocationUpdateTimestamp = DateTime.fromMillisecondsSinceEpoch(0);
   AccessOfferDetails? _lastAccessOfferUpdate;
 
   /// Discards any resources associated with the [PlatformClient].
@@ -88,8 +86,7 @@ class PlatformClient {
       'phoneNumber': phoneNumber,
     });
 
-    Map<String, dynamic> response =
-        await _httpPost('/api/smartapp/verify/confirm', body);
+    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/confirm', body);
 
     return Credentials(
       'PHONE_VERIFICATION',
@@ -127,8 +124,7 @@ class PlatformClient {
       'email': email,
     });
 
-    Map<String, dynamic> response =
-        await _httpPost('/api/smartapp/verify/email/confirm', body);
+    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/email/confirm', body);
 
     return Credentials(
       'EMAIL_VERIFICATION',
@@ -187,8 +183,7 @@ class PlatformClient {
       'authProvider': credentials.provider,
       'device': await _deviceContext,
       'login': credentials.login,
-      'loginfrom':
-          'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
+      'loginfrom': 'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
       'password': credentials.password,
     });
 
@@ -235,9 +230,7 @@ class PlatformClient {
     String body = jsonEncode({
       'authProvider': credentials.provider,
       'login': credentials.login,
-      'preferredLang': preferredLanguages
-          ?.map((language) => language.name)
-          .toList(growable: false),
+      'preferredLang': preferredLanguages?.map((language) => language.name).toList(growable: false),
       'tosAccepted': true,
       'verificationCode': credentials.password,
     });
@@ -246,6 +239,10 @@ class PlatformClient {
 
     return loginWithCredentials(credentials);
   }
+
+  /// Delete an account.
+  /// This action is irreversible and lead to permanent deletion of all data within the account.
+  Future<void> deleteAccount() => _httpDelete('/api/user/$_userId');
 
   /// Creates a service request for the logged-in user.
   ///
@@ -345,8 +342,7 @@ class PlatformClient {
       if (fileMap.length == 1) {
         // If we have only one file, send it with the file.
         var fileEntry = fileMap.entries.first;
-        SentFileInfo fileInfo = await _messagingClient!
-            .sendFile(fileEntry.key, fileEntry.value, text: message);
+        SentFileInfo fileInfo = await _messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
         return [fileInfo.id];
       } else {
         // if we have multiple files, send them separately from teh message
@@ -355,13 +351,11 @@ class PlatformClient {
           await _messagingClient!.sendMessage(message);
         }
 
-        List<Future<SentFileInfo>> futureFileInfo = fileMap.entries
-            .map((e) => _messagingClient!.sendFile(e.key, e.value))
-            .toList(growable: false);
+        List<Future<SentFileInfo>> futureFileInfo =
+            fileMap.entries.map((e) => _messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
         List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
 
-        List<String> fileIds =
-            fileInfoList.map((fi) => fi.id).toList(growable: false);
+        List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
         return fileIds;
       }
     } else if (null != text && text.isNotEmpty) {
@@ -387,10 +381,7 @@ class PlatformClient {
     );
 
     return {
-      'agentFirstName': response['agentName']
-          ?.toString()
-          .split(' ')
-          .first, // Split the first name and last initial.
+      'agentFirstName': response['agentName']?.toString().split(' ').first, // Split the first name and last initial.
       'status': response['serviceStatus'],
     };
   }
@@ -415,8 +406,7 @@ class PlatformClient {
   Future<List<Participant>> getParticipants(int roomId) async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response =
-        await _httpGet('/api/webrtc/room/$roomId/participant');
+    Map<String, dynamic> response = await _httpGet('/api/webrtc/room/$roomId/participant');
 
     return (response['payload'] as List<dynamic>)
         .map((participant) => Participant.fromJson(participant))
@@ -489,8 +479,8 @@ class PlatformClient {
       }),
       // This is to avoid the legacy logic to show non representative feedback data:
       //   if none of the rating is negative, consider the call to be a success.
-      'taskSuccess': Rating.negative != feedback.agentFeedback?.rating &&
-          Rating.negative != feedback.appFeedback?.rating,
+      'taskSuccess':
+          Rating.negative != feedback.agentFeedback?.rating && Rating.negative != feedback.appFeedback?.rating,
     });
 
     await _httpPost('/api/smartapp/feedback', body);
@@ -558,8 +548,7 @@ class PlatformClient {
   Future<PartialBillingInformation> getPartialBillingInformation() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response =
-        await _httpGet('/api/user/$_userId/billing-info');
+    Map<String, dynamic> response = await _httpGet('/api/user/$_userId/billing-info');
 
     return PartialBillingInformation.fromJson(response);
   }
@@ -589,9 +578,7 @@ class PlatformClient {
       _httpPut(
         '/api/user/$_userId/property/$propertyName/value',
         body: jsonEncode(
-          propertyValues
-              .map((propertyValue) => {'value': propertyValue})
-              .toList(growable: false),
+          propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false),
         ),
       );
 
@@ -650,9 +637,7 @@ class PlatformClient {
     return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
-      items: (response['photos'] as List<dynamic>)
-          .map((p) => Photo.fromJson(p))
-          .toList(growable: false),
+      items: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
     );
   }
 
@@ -669,8 +654,7 @@ class PlatformClient {
   Future<Usage> getUsage() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response =
-        await _httpGet('/api/smartapp/usage/$_userId/v3');
+    Map<String, dynamic> response = await _httpGet('/api/smartapp/usage/$_userId/v3');
     return Usage.fromJson(response);
   }
 
@@ -720,10 +704,8 @@ class PlatformClient {
     Future<Map<String, dynamic>> minuteSharingResponseFuture = _httpGet(
       '/api/account/sharing/$_userId',
     );
-    Map<String, dynamic> minuteSharingResponse =
-        await minuteSharingResponseFuture;
-    minuteSharingResponse['maxAdditionalShared'] =
-        planResponse['maxAdditionalShared'] ?? 0;
+    Map<String, dynamic> minuteSharingResponse = await minuteSharingResponseFuture;
+    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'] ?? 0;
     minuteSharingResponse['isGuest'] = isGuest;
     return MinuteSharingInformation.fromJson(minuteSharingResponse);
   }
@@ -907,8 +889,7 @@ class PlatformClient {
     int page, {
     String payloadTag = 'payload',
   }) {
-    Set<String> handledAccessOfferTypes =
-        AccessOfferType.values.map((aot) => aot.name).toSet();
+    Set<String> handledAccessOfferTypes = AccessOfferType.values.map((aot) => aot.name).toSet();
     return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
@@ -1066,11 +1047,9 @@ class PlatformClient {
       'lg': position.longitude,
     });
 
-    Map<String, dynamic> gpsResponse =
-        await _httpPost('/api/user/location', body);
+    Map<String, dynamic> gpsResponse = await _httpPost('/api/user/location', body);
     Map<String, dynamic>? site = gpsResponse['site'];
-    _lastAccessOfferUpdate =
-        null == site ? null : AccessOfferDetails.fromJson(site);
+    _lastAccessOfferUpdate = null == site ? null : AccessOfferDetails.fromJson(site);
     return _lastAccessOfferUpdate;
   }
 
@@ -1084,8 +1063,7 @@ class PlatformClient {
     try {
       Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
       int traceId = _nextTraceId();
-      Map<String, String> headers =
-          await _getHeaders(traceId, additionalHeaders: additionalHeaders);
+      Map<String, String> headers = await _getHeaders(traceId, additionalHeaders: additionalHeaders);
 
       _log.finest(
         'trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}',
@@ -1094,8 +1072,7 @@ class PlatformClient {
       http.Response response;
       switch (method) {
         case 'DELETE':
-          response =
-              await _httpClient.delete(uri, headers: headers, body: body);
+          response = await _httpClient.delete(uri, headers: headers, body: body);
           break;
         case 'GET':
           response = await _httpClient.get(uri, headers: headers);
@@ -1195,8 +1172,7 @@ class PlatformClient {
 
     if (!kIsWeb) {
       // The http package does not automatically set the Accept-Language header on mobile.
-      headers[HttpHeaders.acceptLanguageHeader] =
-          Platform.localeName.replaceAll('_', '-');
+      headers[HttpHeaders.acceptLanguageHeader] = Platform.localeName.replaceAll('_', '-');
     }
 
     if (_session != null) {
@@ -1309,8 +1285,7 @@ class PlatformClient {
     if (_config.messagingKeys != null) {
       // Initialize the PubNub client.
       String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      _messagingClient =
-          MessagingClientPubNub(_config.messagingKeys!, _userId, token);
+      _messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }
