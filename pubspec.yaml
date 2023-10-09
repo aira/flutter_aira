@@ -14,7 +14,7 @@ dependencies:
   equatable: ^2.0.5
   flutter:
     sdk: flutter
-  flutter_webrtc: ^0.9.40
+  flutter_webrtc: ^0.9.45
   http: ^0.13.5
   intl: ^0.18.1
   logging: ^1.2.0
@@ -24,7 +24,7 @@ dependencies:
   pubnub: ^4.2.4
 
 dev_dependencies:
-  flutter_lints: ^2.0.2
+  flutter_lints: ^2.0.3
   flutter_test:
     sdk: flutter
 
