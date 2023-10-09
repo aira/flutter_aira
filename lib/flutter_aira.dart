@@ -19,5 +19,9 @@ export 'src/models/usage.dart' show Usage, PlanUsageBreakdown;
 export 'src/models/user.dart' show User;
 export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'
-    show PlatformLocalizedException, PlatformInvalidTokenException, PlatformUnknownException;
+    show
+        PlatformBusinessLoginRequiredException,
+        PlatformLocalizedException,
+        PlatformInvalidTokenException,
+        PlatformUnknownException;
 export 'src/room.dart' show Room, RoomHandler;
