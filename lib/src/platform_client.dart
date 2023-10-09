@@ -240,6 +240,10 @@ class PlatformClient {
     return loginWithCredentials(credentials);
   }
 
+  /// Delete an account.
+  /// This action is irreversible and lead to permanent deletion of all data within the account.
+  Future<void> deleteAccount() => _httpDelete('/api/user/$_userId');
+
   /// Creates a service request for the logged-in user.
   ///
   /// If the Explorer has more than one [Profile], specify the [accountId] to use for the service request; if no
