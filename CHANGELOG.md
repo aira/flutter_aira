@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PlatformClient.updateTermsOfServiceAccepted(bool)` to update the Terms of Service status (#91)
 - `Room.onConnectionFailed` to update the Room user on any SFU connection failure (#92)
 - `PlatformClient.deleteAccount` to enable the Explorers to delete their account (#94)
+- `PlatformBusinessLoginRequiredException` to handle cases where an operation requires the user to login with business credentials (#95)
 
 ## [1.6.0] - 2023-08-18
 ### New
