@@ -528,7 +528,7 @@ class PlatformClient {
 
   /// Updates the user's terms of service and returns
   /// the logged-in [User].
-  Future<User> updateTermsOfService(bool tosAccepted) async {
+  Future<User> updateTermsOfServiceAccepted(bool tosAccepted) async {
     _verifyIsLoggedIn();
 
     await _httpPut(
