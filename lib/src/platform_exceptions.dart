@@ -19,6 +19,20 @@ class PlatformInvalidTokenException implements Exception {
   String toString() => 'PlatformInvalidTokenException';
 }
 
+/// Exception thrown when the operation requires the user to log in with their business credentials.
+class PlatformBusinessLoginRequiredException extends PlatformLocalizedException {
+  final String _connection;
+
+  const PlatformBusinessLoginRequiredException(
+    String code,
+    String message,
+    this._connection,
+  ) : super(code, message);
+
+  /// The name of the required Auth0 enterprise connection.
+  String get connection => _connection;
+}
+
 /// Exception thrown when something went wrong but we don't have a localized error message from Platform (e.g. Platform
 /// was unreachable).
 class PlatformUnknownException implements Exception {

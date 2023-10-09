@@ -1263,6 +1263,12 @@ class PlatformClient {
     } else if (json['response']?['errorCode'] == 'SEC-001') {
       _session = null;
       throw const PlatformInvalidTokenException();
+    } else if (json['response']?['errorCode'] == 'AIRA-ACCESS-017' && json['metadata']?['connection'] != null) {
+      throw PlatformBusinessLoginRequiredException(
+        json['response']['errorCode'],
+        json['response']['errorMessage'],
+        json['metadata']['connection'],
+      );
     } else if (json['response']?['errorMessage'] != null) {
       throw PlatformLocalizedException(
         json['response']?['errorCode'],
