@@ -674,8 +674,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
     // REVIEW: Should the room expose the connection state (e.g. `isAgentStreamConnected`, `isExplorerStreamConnected`)?
     _log.info('connection state changed track_id=$trackId state=$state');
     if (RTCPeerConnectionState.RTCPeerConnectionStateFailed == state) {
-      SfuConnectionDirection direction = _connectionByTrackId.remove(trackId)!.direction;
-      onConnectionFailed?.call(direction == SfuConnectionDirection.outgoing);
+      SfuConnection connection = _connectionByTrackId.remove(trackId)!;
+      onConnectionFailed?.call(connection.direction == SfuConnectionDirection.outgoing);
+      unawaited(connection.dispose());
     }
   }
 
