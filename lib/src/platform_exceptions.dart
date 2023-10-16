@@ -20,8 +20,8 @@ class PlatformInvalidTokenException implements Exception {
 }
 
 /// Exception thrown when an Explorer tries to delete his account before cancelling his subscription.
-/// For more details, see: https://github.com/aira/platform/blob/29eba575a495e06a0364b7904cbbb52adee81ea0/core/server/AiraPlatform/src/main/java/io/aira/action/delete/user/UserDeleteRestController.java#L77
 class PlatformDeleteAccountException extends PlatformLocalizedException {
+  // For more details, see: https://github.com/aira/platform/blob/29eba575a495e06a0364b7904cbbb52adee81ea0/core/server/AiraPlatform/src/main/java/io/aira/action/delete/user/UserDeleteRestController.java#L77
   const PlatformDeleteAccountException(String code, String message) : super(code, message);
 }
 
