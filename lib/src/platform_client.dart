@@ -242,6 +242,7 @@ class PlatformClient {
 
   /// Delete an account.
   /// This action is irreversible and lead to permanent deletion of all data within the account.
+  /// Throws [PlatformDeleteAccountException] when the user has an active plan subscription.
   Future<void> deleteAccount() => _httpDelete('/api/user/$_userId');
 
   /// Creates a service request for the logged-in user.
@@ -1269,15 +1270,12 @@ class PlatformClient {
         json['response']['errorMessage'],
         json['metadata']['connection'],
       );
+    } else if (json['response']?['errorCode'] == 'KN-UM-065') {
+      throw PlatformDeleteAccountException(json['response']['errorCode'], json['response']['errorMessage']);
     } else if (json['response']?['errorMessage'] != null) {
-      throw PlatformLocalizedException(
-        json['response']?['errorCode'],
-        json['response']['errorMessage'],
-      );
+      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
     } else {
-      throw PlatformUnknownException(
-        'Platform returned unexpected body: $body',
-      );
+      throw PlatformUnknownException('Platform returned unexpected body: $body');
     }
   }
 
@@ -1332,6 +1330,7 @@ class PlatformMessagingKeys {
 /// This extension is a way for us to expose and share location update timestamp functionality internally only.
 extension LocationThrottling on PlatformClient {
   DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateTimestamp;
+
   bool get shouldThrottlePositionUpdate {
     DateTime now = DateTime.now();
     if (now.difference(_lastLocationUpdateTimestamp).inMilliseconds < 1500) {
