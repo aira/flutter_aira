@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2023-10-16
+### New
+- `PlatformDeleteAccountException` is now a possible exception thrown by `platformClient.deleteAccount` to indicate the user deleting his account has a plan subscription which should be resolved before deleting his account. (#96)
+
 ## [1.7.0] - 2023-09-27
 ### New
 - `PlatformClient.updateTermsOfServiceAccepted(bool)` to update the Terms of Service status (#91)
