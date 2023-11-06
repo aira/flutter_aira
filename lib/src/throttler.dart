@@ -9,7 +9,6 @@ class Throttler {
   bool get shouldThrottle {
     DateTime now = DateTime.now();
     if (now.difference(_lastTimestamp).inMilliseconds < delay) {
-      // Same throttling delay as `KurrentoRoom.updateLocation`.
       return true;
     }
     _lastTimestamp = now;

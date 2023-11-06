@@ -124,7 +124,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     this._roomHandler,
   );
 
-  final Logger _log = Logger('KurentoRoom');
+  static final Logger _log = Logger('KurentoRoom');
 
   final PlatformEnvironment _env;
   final PlatformClient _client;
@@ -167,6 +167,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await room._init(session);
       return room;
     } catch (e) {
+      _log.shout('Unable to initialize the WebRTC Room.', e);
       // If something went wrong, trash the room.
       await room.dispose();
       rethrow;

@@ -20,8 +20,9 @@ export 'src/models/user.dart' show User;
 export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'
     show
+        PlatformDeleteAccountException,
         PlatformBusinessLoginRequiredException,
-        PlatformLocalizedException,
         PlatformInvalidTokenException,
+        PlatformLocalizedException,
         PlatformUnknownException;
 export 'src/room.dart' show Room, RoomHandler;
