@@ -204,7 +204,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.7.0"
+    version: "1.7.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -227,10 +227,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_webrtc
-      sha256: da6fb0f0f9515b2c64608011e3ad314e6a858bbf1c57477f418621996e7d22d2
+      sha256: "8522e9f347aed9f03ec591d05fc286a698c1b11a1a6d3e994e92727d24c6f352"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.45"
+    version: "0.9.46"
   form_data:
     dependency: transitive
     description:
@@ -363,10 +363,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "6b8b19bd80da4f11ce91b2d1fb931f3006911477cec227cce23d3253d80df3f1"
+      sha256: e595b98692943b4881b219f0a9e3945118d3c16bd7e2813f98ec6e532d905f72
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.2.1"
   path_provider_foundation:
     dependency: transitive
     description:
@@ -419,10 +419,10 @@ packages:
     dependency: transitive
     description:
       name: platform
-      sha256: ae68c7bfcd7383af3629daafb32fb4e8681c7154428da4febcff06200585f102
+      sha256: "0a279f0707af40c890e80b1e9df8bb761694c074ba7e1d4ab1bc4b728e200b59"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.2"
+    version: "3.1.3"
   platform_detect:
     dependency: transitive
     description:
@@ -467,10 +467,10 @@ packages:
     dependency: transitive
     description:
       name: pubnub
-      sha256: "8de9f31f24d86b54635e19217698588f45e1cd9de75a8b65e72c8d08686eaaf6"
+      sha256: b00c62c6a87d66497202c34c7b5621ababbb55ad7ad4f9016762d653330794c6
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.4"
+    version: "4.3.0"
   sky_engine:
     dependency: transitive
     description: flutter
