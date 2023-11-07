@@ -22,7 +22,7 @@ abstract class MessagingClient {
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
-  Future<void> sendMessage(String text);
+  Future<void> sendMessage(String text, {int? userId});
 
   /// Sends the provided message to the Agent.
   ///
@@ -111,9 +111,9 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   }
 
   @override
-  Future<void> sendMessage(String text) async {
+  Future<void> sendMessage(String text, {int? userId}) async {
     return _sendMessage({
-      'senderId': _userId,
+      'senderId': userId ?? _userId,
       'serviceId': _serviceRequestId,
       'text': text,
     });
