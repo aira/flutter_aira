@@ -19,6 +19,8 @@ abstract class MessagingClient {
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
 
+  Future<void> sendStart();
+
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
@@ -103,6 +105,7 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     });
   }
 
+  @override
   Future<void> sendStart() async {
     return _sendMessage({
       'senderId': _userId,

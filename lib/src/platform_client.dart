@@ -300,11 +300,6 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
-    // HACK: The "start" message is a legacy concept used to organize messages in Dash. It gets sent every time an
-    // Explorer calls Aira, even if the call was canceled or the call didn't use messaging. Eventually, we should find a
-    // solution with fewer shortcomings.
-    await _messagingClient?.sendStart();
-
     if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
     }
