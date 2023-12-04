@@ -672,6 +672,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   void _handleConnectionState(int trackId, RTCPeerConnectionState state) {
+    // This function is the place to handle connection state changes for the room. States like
+    // ServiceRequestState.started could be handled here. It is currently handled through platform events which happen
+    // after the connection state changes, so this is fine as it is, but we could have a better granularigy if this was
+    // handled here.
+
     // REVIEW: Should the room expose the connection state (e.g. `isAgentStreamConnected`, `isExplorerStreamConnected`)?
     _log.info('connection state changed track_id=$trackId state=$state');
     if (RTCPeerConnectionState.RTCPeerConnectionStateFailed == state) {

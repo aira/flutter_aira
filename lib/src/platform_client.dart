@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
+import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
@@ -44,7 +45,7 @@ class PlatformClient {
 
   MessagingClient? get messagingClient => _messagingClient;
 
-  DateTime _lastLocationUpdateTimestamp = DateTime.fromMillisecondsSinceEpoch(0);
+  final Throttler _lastLocationUpdateThrottler = Throttler(delay: 2000); // every 2 seconds
   AccessOfferDetails? _lastAccessOfferUpdate;
 
   /// Discards any resources associated with the [PlatformClient].
@@ -1328,16 +1329,7 @@ class PlatformMessagingKeys {
 }
 
 /// This extension is a way for us to expose and share location update timestamp functionality internally only.
-extension LocationThrottling on PlatformClient {
-  DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateTimestamp;
-
-  bool get shouldThrottlePositionUpdate {
-    DateTime now = DateTime.now();
-    if (now.difference(_lastLocationUpdateTimestamp).inMilliseconds < 1500) {
-      // Same throttling delay as `KurrentoRoom.updateLocation`.
-      return true;
-    }
-    _lastLocationUpdateTimestamp = now;
-    return false;
-  }
+extension SDKPrivatePlatformClient on PlatformClient {
+  DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateThrottler.lastTimestamp;
+  bool get shouldThrottlePositionUpdate => _lastLocationUpdateThrottler.shouldThrottle;
 }
