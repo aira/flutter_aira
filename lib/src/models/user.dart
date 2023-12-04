@@ -9,6 +9,7 @@ class User {
   final List<String>? linkedAccounts;
   final String? phoneNumber;
   final List<Profile> profiles;
+  final String? referralLink;
   final bool tosAccepted;
 
   User({
@@ -20,6 +21,7 @@ class User {
     this.linkedAccounts,
     this.phoneNumber,
     required this.profiles,
+    this.referralLink,
     required this.tosAccepted,
   });
 
@@ -37,9 +39,8 @@ class User {
             .toList(growable: false),
         phoneNumber = json['phoneNumber'],
         tosAccepted = json['tosAccepted'],
-        profiles = (json['accounts'] as List<dynamic>)
-            .map((e) => Profile.fromJson(e))
-            .toList(growable: false);
+        profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false),
+        referralLink = json['referralLink'];
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
