@@ -9,15 +9,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
+import 'package:flutter_aira/src/models/chat.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
+import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
-import 'models/participant.dart';
-import 'room.dart';
 
 /// The Platform client.
 class PlatformClient {
@@ -1048,6 +1047,22 @@ class PlatformClient {
     Map<String, dynamic>? site = gpsResponse['site'];
     _lastAccessOfferUpdate = null == site ? null : AccessOfferDetails.fromJson(site);
     return _lastAccessOfferUpdate;
+  }
+
+  /// Creates a new AI chat session.
+  Future<ChatSession> createChatSession() async {
+    _verifyIsLoggedIn();
+
+    final response = await _httpPost('/chat', jsonEncode({}));
+    return ChatSession.fromJson(response);
+  }
+
+  /// Posts a message to an AI chat session and returns the AI's response.
+  Future<ChatMessage> sendMessage(int sessionId, ChatMessage message) async {
+    _verifyIsLoggedIn();
+
+    final response = await _httpPost('/chat/$sessionId/message', jsonEncode({}));
+    return ChatMessage.fromJson(response);
   }
 
   Future<Map<String, dynamic>> _httpSend(
