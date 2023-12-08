@@ -1060,7 +1060,7 @@ class PlatformClient {
   ///
   /// If an image is provided, it must be encoded as a [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme) (see
   /// [UriData.fromBytes]).
-  Future<ChatMessageInfo> sendMessage(int chatId, {String? message, String? image}) async {
+  Future<ChatMessageInfo> sendChatMessage(int chatId, {String? message, String? image}) async {
     assert(message != null || image != null);
 
     _verifyIsLoggedIn();
