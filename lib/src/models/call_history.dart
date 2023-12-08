@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 import 'package:flutter_aira/src/models/feedback.dart';
 
 /// Object containing all the Feedback Information.

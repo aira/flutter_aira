@@ -1,4 +1,4 @@
-import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 class ChatSessionInfo {
   ChatSessionInfo.fromJson(Map<String, dynamic> json)

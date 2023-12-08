@@ -1,4 +1,4 @@
-import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 import 'package:flutter_aira/src/models/minute_sharing.dart';
 
 /// Some plans are shared by primary Explorer to secondary Explorers.

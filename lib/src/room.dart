@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/flutter_aira.dart';
-import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
