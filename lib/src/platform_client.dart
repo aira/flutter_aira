@@ -9,7 +9,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/chat.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
@@ -1049,20 +1048,31 @@ class PlatformClient {
     return _lastAccessOfferUpdate;
   }
 
-  /// Creates a new AI chat session.
-  Future<ChatSession> createChatSession() async {
+  /// Creates a new Aira AI chat session.
+  Future<ChatSessionInfo> createChatSession() async {
     _verifyIsLoggedIn();
 
-    final response = await _httpPost('/chat', jsonEncode({}));
-    return ChatSession.fromJson(response);
+    final response = await _httpPost('/api/chat', null);
+    return ChatSessionInfo.fromJson(response);
   }
 
-  /// Posts a message to an AI chat session and returns the AI's response.
-  Future<ChatMessage> sendMessage(int sessionId, ChatMessage message) async {
+  /// Sends a chat message and/or image and returns Aira AI's response.
+  ///
+  /// If an image is provided, it must be encoded as a [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme) (see
+  /// [UriData.fromBytes]).
+  Future<ChatMessageInfo> sendMessage(int chatId, {String? message, String? image}) async {
+    assert(message != null || image != null);
+
     _verifyIsLoggedIn();
 
-    final response = await _httpPost('/chat/$sessionId/message', jsonEncode({}));
-    return ChatMessage.fromJson(response);
+    final response = await _httpPost(
+      '/api/chat/$chatId/message',
+      jsonEncode({
+        'message': message,
+        'image': image,
+      }),
+    );
+    return ChatMessageInfo.fromJson(response);
   }
 
   Future<Map<String, dynamic>> _httpSend(
