@@ -19,6 +19,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'models/participant.dart';
 import 'room.dart';
 
+enum UserPropertyName {
+  firstName,
+  lastName,
+  preferredLang,
+  showReferrerRewardSplash,
+  ;
+
+  String get name => toString().split('.').last;
+}
+
 /// The Platform client.
 class PlatformClient {
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
@@ -227,11 +237,13 @@ class PlatformClient {
   Future<Session> createAccount(
     Credentials credentials, {
     List<Language>? preferredLanguages,
+    String? referralCode,
   }) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
       'login': credentials.login,
       'preferredLang': preferredLanguages?.map((language) => language.name).toList(growable: false),
+      'referralCode': referralCode ?? '',
       'tosAccepted': true,
       'verificationCode': credentials.password,
     });
@@ -558,31 +570,40 @@ class PlatformClient {
   /// Used to update the [firstName] or [lastName] or both of a user.
   Future<void> updateName(String firstName, String lastName) async {
     await Future.wait([
-      _updatePropertyValue('firstName', [firstName]),
-      _updatePropertyValue('lastName', [lastName]),
+      updatePropertyValue(UserPropertyName.firstName, [firstName]),
+      updatePropertyValue(UserPropertyName.lastName, [lastName]),
     ]);
   }
 
   /// Used to update the preferred languages of a user.
   Future<void> updatePreferredLanguages(List<Language> languages) async {
-    await Future.wait([
-      _updatePropertyValue(
-        'preferredLang',
-        languages.map((l) => l.name).toList(growable: false),
-      ),
-    ]);
+    await updatePropertyValue(
+      UserPropertyName.preferredLang,
+      languages.map((l) => l.name).toList(growable: false),
+    );
   }
 
-  Future<Map<String, dynamic>> _updatePropertyValue(
-    String propertyName,
-    List<String> propertyValues,
-  ) async =>
-      _httpPut(
-        '/api/user/$_userId/property/$propertyName/value',
-        body: jsonEncode(
-          propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false),
-        ),
-      );
+  Future<void> updatePropertyValue(
+    UserPropertyName propertyName,
+    dynamic propertyValue,
+  ) async {
+    _verifyIsLoggedIn();
+
+    List propertyValues = propertyValue is List ? propertyValue : [propertyValue];
+    await _httpPut(
+      '/api/user/$_userId/property/${propertyName.name}/value',
+      body: jsonEncode(
+        propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false),
+      ),
+    );
+  }
+
+  Future<dynamic> getPropertyValue(UserPropertyName propertyName) async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> result = await _httpGet('/api/user/$_userId/property/${propertyName.name}/value');
+    return result['payload'];
+  }
 
   /// Used to start the process to update and verify a user's [email] address.
   /// This process is completed by visiting a verification link sent to [email].
@@ -1331,5 +1352,6 @@ class PlatformMessagingKeys {
 /// This extension is a way for us to expose and share location update timestamp functionality internally only.
 extension SDKPrivatePlatformClient on PlatformClient {
   DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateThrottler.lastTimestamp;
+
   bool get shouldThrottlePositionUpdate => _lastLocationUpdateThrottler.shouldThrottle;
 }
