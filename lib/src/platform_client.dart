@@ -19,16 +19,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'models/participant.dart';
 import 'room.dart';
 
-enum UserPropertyName {
-  firstName,
-  lastName,
-  preferredLang,
-  showReferrerRewardSplash,
-  ;
-
-  String get name => toString().split('.').last;
-}
-
 /// The Platform client.
 class PlatformClient {
   /// Creates a new [PlatformClient] with the specified [PlatformClientConfig].
@@ -570,21 +560,22 @@ class PlatformClient {
   /// Used to update the [firstName] or [lastName] or both of a user.
   Future<void> updateName(String firstName, String lastName) async {
     await Future.wait([
-      updatePropertyValue(UserPropertyName.firstName, [firstName]),
-      updatePropertyValue(UserPropertyName.lastName, [lastName]),
+      setUserProperty(UserProperty.firstName, [firstName]),
+      setUserProperty(UserProperty.lastName, [lastName]),
     ]);
   }
 
   /// Used to update the preferred languages of a user.
   Future<void> updatePreferredLanguages(List<Language> languages) async {
-    await updatePropertyValue(
-      UserPropertyName.preferredLang,
+    await setUserProperty(
+      UserProperty.preferredLang,
       languages.map((l) => l.name).toList(growable: false),
     );
   }
 
-  Future<void> updatePropertyValue(
-    UserPropertyName propertyName,
+  /// Used to set the value of a user property. See [UserProperty] for available properties.
+  Future<void> setUserProperty(
+    UserProperty propertyName,
     dynamic propertyValue,
   ) async {
     _verifyIsLoggedIn();
@@ -598,7 +589,8 @@ class PlatformClient {
     );
   }
 
-  Future<dynamic> getPropertyValue(UserPropertyName propertyName) async {
+  /// Used to get the value of a user property. See [UserProperty] for available properties.
+  Future<dynamic> getUserProperty(UserProperty propertyName) async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> result = await _httpGet('/api/user/$_userId/property/${propertyName.name}/value');

@@ -1,3 +1,4 @@
+export 'src/enum/user_property.dart' show UserProperty;
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/access_offer.dart' show AccessOfferDetails, AccessOfferType, AccountDetails, SiteAddress;
 export 'src/models/account.dart' show Account, AccountType;
@@ -17,8 +18,7 @@ export 'src/models/session.dart' show Session;
 export 'src/models/track.dart' show Track;
 export 'src/models/usage.dart' show Usage, PlanUsageBreakdown;
 export 'src/models/user.dart' show User;
-export 'src/platform_client.dart'
-    show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys, UserPropertyName;
+export 'src/platform_client.dart' show PlatformClient, PlatformClientConfig, PlatformEnvironment, PlatformMessagingKeys;
 export 'src/platform_exceptions.dart'
     show
         PlatformDeleteAccountException,
