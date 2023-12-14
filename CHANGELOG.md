@@ -4,9 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2023-12-04
+### New
+- `User.referralLink` to retrieve the link Explorer which allow Explorer to get reward when friends join the Aira family (#98)
+- `PlatformClient.getPropertyValue` to retrieve properties from `UserPropertyName` (#98)
+
 ## [1.8.1] - 2023-11-06
 ### Changed
-- Increased the throttling duration to 2 seconds for location updates (#92)
+- Increased the throttling duration to 2 seconds for location updates (#97)
 
 ## [1.8.0] - 2023-10-16
 ### New

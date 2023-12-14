@@ -198,7 +198,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       if (ServiceRequestState.started == _serviceRequestState) {
         // Communication was previously established
         if (ConnectivityResult.none == result) {
-          _log.info('Lost connection to Internet');
+          _log.info('Lost internet connection');
           onConnectionLost?.call();
         } else {
           _log.info('Now using connection type: $result. '
