@@ -590,11 +590,12 @@ class PlatformClient {
   }
 
   /// Used to get the value of a user property. See [UserProperty] for available properties.
-  Future<dynamic> getUserProperty(UserProperty propertyName) async {
+  Future<List<dynamic>> getUserProperty(UserProperty propertyName) async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> result = await _httpGet('/api/user/$_userId/property/${propertyName.name}/value');
-    return result['payload'];
+    List<dynamic>? propertyList = result['payload'];
+    return propertyList?.map((m) => m['value']).toList(growable: false) ?? [];
   }
 
   /// Used to start the process to update and verify a user's [email] address.
