@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **BREAKING:** A "start" message -- used by the Agent Dashboard to group messages into "sessions"
   -- is no longer automatically published to the messaging channel every time a service request is
-  created (#99).
+  created. The app can now control when a messaging session starts by publishing a "start" message
+  with the new `MessagingClient.sendRawMessage` API.
 
 ## [1.9.0] - 2023-12-04
 ### New
