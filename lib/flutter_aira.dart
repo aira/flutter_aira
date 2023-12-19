@@ -1,3 +1,4 @@
+export 'src/enum/user_property.dart' show UserProperty;
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/access_offer.dart' show AccessOfferDetails, AccessOfferType, AccountDetails, SiteAddress;
 export 'src/models/account.dart' show Account, AccountType;
