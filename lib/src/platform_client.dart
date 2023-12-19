@@ -10,14 +10,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/messaging_client.dart';
 import 'package:flutter_aira/src/models/sent_file_info.dart';
+import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
-import 'models/participant.dart';
-import 'room.dart';
 
 /// The Platform client.
 class PlatformClient {
@@ -302,11 +300,6 @@ class PlatformClient {
       params['latitude'] = position.latitude;
       params['longitude'] = position.longitude;
     }
-
-    // HACK: The "start" message is a legacy concept used to organize messages in Dash. It gets sent every time an
-    // Explorer calls Aira, even if the call was canceled or the call didn't use messaging. Eventually, we should find a
-    // solution with fewer shortcomings.
-    await _messagingClient?.sendStart();
 
     if (preCallMessage.isNotEmpty) {
       await _sendPreCallMessage(message, fileMap);
@@ -1067,6 +1060,33 @@ class PlatformClient {
     Map<String, dynamic>? site = gpsResponse['site'];
     _lastAccessOfferUpdate = null == site ? null : AccessOfferDetails.fromJson(site);
     return _lastAccessOfferUpdate;
+  }
+
+  /// Creates a new Aira AI chat session.
+  Future<ChatSessionInfo> createChatSession() async {
+    _verifyIsLoggedIn();
+
+    final response = await _httpPost('/api/chat', null);
+    return ChatSessionInfo.fromJson(response);
+  }
+
+  /// Sends a chat message and/or image and returns Aira AI's response.
+  ///
+  /// If an image is provided, it must be encoded as a [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme) (see
+  /// [UriData.fromBytes]).
+  Future<ChatMessageInfo> sendChatMessage(int chatId, {String? message, String? image}) async {
+    assert(message != null || image != null);
+
+    _verifyIsLoggedIn();
+
+    final response = await _httpPost(
+      '/api/chat/$chatId/message',
+      jsonEncode({
+        'message': message,
+        'image': image,
+      }),
+    );
+    return ChatMessageInfo.fromJson(response);
   }
 
   Future<Map<String, dynamic>> _httpSend(

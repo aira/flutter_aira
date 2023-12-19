@@ -22,7 +22,7 @@ class PlatformInvalidTokenException implements Exception {
 /// Exception thrown when an Explorer tries to delete his account before cancelling his subscription.
 class PlatformDeleteAccountException extends PlatformLocalizedException {
   // For more details, see: https://github.com/aira/platform/blob/29eba575a495e06a0364b7904cbbb52adee81ea0/core/server/AiraPlatform/src/main/java/io/aira/action/delete/user/UserDeleteRestController.java#L77
-  const PlatformDeleteAccountException(String code, String message) : super(code, message);
+  const PlatformDeleteAccountException(super.code, super.message);
 }
 
 /// Exception thrown when the operation requires the user to log in with their business credentials.
@@ -30,10 +30,10 @@ class PlatformBusinessLoginRequiredException extends PlatformLocalizedException 
   final String _connection;
 
   const PlatformBusinessLoginRequiredException(
-    String code,
-    String message,
+    super.code,
+    super.message,
     this._connection,
-  ) : super(code, message);
+  );
 
   /// The name of the required Auth0 enterprise connection.
   String get connection => _connection;

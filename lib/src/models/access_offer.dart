@@ -1,5 +1,5 @@
 import 'package:flutter_aira/src/models/account.dart';
-import 'package:flutter_aira/src/models/convertion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 enum AccessOfferType {
   product,

@@ -19,10 +19,15 @@ abstract class MessagingClient {
   /// If the application does not support messaging, this will throw an exception.
   Stream<Message> get messageStream;
 
-  /// Sends the provided message to the Agent.
+  /// Sends the provided message text to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
   Future<void> sendMessage(String text);
+
+  /// Publishes the provided message as-is.
+  ///
+  /// If the application does not support messaging, this will throw an exception.
+  Future<void> sendRawMessage(Map<String, dynamic> message);
 
   /// Sends the provided message to the Agent.
   ///
@@ -103,23 +108,17 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     });
   }
 
-  Future<void> sendStart() async {
-    return _sendMessage({
-      'senderId': _userId,
-      'start': true,
-    });
-  }
-
   @override
   Future<void> sendMessage(String text) async {
-    return _sendMessage({
+    return sendRawMessage({
       'senderId': _userId,
       'serviceId': _serviceRequestId,
       'text': text,
     });
   }
 
-  Future<void> _sendMessage(Map<String, dynamic> message) async {
+  @override
+  Future<void> sendRawMessage(Map<String, dynamic> message) async {
     pn.PublishResult result = await _pubnub.publish(_messageChannel, message);
     if (result.isError) {
       throw PlatformUnknownException(result.description);
