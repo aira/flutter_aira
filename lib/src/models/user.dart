@@ -11,6 +11,7 @@ class User {
   final List<Profile> profiles;
   final String? referralLink;
   final bool tosAccepted;
+  final int aiDailyMessageLimit;
 
   User({
     required this.id,
@@ -23,6 +24,7 @@ class User {
     required this.profiles,
     this.referralLink,
     required this.tosAccepted,
+    required this.aiDailyMessageLimit,
   });
 
   User.fromJson(Map<String, dynamic> json)
@@ -34,13 +36,13 @@ class User {
             .cast<Language>()
             .toList(growable: false),
         lastName = json['lastName'] ?? '',
-        linkedAccounts = (json['providers'] as List<dynamic>)
-            .map((json) => json['serviceName'] as String)
-            .toList(growable: false),
+        linkedAccounts =
+            (json['providers'] as List<dynamic>).map((json) => json['serviceName'] as String).toList(growable: false),
         phoneNumber = json['phoneNumber'],
         tosAccepted = json['tosAccepted'],
         profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false),
-        referralLink = json['referralLink'];
+        referralLink = json['referralLink'],
+        aiDailyMessageLimit = _getAIDailyMessageLimitProperty(json['properties']);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
@@ -53,6 +55,8 @@ class User {
     String? phoneNumber,
     bool? tosAccepted,
     List<Profile>? profiles,
+    String? referralLink,
+    int? aiDailyMessageLimit,
   }) =>
       User(
         id: id ?? this.id,
@@ -64,5 +68,11 @@ class User {
         phoneNumber: phoneNumber ?? this.phoneNumber,
         profiles: profiles ?? this.profiles,
         tosAccepted: tosAccepted ?? this.tosAccepted,
+        referralLink: referralLink ?? this.referralLink,
+        aiDailyMessageLimit: aiDailyMessageLimit ?? this.aiDailyMessageLimit,
       );
 }
+
+///Returns the value of the property [aiDailyMessageLimit] from the [json] object.
+int _getAIDailyMessageLimitProperty(Map<String, dynamic> json) =>
+    int.tryParse(json['aiDailyMessageLimit']?.first?['value'] ?? '0') ?? 0;
