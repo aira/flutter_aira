@@ -11,7 +11,7 @@ class User {
   final List<Profile> profiles;
   final String? referralLink;
   final bool tosAccepted;
-  final int? aiDailyMessageLimit;
+  final int aiDailyMessageLimit;
 
   User({
     required this.id,
@@ -24,7 +24,7 @@ class User {
     required this.profiles,
     this.referralLink,
     required this.tosAccepted,
-    this.aiDailyMessageLimit,
+    required this.aiDailyMessageLimit,
   });
 
   User.fromJson(Map<String, dynamic> json)
