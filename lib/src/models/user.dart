@@ -11,7 +11,7 @@ class User {
   final List<Profile> profiles;
   final String? referralLink;
   final bool tosAccepted;
-  final String? aiDailyMessageLimit;
+  final int? aiDailyMessageLimit;
 
   User({
     required this.id,
@@ -55,6 +55,8 @@ class User {
     String? phoneNumber,
     bool? tosAccepted,
     List<Profile>? profiles,
+    String? referralLink,
+    int? aiDailyMessageLimit,
   }) =>
       User(
         id: id ?? this.id,
@@ -66,8 +68,11 @@ class User {
         phoneNumber: phoneNumber ?? this.phoneNumber,
         profiles: profiles ?? this.profiles,
         tosAccepted: tosAccepted ?? this.tosAccepted,
+        referralLink: referralLink ?? this.referralLink,
+        aiDailyMessageLimit: aiDailyMessageLimit ?? this.aiDailyMessageLimit,
       );
 }
 
 ///Returns the value of the property [aiDailyMessageLimit] from the [json] object.
-String? _getAIDailyMessageLimitProperty(Map<String, dynamic> json) => (json['aiDailyMessageLimit']?.first?['value']);
+int _getAIDailyMessageLimitProperty(Map<String, dynamic> json) =>
+    int.tryParse(json['aiDailyMessageLimit']?.first?['value'] ?? '0') ?? 0;

@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.11.0] - 2024-01-03
 ### New
 - `User.aiDailyMessageLimit` to determine how many AI image description requests an Explorer can make per day (#102)
-- `User.getAIDailyMessageLimitProperty` to retrieve property from `UserProperties` (#102)
 
 ## [1.10.1] - 2023-12-28
 ### Changed
