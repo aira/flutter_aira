@@ -1090,11 +1090,11 @@ class PlatformClient {
   }
 
   /// Sends user feedback on the AI response.
-  Future<void> sendMessageFeedback(int sessionId, int messageId, int rating, String comment) async {
+  Future<void> sendChatMessageFeedback(int chatId, int messageId, int rating, String comment) async {
     _verifyIsLoggedIn();
 
     await _httpPut(
-      '/api/chat/$sessionId/message/$messageId/explorer-feedback',
+      '/api/chat/$chatId/message/$messageId/explorer-feedback',
       body: jsonEncode({
         'rating': rating,
         'comment': comment,
