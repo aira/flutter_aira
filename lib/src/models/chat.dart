@@ -1,3 +1,4 @@
+import 'package:flutter_aira/src/models/chat_feedback_info.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 class ChatSessionInfo {
@@ -27,6 +28,7 @@ class ChatMessageInfo {
         senderId = json['senderId'],
         role = SenderRole.fromName(json['role']),
         message = json['message'],
+        userFeedback = json['userFeedback'] != null ? ChatFeedbackInfo.fromJson(json['userFeedback']) : null,
         imageUrl = json['imageUrl'];
 
   final int id;
@@ -35,4 +37,5 @@ class ChatMessageInfo {
   final SenderRole role;
   final String? message;
   final String? imageUrl;
+  final ChatFeedbackInfo? userFeedback;
 }
