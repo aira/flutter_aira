@@ -6,13 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.12.0] - 2024-01-10
 ### Added
-- `ChatMessageInfo.ChatFeedbackInfo` to include Explorer feedback (#107)
-- `Message.messageId` (#107)
-- `PlatformClient.sendMessageFeedback` to send user feedback to the AI response (#107)
+- `ChatMessageInfo.ChatFeedbackInfo` to include Explorer feedback (#103)
+- `Message.messageId` (#103)
+- `PlatformClient.sendChatMessageFeedback` to send user feedback to the AI response (#103)
 
 ## [1.11.0] - 2024-01-03
 ### Added
-- `User.aiDailyMessageLimit` to determine how many AI image description requests an Explorer can make per day (#106)
+- `User.aiDailyMessageLimit` to determine how many AI image description requests an Explorer can make per day (#102)
 
 ## [1.10.1] - 2023-12-28
 ### Changed

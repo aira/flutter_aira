@@ -1,4 +1,4 @@
-import 'package:flutter_aira/src/models/chat_feedback_info.dart';
+import 'package:flutter_aira/src/models/chat/chat_feedback_info.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 class ChatSessionInfo {

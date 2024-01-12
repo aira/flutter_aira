@@ -12,7 +12,7 @@ class Message {
   final int userId;
 
   /// The ID of the message.
-  final int messageId;
+  final int? messageId;
 
   /// Whether the message was sent by the Agent.
   bool get isRemote => !isLocal;
