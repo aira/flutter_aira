@@ -4,7 +4,8 @@ export 'src/models/access_offer.dart' show AccessOfferDetails, AccessOfferType, 
 export 'src/models/account.dart' show Account, AccountType;
 export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/call_history.dart' show CallSession, SessionFeedback;
-export 'src/models/chat.dart' show ChatMessageInfo, ChatSessionInfo, SenderRole;
+export 'src/models/chat/chat.dart' show ChatMessageInfo, ChatSessionInfo, SenderRole;
+export 'src/models/chat/chat_feedback_info.dart' show ChatFeedbackInfo;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;

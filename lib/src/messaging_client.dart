@@ -102,6 +102,7 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
         sentAt: envelope.publishedAt.toDateTime().millisecondsSinceEpoch,
         text: content['text'] ?? '',
         userId: content['senderId'],
+        messageId: content['messageId'] ?? 0,
         fileId: fileInfo['id'],
         fileName: fileInfo['name'],
       );

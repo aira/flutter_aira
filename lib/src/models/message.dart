@@ -11,6 +11,9 @@ class Message {
   /// The ID of the user who sent the message.
   final int userId;
 
+  /// The ID of the message.
+  final int? messageId;
+
   /// Whether the message was sent by the Agent.
   bool get isRemote => !isLocal;
 
@@ -25,6 +28,7 @@ class Message {
     required this.sentAt,
     required this.text,
     required this.userId,
+    required this.messageId,
     this.fileId,
     this.fileName,
   });

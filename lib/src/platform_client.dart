@@ -1089,6 +1089,19 @@ class PlatformClient {
     return ChatMessageInfo.fromJson(response);
   }
 
+  /// Sends user feedback on the AI response.
+  Future<void> sendChatMessageFeedback(int chatId, int messageId, int rating, String comment) async {
+    _verifyIsLoggedIn();
+
+    await _httpPut(
+      '/api/chat/$chatId/message/$messageId/explorer-feedback',
+      body: jsonEncode({
+        'rating': rating,
+        'comment': comment,
+      }),
+    );
+  }
+
   Future<Map<String, dynamic>> _httpSend(
     String method,
     String unencodedPath, {
