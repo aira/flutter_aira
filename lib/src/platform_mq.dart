@@ -62,7 +62,12 @@ class PlatformMQImpl implements PlatformMQ {
     _client.published!.listen(_handleData);
   }
 
-  static Future<PlatformMQ> create(PlatformEnvironment env, Session session, {String? lastWillMessage, String? lastWillTopic}) async {
+  static Future<PlatformMQ> create(
+    PlatformEnvironment env,
+    Session session, {
+    String? lastWillMessage,
+    String? lastWillTopic,
+  }) async {
     PlatformMQImpl instance = PlatformMQImpl._(session);
     await instance._init(env, lastWillMessage: lastWillMessage, lastWillTopic: lastWillTopic);
     return instance;
@@ -82,7 +87,12 @@ class PlatformMQImpl implements PlatformMQ {
     _log.finest('received message client_id=${_client.clientIdentifier} topic=$topic message=$decoded');
 
     for (final MessageCallback callback in _callbacksByTopic[topic] ?? []) {
-      callback(decoded).catchError((e) => _log.shout('failed to handle message topic=$topic', e));
+      callback(decoded).catchError(
+        (e) => _log.shout(
+          'failed to handle message topic=$topic message=$decoded',
+          e,
+        ),
+      );
     }
   }
 
