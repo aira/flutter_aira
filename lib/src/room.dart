@@ -618,13 +618,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // Agent-initiated end message, but the impact of that is low (the Explorer can end the call themselves).
           _getServiceRequestStatusTimer?.cancel();
 
-          // HACK: In some cases, the video track isn't fully created at the time we join the room. This causes Agent
-          // Dashboard to behave as if the video is muted when it really isn't. So, if we have a video track and we're
-          // not muted, we want to make sure SFUConnection is transmitting that video.
-          final bool shouldTransmitVideo = _isVideoMuted == false && _hasVideoTrack;
-          if (shouldTransmitVideo && _connectionByTrackId[_localTrackId!]?.ownsVideoTrack != true) {
-            _log.warning('Attempting to re-create the video track');
-            await _setVideoMuted(_isVideoMuted);
+          final bool hasOutgoingVideoSenderTrack = _connectionByTrackId[_localTrackId!]?.ownsVideoTrack != true;
+          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack) {
+            _log.shout(
+                'Starting a call without video. hasOutgoingVideoSenderTrack: $hasOutgoingVideoSenderTrack, _hasVideoTrack: $_hasVideoTrack');
           }
           // Now that the Agent has joined the room, publish our participant status.
           await _updateParticipantStatus();
