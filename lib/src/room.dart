@@ -285,6 +285,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> join(MediaStream localStream) async {
     _localStream = localStream;
     await _createOutgoingTrack();
+    // Attempt to update the participant status just in case we succeed at
+    // joining the room after the ServiceRequest's status is set to "Started"
+    await _updateParticipantStatus();
   }
 
   @override
@@ -612,22 +615,42 @@ class KurentoRoom extends ChangeNotifier implements Room {
           await _updateServiceRequestStatus('ASSIGNED', agentFirstName);
         } else if (_serviceRequestState == ServiceRequestState.assigned) {
           _serviceRequestState = ServiceRequestState.started;
-          notifyListeners();
 
           // Once we've started, we no longer need the timer to consume resources. This means we may miss an
           // Agent-initiated end message, but the impact of that is low (the Explorer can end the call themselves).
           _getServiceRequestStatusTimer?.cancel();
 
-          final bool hasOutgoingVideoSenderTrack = _connectionByTrackId[_localTrackId!]?.ownsVideoTrack != true;
-          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack) {
+          // HACK: This condition is here to cover the improbable possibility
+          // that we would have join the room with a _localStream which didn't
+          // yet contain a video track. In this case, this code would replace
+          // the transceiver for another one containing the video track.
+          final bool shouldTransmitVideo = _isVideoMuted == false && _hasVideoTrack;
+          final bool hasOutgoingVideoSenderTrack = _connectionByTrackId[_localTrackId!]?.ownsVideoTrack == true;
+          if (null != _localTrackId && shouldTransmitVideo && !hasOutgoingVideoSenderTrack) {
+            _log.warning('Attempting to re-create the video track');
+            await _setVideoMuted(_isVideoMuted);
+          }
+
+          // Remove the follow logging once no longer needed.
+          // Some logging to help diagnose issues related to videos when they
+          // arise.
+          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack || null == _localTrackId) {
             _log.shout(
               'Starting a call without video. '
               'hasOutgoingVideoSenderTrack: $hasOutgoingVideoSenderTrack, '
-              '_hasVideoTrack: $_hasVideoTrack',
+              '_hasVideoTrack: $_hasVideoTrack'
+              '_localTrackId: ${null == _localTrackId ? 'null' : 'not null'}',
             );
           }
+          if (_isVideoMuted) {
+            _log.warning('Starting a call with video muted');
+          }
+
           // Now that the Agent has joined the room, publish our participant status.
           await _updateParticipantStatus();
+
+          // We want to notify Listeners after updating the participant Status.
+          notifyListeners();
         }
         break;
 
