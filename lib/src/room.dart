@@ -626,16 +626,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // arise.
           final bool hasOutgoingVideoSenderTrack =
               null != _localTrackId && _connectionByTrackId[_localTrackId!]?.ownsVideoTrack == true;
-          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack) {
+          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack || isVideoMuted) {
             _log.shout(
               'Starting a call without video. '
               'hasOutgoingVideoSenderTrack: $hasOutgoingVideoSenderTrack, '
-              '_hasVideoTrack: $_hasVideoTrack'
-              '_localTrackId: ${null == _localTrackId ? 'null' : 'not null'}',
+              '_hasVideoTrack: $_hasVideoTrack, '
+              '_localTrackId: ${null == _localTrackId ? 'null' : 'not null'}, '
+              'isVideoMuted: $isVideoMuted',
             );
-          }
-          if (_isVideoMuted) {
-            _log.shout('Starting a call with video muted');
           }
 
           // Now that the Agent has joined the room, publish our participant status.
