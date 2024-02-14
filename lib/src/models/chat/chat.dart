@@ -5,11 +5,14 @@ class ChatSessionInfo {
   ChatSessionInfo.fromJson(Map<String, dynamic> json)
       : chatId = json['chatId'],
         userId = json['userId'],
-        createdAt = (json['createdAt'] as String).dateTimeZ;
+        createdAt = (json['createdAt'] as String).dateTimeZ,
+        messages =
+            json['messages'] != null ? (json['messages'] as List).map((e) => ChatMessageInfo.fromJson(e)).toList() : [];
 
   final int chatId;
   final int userId;
   final DateTime createdAt;
+  List<ChatMessageInfo> messages;
 }
 
 enum SenderRole {
