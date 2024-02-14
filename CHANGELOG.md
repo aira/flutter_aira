@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2] - 2024-02-02
+### Changed
+- Added a safety to give a second chance to transmit video in case the video track wasn't fully initialized at room join time. (#106)
+- Added a safety to make sure the participant status is updated properly if we join the room after the Service Request status is set to "started" (#106)
+- Added logging to help diagnose issues related to calls started without videos (#106)
+
+## [1.12.1] - 2024-01-29
+### Changed
+- Updated plugin and pod dependencies for security and compatibility purposes (#104)
+
 ## [1.12.0] - 2024-01-10
 ### Added
 - `ChatMessageInfo.ChatFeedbackInfo` to include Explorer feedback (#103)

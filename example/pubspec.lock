@@ -133,10 +133,10 @@ packages:
     dependency: transitive
     description:
       name: device_info_plus
-      sha256: f52ab3b76b36ede4d135aab80194df8925b553686f0fa12226b4e2d658e45903
+      sha256: "0042cb3b2a76413ea5f8a2b40cec2a33e01d0c937e91f0f7c211fde4f7739ba6"
       url: "https://pub.dev"
     source: hosted
-    version: "8.2.2"
+    version: "9.1.1"
   device_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -204,7 +204,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.13.0"
+    version: "1.12.2"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -467,10 +467,10 @@ packages:
     dependency: transitive
     description:
       name: pubnub
-      sha256: "48850f2c39ea0e284f69caeb6871a869877c6d745bd788966dcc392225ade4ba"
+      sha256: "005be47abf46e7d7bf1c5cec10426b7ce7ce6d258d19219ff460bb8d67735ff9"
       url: "https://pub.dev"
     source: hosted
-    version: "4.3.1"
+    version: "4.3.2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -564,6 +564,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.4"
+  win32_registry:
+    dependency: transitive
+    description:
+      name: win32_registry
+      sha256: "1c52f994bdccb77103a6231ad4ea331a244dbcef5d1f37d8462f713143b0bfae"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   xdg_directories:
     dependency: transitive
     description:

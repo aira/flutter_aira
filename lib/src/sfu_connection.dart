@@ -114,6 +114,8 @@ class SfuConnection {
     }
   }
 
+  bool get ownsVideoTrack => _video.sender.track != null;
+
   Future<void> replaceVideoTrack(MediaStreamTrack? track) async {
     if (_isIncoming) {
       throw StateError('Cannot replace video track on incoming connection');
