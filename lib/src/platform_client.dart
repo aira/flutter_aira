@@ -1070,6 +1070,14 @@ class PlatformClient {
     return ChatSessionInfo.fromJson(response);
   }
 
+  /// Returns the list of chat sessions for the current user.
+  Future<ChatSessionInfo> getChatSession(int chatId) async {
+    _verifyIsLoggedIn();
+
+    final response = await _httpGet('/api/chat/$chatId');
+    return ChatSessionInfo.fromJson(response);
+  }
+
   /// Sends a chat message and/or image and returns Aira AI's response.
   ///
   /// If an image is provided, it must be encoded as a [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme) (see

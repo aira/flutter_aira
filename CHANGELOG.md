@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2024-02-13
+### Added
+- `PlatformClient.getChatSession` to get chat session Info  (#107)
+
 ## [1.12.2] - 2024-02-02
 ### Changed
 - Added a safety to give a second chance to transmit video in case the video track wasn't fully initialized at room join time. (#106)
