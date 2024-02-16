@@ -2,7 +2,7 @@ import 'package:flutter_aira/src/models/chat/chat_feedback_info.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 class ChatSessionInfo {
-  ChatSessionInfo.temp()
+  ChatSessionInfo.template()
       : chatId = 0,
         userId = 0,
         createdAt = DateTime.now(),
@@ -34,7 +34,7 @@ enum SenderRole {
 }
 
 class ChatMessageInfo {
-  ChatMessageInfo.temp({required this.role, this.message, this.imageUrl})
+  ChatMessageInfo.template({required this.role, this.message, this.imageUrl})
       : id = 0,
         chatId = 0,
         senderId = 0,
