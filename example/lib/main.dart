@@ -374,9 +374,20 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   @override
-  Future<void> addRemoteStream(MediaStream stream) async {
+  Future<void> addRemoteStream(int trackId, MediaStream stream) async {
     await _rendererInitialized;
     _remoteRenderer.srcObject = stream;
+  }
+
+  @override
+  Future<void> removeRemoteStream(int trackId) async {
+    await _rendererInitialized;
+    MediaStream? stream = _remoteRenderer.srcObject;
+    await Future.wait(
+      stream?.getTracks().map((MediaStreamTrack track) => track.stop()).toList() ?? <Future<void>>[],
+    );
+    await stream?.dispose();
+    await _remoteRenderer.dispose();
   }
 
   @override
