@@ -60,7 +60,6 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   final TextEditingController _verificationCodeController = TextEditingController();
 
   final Map<int, RTCVideoRenderer> _remoteRenderers = {};
-  // late final Future<void> _rendererInitialized;
 
   LoginType _loginType = LoginType.verificationCode;
   MediaStream? _localStream;
@@ -85,8 +84,6 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _tokenController.text = '';
     _userIdController.text = '';
     _verificationCodeController.text = '';
-
-    // _rendererInitialized = _remoteRenderer.initialize();
   }
 
   @override
@@ -393,12 +390,13 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
   @override
   Future<void> removeRemoteStream(int trackId) async {
-    final renderer = _remoteRenderers[trackId];
+    final renderer = _remoteRenderers.remove(trackId);
     if (null == renderer) return;
 
     MediaStream? stream = renderer.srcObject;
     await stream?.disposeMediaStream();
     await renderer.dispose();
+    setState(() {}); // Remove the renderer from the Widget tree.
   }
 
   @override
