@@ -19,8 +19,13 @@ import 'sfu_connection.dart';
 typedef AccessOfferChangeCallback = void Function(AccessOfferDetails accessOffer, Duration? remainingTime);
 
 abstract class RoomHandler {
-  /// Adds the remote stream to an [RTCVideoRenderer].
-  Future<void> addRemoteStream(MediaStream stream);
+  /// Adds a remote stream. This signals the client application that a new
+  /// remote stream (participant) has join our video conferencing room.
+  Future<void> addRemoteStream(int trackId, MediaStream stream);
+
+  /// Removes a remote stream. This signals the client that a remote stream
+  /// (participant) has been removed from out video conferencing room.
+  Future<void> removeRemoteStream(int trackId);
 
   /// Takes a photo.
   Future<ByteBuffer> takePhoto();
@@ -732,7 +737,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
-    await _roomHandler.addRemoteStream(event.streams[0]);
+    await _roomHandler.addRemoteStream(trackId, event.streams[0]);
   }
 
   Future<void> _updateParticipantStatus() async {
@@ -830,6 +835,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       _log.warning('incoming track not found outgoing_track_id=$outgoingTrackId');
       return;
     }
+    await _roomHandler.removeRemoteStream(incomingTrackId);
 
     SfuConnection? connection = _connectionByTrackId.remove(incomingTrackId);
     if (connection != null) {
