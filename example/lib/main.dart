@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:example/media_stream_extension.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -58,8 +59,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _verificationCodeController = TextEditingController();
 
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  late final Future<void> _rendererInitialized;
+  final Map<int, RTCVideoRenderer> _remoteRenderers = {};
+  // late final Future<void> _rendererInitialized;
 
   LoginType _loginType = LoginType.verificationCode;
   MediaStream? _localStream;
@@ -85,12 +86,12 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _userIdController.text = '';
     _verificationCodeController.text = '';
 
-    _rendererInitialized = _remoteRenderer.initialize();
+    // _rendererInitialized = _remoteRenderer.initialize();
   }
 
   @override
   void dispose() {
-    _remoteRenderer.dispose();
+    disposeRenderers();
 
     _messageFocusNode.dispose();
 
@@ -104,6 +105,14 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
     _verificationCodeController.dispose();
 
     super.dispose();
+  }
+
+  Future<void> disposeRenderers() async {
+    for (RTCVideoRenderer renderer in _remoteRenderers.values) {
+      MediaStream? stream = renderer.srcObject;
+      stream?.disposeMediaStream();
+      await renderer.dispose();
+    }
   }
 
   @override
@@ -146,10 +155,9 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   Widget get _inCallWidget {
     return Column(
       children: <Widget>[
-        Visibility(
-          visible: false,
-          child: RTCVideoView(_remoteRenderer),
-        ),
+        ..._remoteRenderers.values.map((RTCVideoRenderer renderer) {
+          return Visibility(visible: false, child: RTCVideoView(renderer));
+        }),
         Visibility(
           visible: _isMessagingEnabled,
           child: _messagingWidget,
@@ -375,19 +383,22 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
   @override
   Future<void> addRemoteStream(int trackId, MediaStream stream) async {
-    await _rendererInitialized;
-    _remoteRenderer.srcObject = stream;
+    final newRenderer = RTCVideoRenderer();
+    await newRenderer.initialize();
+    newRenderer.srcObject = stream;
+    setState(() async {
+      _remoteRenderers[trackId] = newRenderer;
+    });
   }
 
   @override
   Future<void> removeRemoteStream(int trackId) async {
-    await _rendererInitialized;
-    MediaStream? stream = _remoteRenderer.srcObject;
-    await Future.wait(
-      stream?.getTracks().map((MediaStreamTrack track) => track.stop()).toList() ?? <Future<void>>[],
-    );
-    await stream?.dispose();
-    await _remoteRenderer.dispose();
+    final renderer = _remoteRenderers[trackId];
+    if (null == renderer) return;
+
+    MediaStream? stream = renderer.srcObject;
+    await stream?.disposeMediaStream();
+    await renderer.dispose();
   }
 
   @override
@@ -551,9 +562,12 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   Future<void> _hangUp() async {
-    _remoteRenderer.srcObject?.getTracks().forEach((MediaStreamTrack track) => track.stop());
-    _remoteRenderer.srcObject?.dispose();
-    _remoteRenderer.srcObject = null;
+    for (RTCVideoRenderer renderer in _remoteRenderers.values) {
+      await renderer.srcObject?.disposeMediaStream();
+      renderer.srcObject = null;
+      await renderer.dispose();
+    }
+    _remoteRenderers.clear();
 
     _localStream?.getTracks().forEach((MediaStreamTrack track) => track.stop());
     _localStream?.dispose();
