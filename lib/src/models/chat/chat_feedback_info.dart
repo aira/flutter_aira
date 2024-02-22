@@ -1,5 +1,5 @@
 class ChatFeedbackInfo {
-  final String authorId;
+  final int authorId;
   final int rating;
   final String? comment;
 

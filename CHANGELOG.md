@@ -4,16 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2024-02-21
+### Added
+- Updated `ChatFeedbackInfo` according to changes of the model on the platform.(#112)
+
 ## [2.0.0] - 2024-02-17
 ### Changed
 Since Aira now supports call transfers, the `RoomHandler` needs to be able to handle multiple remote streams.
-- **BREAKING:** `RoomHandler.addRemoteStream` now requires two parameters (#109)
-- **BREAKING:** `RoomHandler` has a new function to implement: `removeRemoteStream` (#109)
+- **BREAKING:** `RoomHandler.addRemoteStream` now requires two parameters (#110)
+- **BREAKING:** `RoomHandler` has a new function to implement: `removeRemoteStream` (#110)
 
 ## [1.13.2] - 2024-02-16
 ### Added
-- `ChatMessageInfo.template` constructor was added (#108)
-- `ChatSessionInfo.template` constructor was added (#108)
+- `ChatMessageInfo.template` constructor was added (#109)
+- `ChatSessionInfo.template` constructor was added (#109)
 
 ## [1.13.1] - 2024-02-15
 ### Changed
