@@ -1110,6 +1110,28 @@ class PlatformClient {
     );
   }
 
+  /// Request agent validation for a chat message.
+  Future<Map<String, dynamic>> requestAgentValidation(
+      int chatId,
+      int messageId, {
+        bool status = true,
+      }) {
+    _verifyIsLoggedIn();
+
+    return _httpPut(
+      '/api/chat/$chatId/message/$messageId/validation-requested',
+      body: jsonEncode({'status': status}),
+    );
+  }
+
+  /// Returns the chat message for the given chat and message IDs.
+  Future<ChatMessageInfo> getChatMessage(int chatId, int messageId) async {
+    _verifyIsLoggedIn();
+
+    final response = await _httpGet('/api/chat/$chatId/message/$messageId');
+    return ChatMessageInfo.fromJson(response);
+  }
+
   Future<Map<String, dynamic>> _httpSend(
     String method,
     String unencodedPath, {
