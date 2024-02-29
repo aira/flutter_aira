@@ -1112,15 +1112,14 @@ class PlatformClient {
 
   /// Request agent validation for a chat message.
   Future<Map<String, dynamic>> requestAgentValidation(
-      int chatId,
-      int messageId, {
-        bool status = true,
-      }) {
+     int chatId,
+     int messageId,
+  ) {
     _verifyIsLoggedIn();
 
     return _httpPut(
       '/api/chat/$chatId/message/$messageId/validation-requested',
-      body: jsonEncode({'status': status}),
+      body: jsonEncode({'status': true}),
     );
   }
 

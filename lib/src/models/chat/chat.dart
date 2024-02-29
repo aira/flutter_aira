@@ -1,9 +1,11 @@
-import '../../models/conversion_extension.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 import 'agent_feedback_info.dart';
 import 'user_feedback_info.dart';
 
+/// Information about a chat session.
 class ChatSessionInfo {
+  /// Creates a new instance of [ChatSessionInfo].
   ChatSessionInfo({
     required this.chatId,
     required this.userId,
@@ -21,22 +23,33 @@ class ChatSessionInfo {
                 .toList()
             : [];
 
+  /// The ID of the chat session.
   final int chatId;
+
+  /// The ID of the user.
   final int userId;
+
+  /// The date and time when the chat session was created.
   final DateTime createdAt;
+
+  /// The list of messages in the chat session.
   List<ChatMessageInfo> messages;
 }
 
+/// The role of the sender of a chat message.
 enum SenderRole {
   assistant,
   user;
 
+  /// Gets [SenderRole] from the given name.
   static SenderRole fromName(String name) {
     return SenderRole.values.byName(name.toLowerCase());
   }
 }
 
+/// Information about a chat message.
 class ChatMessageInfo {
+  /// Creates a new instance of [ChatMessageInfo].
   const ChatMessageInfo({
     required this.id,
     required this.chatId,
@@ -62,13 +75,28 @@ class ChatMessageInfo {
             : null,
         imageUrl = json['imageUrl'];
 
+  /// The ID of the chat message.
   final int id;
+
+  /// The ID of the chat session.
   final int chatId;
+
+  /// The ID of the sender.
   final int senderId;
+
+  /// The role of the sender.
   final SenderRole role;
+
+  /// The message content.
   final String? message;
+
+  /// The URL of the image.
   final String? imageUrl;
+
+  /// The user feedback.
   final UserFeedbackInfo? userFeedback;
+
+  /// The agent feedback.
   final AgentFeedbackInfo? agentFeedback;
 
   Map<String, dynamic> toMap() {

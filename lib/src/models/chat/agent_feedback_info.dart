@@ -1,7 +1,9 @@
-import '../../models/conversion_extension.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_aira/src/models/conversion_extension.dart';
 
+/// Information about the feedback provided by the Visual Interpreter.
 class AgentFeedbackInfo {
+  /// Creates a new instance of [AgentFeedbackInfo].
   const AgentFeedbackInfo({
     this.authorId,
     this.authorFullName,
@@ -29,16 +31,33 @@ class AgentFeedbackInfo {
         updatedAt = (json['updatedAt'] as String?)?.dateTimeZ,
         analysis = json['analysis'];
 
+  /// The ID of the author of the feedback which is the Visual Interpreter.
   final int? authorId;
+
+  /// The full name of the author of the feedback which is the Visual Interpreter.
   final String? authorFullName;
-  final int? rating;
+
+  /// The rating for the text content.
+  /// 1: Good, -1: Bad
   final int? textRating;
+
+  /// The rating for the image content.
+  /// 1: Good, -1: Bad
   final int? imageRating;
-  final String? comment;
+
+  /// The verified content by the Visual Interpreter.
   final String? verifiedContent;
+
+  /// The state of the feedback.
   final AgentFeedbackState? state;
+
+  /// The date and time when the feedback was requested.
   final DateTime? requestedAt;
+
+  /// The date and time when the feedback was updated.
   final DateTime? updatedAt;
+  final String? comment;
+  final int? rating;
   final Map<String, dynamic>? analysis;
 
   Map<String, dynamic> toMap() {
@@ -58,6 +77,7 @@ class AgentFeedbackInfo {
   }
 }
 
+/// The state of the feedback.
 enum AgentFeedbackState {
   pending('PENDING'),
   inProgress('IN_PROGRESS'),
@@ -67,6 +87,7 @@ enum AgentFeedbackState {
 
   const AgentFeedbackState(this.value);
 
+  /// Gets the [AgentFeedbackState] from the given value.
   static AgentFeedbackState? fromValue(String? value) {
     return AgentFeedbackState.values.firstWhereOrNull((e) => e.value == value);
   }
