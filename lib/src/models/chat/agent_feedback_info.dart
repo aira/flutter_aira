@@ -1,4 +1,5 @@
 import '../../models/conversion_extension.dart';
+import 'package:collection/collection.dart';
 
 class AgentFeedbackInfo {
   const AgentFeedbackInfo({
@@ -24,7 +25,7 @@ class AgentFeedbackInfo {
         comment = json['comment'],
         verifiedContent = json['verifiedContent'],
         state = AgentFeedbackState.fromValue(json['state']),
-        requestedAt = (json['requestedAt'] as String).dateTimeZ,
+        requestedAt = (json['requestedAt'] as String?)?.dateTimeZ,
         updatedAt = (json['updatedAt'] as String?)?.dateTimeZ,
         analysis = json['analysis'];
 
@@ -35,8 +36,8 @@ class AgentFeedbackInfo {
   final int? imageRating;
   final String? comment;
   final String? verifiedContent;
-  final AgentFeedbackState state;
-  final DateTime requestedAt;
+  final AgentFeedbackState? state;
+  final DateTime? requestedAt;
   final DateTime? updatedAt;
   final Map<String, dynamic>? analysis;
 
@@ -49,8 +50,8 @@ class AgentFeedbackInfo {
       'imageRating': imageRating,
       'comment': comment,
       'verifiedContent': verifiedContent,
-      'state': state.name,
-      'requestedAt': requestedAt.dateTimeStringZ,
+      'state': state?.name,
+      'requestedAt': requestedAt?.dateTimeStringZ,
       'updatedAt': updatedAt?.dateTimeStringZ,
       'analysis': analysis,
     };
@@ -66,7 +67,7 @@ enum AgentFeedbackState {
 
   const AgentFeedbackState(this.value);
 
-  static AgentFeedbackState fromValue(String value) {
-    return AgentFeedbackState.values.firstWhere((e) => e.value == value);
+  static AgentFeedbackState? fromValue(String? value) {
+    return AgentFeedbackState.values.firstWhereOrNull((e) => e.value == value);
   }
 }
