@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `requestAgentValidation` to request agent validation (#114)
 - `getChatMessage` to get chat a specific message info (#114)
+- Dependency to `collection` has been added (#114) 
 
 ### Changed
 - **BREAKING:** Replaced `ChatMessageInfo.template` with a new constructor that have all available fields (#114)
