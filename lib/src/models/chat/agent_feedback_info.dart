@@ -3,6 +3,7 @@ import '../../models/conversion_extension.dart';
 class AgentFeedbackInfo {
   const AgentFeedbackInfo({
     this.authorId,
+    this.authorFullName,
     this.rating,
     this.textRating,
     this.imageRating,
@@ -16,6 +17,7 @@ class AgentFeedbackInfo {
 
   AgentFeedbackInfo.fromJson(Map<String, dynamic> json)
       : authorId = json['authorId'],
+        authorFullName = json['authorFullName'],
         rating = json['rating'],
         textRating = json['textRating'],
         imageRating = json['imageRating'],
@@ -27,6 +29,7 @@ class AgentFeedbackInfo {
         analysis = json['analysis'];
 
   final int? authorId;
+  final String? authorFullName;
   final int? rating;
   final int? textRating;
   final int? imageRating;
@@ -40,6 +43,7 @@ class AgentFeedbackInfo {
   Map<String, dynamic> toMap() {
     return {
       'authorId': authorId,
+      'authorFullName': authorFullName,
       'rating': rating,
       'textRating': textRating,
       'imageRating': imageRating,
