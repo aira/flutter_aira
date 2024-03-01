@@ -6,7 +6,7 @@ class AgentFeedbackInfo {
   /// Creates a new instance of [AgentFeedbackInfo].
   const AgentFeedbackInfo({
     this.authorId,
-    this.authorFullName,
+    this.authorFirstName,
     this.rating,
     this.textRating,
     this.imageRating,
@@ -20,7 +20,7 @@ class AgentFeedbackInfo {
 
   AgentFeedbackInfo.fromJson(Map<String, dynamic> json)
       : authorId = json['authorId'],
-        authorFullName = json['authorFullName'],
+        authorFirstName = json['authorFirstName'],
         rating = json['rating'],
         textRating = json['textRating'],
         imageRating = json['imageRating'],
@@ -34,8 +34,8 @@ class AgentFeedbackInfo {
   /// The ID of the author of the feedback which is the Visual Interpreter.
   final int? authorId;
 
-  /// The full name of the author of the feedback which is the Visual Interpreter.
-  final String? authorFullName;
+  /// The first name of the author of the feedback which is the Visual Interpreter.
+  final String? authorFirstName;
 
   /// The rating for the text content.
   /// 1: Good, -1: Bad
@@ -63,7 +63,7 @@ class AgentFeedbackInfo {
   Map<String, dynamic> toMap() {
     return {
       'authorId': authorId,
-      'authorFullName': authorFullName,
+      'authorFirstName': authorFirstName,
       'rating': rating,
       'textRating': textRating,
       'imageRating': imageRating,
