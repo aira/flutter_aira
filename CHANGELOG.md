@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.1] - 2024-03-01
+## [2.1.2] - 2024-03-06
+### Changed
+- Updated mqtt's websocket protocol to align with newer version of RabbitMQ. This change is backward compatible. (#117)
 
+## [2.1.1] - 2024-03-01
 ### Changed
 - **BREAKING:** Renamed `authorFullName` to `authorFirstName` (#116)
 
