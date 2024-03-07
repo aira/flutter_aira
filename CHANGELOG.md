@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.2] - 2024-03-06
 ### Changed
-- Updated mqtt's websocket protocol to align with newer version of RabbitMQ. This change is backward compatible. (#117)
+- Updated mqtt's websocket protocol to align with newer version of RabbitMQ. This change is backward compatible. (#118)
 
 ## [2.1.1] - 2024-03-01
 ### Changed
