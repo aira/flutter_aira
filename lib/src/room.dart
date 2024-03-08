@@ -17,9 +17,7 @@ import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
 typedef AccessOfferChangeCallback = void Function(
-  AccessOfferDetails accessOffer,
-  Duration? remainingTime,
-);
+  AccessOfferDetails accessOffer, Duration? remainingTime,);
 
 abstract class RoomHandler {
   /// Adds a remote stream. This signals the client application that a new
@@ -170,14 +168,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
     ServiceRequest serviceRequest,
     RoomHandler roomHandler,
   ) async {
-    KurentoRoom room = KurentoRoom._(
-      env,
-      client,
-      session,
-      messagingClient,
-      serviceRequest,
-      roomHandler,
-    );
+    KurentoRoom room = KurentoRoom._(env,client,session,
+      messagingClient,serviceRequest,roomHandler,);
     try {
       await room._init(session);
       return room;
@@ -190,41 +182,18 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _init(Session session) async {
-    _mq = await PlatformMQImpl.create(
-      _env,
-      session,
-      lastWillMessage: _lastWillMessage,
-      lastWillTopic: _lastWillTopic,
-    );
+    _mq = await PlatformMQImpl.create(_env,session,
+      lastWillMessage: _lastWillMessage,lastWillTopic: _lastWillTopic,);
     // Asynchronously subscribe to the room-related topics.
-    await _mq.subscribe(
-      _participantEventTopic,
-      MqttQos.atMostOnce,
-      _handleParticipantEventMessage,
-    );
-    await _mq.subscribe(
-      _participantTopic,
-      MqttQos.atMostOnce,
-      _handleParticipantMessage,
-    );
-    await _mq.subscribe(
-      _serviceRequestPresenceTopic,
-      MqttQos.atLeastOnce,
-      _handleServiceRequestPresenceMessage,
-    );
-    await _mq.subscribe(
-      _callEventsTopic,
-      MqttQos.atLeastOnce,
-      _handleCallEvents,
-    );
+    await _mq.subscribe(_participantEventTopic,MqttQos.atMostOnce,_handleParticipantEventMessage,);
+    await _mq.subscribe(_participantTopic,MqttQos.atMostOnce,_handleParticipantMessage,);
+    await _mq.subscribe(_serviceRequestPresenceTopic,MqttQos.atLeastOnce,_handleServiceRequestPresenceMessage,);
+    await _mq.subscribe(_callEventsTopic,MqttQos.atLeastOnce,_handleCallEvents,);
 
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
     // FIXME: This timer eats up the exceptions thrown by the '_getServiceRequestStatus()' function which is an issue when the token is not valid anymore.
-    _getServiceRequestStatusTimer = Timer.periodic(
-      const Duration(seconds: 3),
-      (_) => _getServiceRequestStatus(),
-    );
+    _getServiceRequestStatusTimer = Timer.periodic(const Duration(seconds: 3),(_) => _getServiceRequestStatus(),);
 
     if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android) {
       _connectivityMonitoringSubscription = Connectivity().onConnectivityChanged.listen(_handleConnectionRecovery);
@@ -381,18 +350,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } else {
       // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
       // recreating the video track from scratch.
-      await _client.deleteTrack(
-        _serviceRequest.roomId,
-        _serviceRequest.participantId,
-        _localTrackId!,
-      );
+      await _client.deleteTrack(_serviceRequest.roomId,_serviceRequest.participantId,_localTrackId!,);
       await _createOutgoingTrack();
     }
 
     await _updateParticipantStatus();
-    _log.info(
-      'started presenting track=${_presentationStream!.getVideoTracks()[0].label}',
-    );
+    _log.info('started presenting track=${_presentationStream!.getVideoTracks()[0].label}',);
   }
 
   @override
@@ -421,17 +384,12 @@ class KurentoRoom extends ChangeNotifier implements Room {
     if (kIsWeb) {
       // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
       // track.
-      await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
-        _isVideoMuted || !_hasVideoTrack ? null : _localStream!.getVideoTracks()[0],
-      );
+      await _connectionByTrackId[_localTrackId]!
+      .replaceVideoTrack(_isVideoMuted || !_hasVideoTrack ? null : _localStream!.getVideoTracks()[0],);
     } else {
       // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
       // recreating the video track from scratch.
-      await _client.deleteTrack(
-        _serviceRequest.roomId,
-        _serviceRequest.participantId,
-        _localTrackId!,
-      );
+      await _client.deleteTrack(_serviceRequest.roomId,_serviceRequest.participantId,_localTrackId!,);
       await _createOutgoingTrack();
     }
 
@@ -448,9 +406,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
       _localStream = mediaStream;
 
       // Replace the tracks.
-      await _connectionByTrackId[_localTrackId]!.replaceAudioTrack(
-        _isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0],
-      );
+      await _connectionByTrackId[_localTrackId]!.
+      replaceAudioTrack(_isAudioMuted || mediaStream.getAudioTracks().isEmpty ? null : mediaStream.getAudioTracks()[0],);
       if (!_isPresenting) {
         await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
           _isVideoMuted || !_hasVideoTrack ? null : mediaStream.getVideoTracks()[0],
@@ -468,9 +425,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
     if (ServiceRequestState.started != _serviceRequestState) {
-      _log.warning(
-        'ServiceRequest is not started yet, not sending position ($_serviceRequestState)',
-      );
+      _log.warning('ServiceRequest is not started yet, not sending position ($_serviceRequestState)',);
       return;
     }
 
@@ -480,51 +435,15 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     List<Map<String, dynamic>> serviceInfoData = [
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LAT',
-        'paramValue': position.latitude,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'LONG',
-        'paramValue': position.longitude,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'HORIZONTAL_ACCURACY',
-        'paramValue': position.accuracy,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'BEARING',
-        'paramValue': position.heading,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'BEARING_ACCURACY',
-        'paramValue': position.headingAccuracy,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'ALTITUDE',
-        'paramValue': position.altitude,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'VERTICAL_ACCURACY',
-        'paramValue': position.verticalAccuracy,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'SPEED',
-        'paramValue': position.speed,
-      },
-      {
-        'instrumentationType': 'TYPE_GPS',
-        'paramName': 'SPEED_ACCURACY',
-        'paramValue': position.speedAccuracy,
-      }
+      {'instrumentationType': 'TYPE_GPS','paramName': 'LAT','paramValue': position.latitude,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'LONG','paramValue': position.longitude,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'HORIZONTAL_ACCURACY','paramValue': position.accuracy,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'BEARING','paramValue': position.heading,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'BEARING_ACCURACY','paramValue': position.headingAccuracy,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'ALTITUDE','paramValue': position.altitude,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'VERTICAL_ACCURACY','paramValue': position.verticalAccuracy,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'SPEED','paramValue': position.speed,},
+      {'instrumentationType': 'TYPE_GPS','paramName': 'SPEED_ACCURACY','paramValue': position.speedAccuracy,}
     ];
 
     Map<String, dynamic> gpsLocationData = {
@@ -535,24 +454,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     try {
       await Future.wait([
-        _mq.publish(
-          _serviceInfoTopic,
-          MqttQos.atMostOnce,
-          jsonEncode({'data': serviceInfoData}),
-        ),
-        _mq.publish(
-          _gpsLocationTopic,
-          MqttQos.atMostOnce,
-          jsonEncode(gpsLocationData),
-        ),
+        _mq.publish(_serviceInfoTopic,MqttQos.atMostOnce,jsonEncode({'data': serviceInfoData}),),
+        _mq.publish(_gpsLocationTopic,MqttQos.atMostOnce,jsonEncode(gpsLocationData),),
       ]);
       _log.finest('Published location info\n\t$serviceInfoData\n\t$gpsLocationData'
           '\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
     } catch (e) {
-      _log.warning(
-        'Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic',
-        e,
-      );
+      _log.warning('Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic',e,);
     }
   }
 
@@ -601,10 +509,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       }
 
       try {
-        await _client.uploadPhoto(
-          _serviceRequest.id,
-          await _roomHandler.takePhoto(),
-        );
+        await _client.uploadPhoto(_serviceRequest.id,await _roomHandler.takePhoto(),);
       } catch (e, s) {
         _log.shout('failed to take photo', e, s);
       }
@@ -679,19 +584,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
 
       default:
-        _log.warning(
-          'ignoring unsupported participant message type=${participantMessage.type}',
-        );
+        _log.warning('ignoring unsupported participant message type=${participantMessage.type}',);
     }
   }
 
   Future<void> _getServiceRequestStatus() async {
     Map<String, String?> response = await _client.getServiceRequestStatus(_serviceRequest.id);
 
-    await _updateServiceRequestStatus(
-      response['status']!,
-      response['agentFirstName'],
-    );
+    await _updateServiceRequestStatus(response['status']!,response['agentFirstName'],);
   }
 
   Future<void> _handleServiceRequestPresenceMessage(String message) async {
@@ -701,10 +601,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _updateServiceRequestStatus(json['status'], json['agentFirstName']);
   }
 
-  Future<void> _updateServiceRequestStatus(
-    String status,
-    String? agentFirstName,
-  ) async {
+  Future<void> _updateServiceRequestStatus(String status,String? agentFirstName,) async {
     _log.info('updating service request status=$status');
 
     switch (status) {
