@@ -16,8 +16,7 @@ import 'models/participant_message.dart';
 import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
-typedef AccessOfferChangeCallback = void Function(
-  AccessOfferDetails accessOffer, Duration? remainingTime,);
+typedef AccessOfferChangeCallback = void Function(AccessOfferDetails accessOffer, Duration? remainingTime,);
 
 abstract class RoomHandler {
   /// Adds a remote stream. This signals the client application that a new
@@ -168,8 +167,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     ServiceRequest serviceRequest,
     RoomHandler roomHandler,
   ) async {
-    KurentoRoom room = KurentoRoom._(env,client,session,
-      messagingClient,serviceRequest,roomHandler,);
+    KurentoRoom room = KurentoRoom._(env,client,session,messagingClient,serviceRequest,roomHandler,);
     try {
       await room._init(session);
       return room;
@@ -182,8 +180,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _init(Session session) async {
-    _mq = await PlatformMQImpl.create(_env,session,
-      lastWillMessage: _lastWillMessage,lastWillTopic: _lastWillTopic,);
+    _mq = await PlatformMQImpl.create(_env,session,lastWillMessage: _lastWillMessage,lastWillTopic: _lastWillTopic);
     // Asynchronously subscribe to the room-related topics.
     await _mq.subscribe(_participantEventTopic,MqttQos.atMostOnce,_handleParticipantEventMessage,);
     await _mq.subscribe(_participantTopic,MqttQos.atMostOnce,_handleParticipantMessage,);
@@ -443,8 +440,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       {'instrumentationType': 'TYPE_GPS','paramName': 'ALTITUDE','paramValue': position.altitude,},
       {'instrumentationType': 'TYPE_GPS','paramName': 'VERTICAL_ACCURACY','paramValue': position.verticalAccuracy,},
       {'instrumentationType': 'TYPE_GPS','paramName': 'SPEED','paramValue': position.speed,},
-      {'instrumentationType': 'TYPE_GPS','paramName': 'SPEED_ACCURACY','paramValue': position.speedAccuracy,}
-    ];
+      {'instrumentationType': 'TYPE_GPS','paramName': 'SPEED_ACCURACY','paramValue': position.speedAccuracy,},];
 
     Map<String, dynamic> gpsLocationData = {
       'userId': _serviceRequest.userId,
