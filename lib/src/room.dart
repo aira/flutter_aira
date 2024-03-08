@@ -646,6 +646,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
         }
         break;
 
+      case 'LEFT':
+        _agentName = null;
+        notifyListeners();
+        break;
+
       case 'END':
       case 'CANCEL':
         if (_serviceRequestState != ServiceRequestState.ended) {
