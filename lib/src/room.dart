@@ -646,12 +646,17 @@ class KurentoRoom extends ChangeNotifier implements Room {
         }
         break;
 
-      // All of the other status values -- END, CANCEL, etc. -- are end states.
-      default:
+      case 'END':
+      case 'CANCEL':
         if (_serviceRequestState != ServiceRequestState.ended) {
           _serviceRequestState = ServiceRequestState.ended;
           if (!_isDisposed) notifyListeners();
         }
+        break;
+
+      // All of the other status values -- END, CANCEL, etc. -- are end states.
+      default:
+        _log.warning('ignoring unsupported service request status=$status');
     }
   }
 
