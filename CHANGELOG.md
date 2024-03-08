@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2024-03-08
 
 ### Changed
-- ### Added Handling Case "LEFT" on `_updateServiceRequestStatus` on transfer calls this, without this version if a transfer occurs in the call it will terminate the call for the explorer (bug) (#118)
+- ### Added Handling Case "LEFT" on `_updateServiceRequestStatus` on transfer calls this, without this version if a transfer occurs in the call it will terminate the call for the explorer (bug) (#119)
 
 ## [2.1.2] - 2024-03-06
 ### Changed
