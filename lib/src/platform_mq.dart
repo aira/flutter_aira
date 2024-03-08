@@ -39,7 +39,7 @@ class PlatformMQImpl implements PlatformMQ {
       ..autoReconnect = true
       ..keepAlivePeriod = 30
       ..setProtocolV311()
-      ..websocketProtocols = ['mqttv3.1.1']
+      ..websocketProtocols = ['mqtt']
       ..onAutoReconnect = _handleAutoReconnect
       ..onConnected = _handleConnected
       ..onSubscribed = _handleSubscribed
@@ -62,7 +62,12 @@ class PlatformMQImpl implements PlatformMQ {
     _client.published!.listen(_handleData);
   }
 
-  static Future<PlatformMQ> create(PlatformEnvironment env, Session session, {String? lastWillMessage, String? lastWillTopic}) async {
+  static Future<PlatformMQ> create(
+    PlatformEnvironment env,
+    Session session, {
+    String? lastWillMessage,
+    String? lastWillTopic,
+  }) async {
     PlatformMQImpl instance = PlatformMQImpl._(session);
     await instance._init(env, lastWillMessage: lastWillMessage, lastWillTopic: lastWillTopic);
     return instance;
