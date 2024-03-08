@@ -645,13 +645,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
           await _updateParticipantStatus();
         }
         break;
+      // Handles the case when the Agent leaves the room on a call transfer, name is turned to null to represent that agent is no longer in the call
+      case 'LEFT':
+        _agentName = null;
+        notifyListeners();
+        break;
 
-      // All of the other status values -- END, CANCEL, etc. -- are end states.
-      default:
+      case 'END':
+      case 'CANCEL':
         if (_serviceRequestState != ServiceRequestState.ended) {
           _serviceRequestState = ServiceRequestState.ended;
           if (!_isDisposed) notifyListeners();
         }
+        break;
+
+      default:
+        _log.warning('ignoring unsupported service request status=$status');
     }
   }
 
