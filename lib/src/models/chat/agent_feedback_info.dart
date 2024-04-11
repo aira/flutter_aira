@@ -69,7 +69,7 @@ class AgentFeedbackInfo {
       'imageRating': imageRating,
       'comment': comment,
       'verifiedContent': verifiedContent,
-      'state': state?.name,
+      'state': state.name,
       'requestedAt': requestedAt?.dateTimeStringZ,
       'updatedAt': updatedAt?.dateTimeStringZ,
       'analysis': analysis,
