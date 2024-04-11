@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 
 /// Information about the feedback provided by the Visual Interpreter.
@@ -94,7 +93,6 @@ enum AgentFeedbackState {
   /// If the value is not found, [pending] is returned.
   static AgentFeedbackState fromValue(String? value) {
     return AgentFeedbackState.values
-            .firstWhereOrNull((e) => e.value == value) ??
-        pending;
+        .firstWhere((e) => e.value == value, orElse: () => pending);
   }
 }
