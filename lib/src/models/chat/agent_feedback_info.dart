@@ -49,7 +49,7 @@ class AgentFeedbackInfo {
   final String? verifiedContent;
 
   /// The state of the feedback.
-  final AgentFeedbackState? state;
+  final AgentFeedbackState state;
 
   /// The date and time when the feedback was requested.
   final DateTime? requestedAt;
@@ -78,9 +78,11 @@ class AgentFeedbackInfo {
 }
 
 /// The state of the feedback.
+/// The states can be found in the backend under https://github.com/aira/aira-backend-services/blob/main/api-models/src/main/resources/openapi/task-manager.yaml#L693-L697
 enum AgentFeedbackState {
   pending('PENDING'),
-  inProgress('IN_PROGRESS'),
+  assigned('ASSIGNED'),
+  started('STARTED'),
   completed('COMPLETED');
 
   final String value;
@@ -88,7 +90,11 @@ enum AgentFeedbackState {
   const AgentFeedbackState(this.value);
 
   /// Gets the [AgentFeedbackState] from the given value.
-  static AgentFeedbackState? fromValue(String? value) {
-    return AgentFeedbackState.values.firstWhereOrNull((e) => e.value == value);
+  ///
+  /// If the value is not found, [pending] is returned.
+  static AgentFeedbackState fromValue(String? value) {
+    return AgentFeedbackState.values
+            .firstWhereOrNull((e) => e.value == value) ??
+        pending;
   }
 }
