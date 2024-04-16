@@ -21,6 +21,7 @@ dependencies:
   logging: ^1.2.0
   meta: ^1.10.0
   mqtt_client: ^10.2.0
+  mutex: ^3.1.0
   package_info_plus: ^5.0.1
   pubnub: ^4.3.2
 

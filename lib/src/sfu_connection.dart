@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:mutex/mutex.dart';
 
 /// The direction of the connection to the selective forwarding unit (SFU).
 enum SfuConnectionDirection {
@@ -37,6 +38,14 @@ class SfuConnection {
   final Function(int trackId, RTCTrackEvent event) onTrack;
 
   bool get _isIncoming => direction == SfuConnectionDirection.incoming;
+
+  /// [_pendingIceCandidates] is used to hold pending ICE candidates until we
+  /// get the SDP Remote Description. After that, we "register" all the ICE
+  /// candidates contained by [_pendingIceCandidates] and set it to null.
+  List<RTCIceCandidate>? _pendingIceCandidates = [];
+
+  /// Used to protect access to [_pendingIceCandidates]
+  final Mutex _pendingIceCandidatesMutex = Mutex();
 
   /// Connects to the SFU.
   Future<void> connect(
@@ -128,10 +137,39 @@ class SfuConnection {
   }
 
   /// Handles an ICE candidate from the SFU.
-  Future<void> handleIceCandidate(RTCIceCandidate candidate) => _peerConnection.addCandidate(candidate);
+  Future<void> handleIceCandidate(RTCIceCandidate candidate) async {
+    try {
+      await _pendingIceCandidatesMutex.acquire();
+      bool isSDPRemoteDescriptionSet = _pendingIceCandidates == null;
+      if (isSDPRemoteDescriptionSet) {
+        await _peerConnection.addCandidate(candidate);
+      } else {
+        // If we don't have a SDP remote description yet, we can't add a ICE
+        // Candidate yet. This addresses the
+        //    "Unable to RTCPeerConnection::addCandidate: Error The remote
+        //    description was null"
+        // issue.
+        _pendingIceCandidates!.add(candidate);
+      }
+    } finally {
+      _pendingIceCandidatesMutex.release();
+    }
+  }
 
   /// Handles an SDP answer from the SFU.
-  Future<void> handleSdpAnswer(RTCSessionDescription answer) => _peerConnection.setRemoteDescription(answer);
+  Future<void> handleSdpAnswer(RTCSessionDescription answer) async {
+    await _peerConnection.setRemoteDescription(answer);
+    try {
+      await _pendingIceCandidatesMutex.acquire();
+      assert(_pendingIceCandidates != null, 'Pending ice candidates should not be null at this point');
+      for (RTCIceCandidate candidate in _pendingIceCandidates ?? []) {
+        await _peerConnection.addCandidate(candidate);
+      }
+      _pendingIceCandidates = null;
+    } finally {
+      _pendingIceCandidatesMutex.release();
+    }
+  }
 
   /// Disconnects from the SFU.
   Future<void> dispose() {
