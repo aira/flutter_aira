@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.4.1] - 2024-05-22
 
 ### Changed
-Updated the following plugins which is required to use with flutter v3.22.1:
+Updated the following plugins which is required to use with flutter v3.22.1 (#122)
 - connectivity_plus: ^6.0.3
 - device_info_plus: ^10.1.0
 - flutter_webrtc: ^0.10.6
