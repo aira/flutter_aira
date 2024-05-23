@@ -155,7 +155,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   MediaStream? _localStream;
   int? _localTrackId;
   Timer? _getServiceRequestStatusTimer;
-  StreamSubscription<ConnectivityResult>? _connectivityMonitoringSubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivityMonitoringSubscription;
   ConnectivityResult? _currentlyUsedConnectionType;
 
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
@@ -197,7 +197,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  Future<void> _handleConnectionRecovery(ConnectivityResult result) async {
+  Future<void> _handleConnectionRecovery(List<ConnectivityResult> results) async {
+    final result = results.firstOrNull;
     if (result != _currentlyUsedConnectionType) {
       // Status has changed
       if (ServiceRequestState.started == _serviceRequestState) {
