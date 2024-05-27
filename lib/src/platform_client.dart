@@ -25,6 +25,9 @@ class PlatformClient {
   /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
   PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
 
+  static const kEmailVerification= 'EMAIL_VERIFICATION';
+  static const kPhoneVerification= 'PHONE_VERIFICATION';
+
   final _log = Logger('PlatformClient');
 
   // Reuse the HTTP client as a performance optimization.
@@ -88,7 +91,7 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/confirm', body);
 
     return Credentials(
-      'PHONE_VERIFICATION',
+      PlatformClient.kPhoneVerification,
       phoneNumber,
       response['verificationCode'],
       response['newUser'],
@@ -126,7 +129,7 @@ class PlatformClient {
     Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/email/confirm', body);
 
     return Credentials(
-      'EMAIL_VERIFICATION',
+      PlatformClient.kEmailVerification,
       email,
       response['verificationCode'],
       response['newUser'],
@@ -206,7 +209,7 @@ class PlatformClient {
     );
 
     Credentials credentials = Credentials(
-      'PHONE_VERIFICATION',
+      PlatformClient.kPhoneVerification,
       response['verificationCode'],
       response['phoneVerificationId'].toString(),
       response['newUser'],
