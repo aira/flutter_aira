@@ -20,7 +20,6 @@ class PlanUsageBreakdown extends MinuteSharingMember {
 
 /// Contains main information about usage.
 class Usage {
-
   /// End date of a billing cycle.
   DateTime? billingCycleEnd;
 
@@ -76,14 +75,21 @@ class Usage {
   int? totalPrimaryMinutesUsed;
 
   Usage.fromJson(Map<String, dynamic> json)
-      : billingCycleEnd = null == json['billingCycleEnd'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),
-        billingCycleStart = null == json['billingCycleStart'] ? null : DateTime.fromMillisecondsSinceEpoch(json['billingCycleStart']),
+      : billingCycleEnd = null == json['billingCycleEnd']
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(json['billingCycleEnd']),
+        billingCycleStart = null == json['billingCycleStart']
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(json['billingCycleStart']),
         hasFreeCall = json['hasFreeCall'],
         planName = json['planName'],
         planUnlimited = json['planUnlimited'],
-        planUsageBreakdownList = (json['usageBreakdown'] as List<dynamic>).map((e) => PlanUsageBreakdown.fromJson(e)).toList(growable: false),
+        planUsageBreakdownList = (json['usageBreakdown'] as List<dynamic>)
+            .map((e) => PlanUsageBreakdown.fromJson(e))
+            .toList(growable: false),
         primary = json['primary'],
-        timeUntilNextFreeCall = (json['timeUntilNextFreeCall'] as String?)?.dateTimeZ,
+        timeUntilNextFreeCall =
+            (json['timeUntilNextFreeCall'] as String?)?.dateTimeZ,
         totalAccessMinutesUsed = json['totalAccessMinutesUsed'],
         totalCreditMinutes = json['totalCreditMinutes'],
         totalCreditMinutesUsed = json['totalCreditMinutesUsed'],

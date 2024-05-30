@@ -12,14 +12,19 @@ enum Rating {
     if (null == value) {
       return null;
     }
-    switch(value) {
-      case 2: return excellent;
-      case 1: return positive;
-      case 0: return neutral;
-      case -1: return negative;
+    switch (value) {
+      case 2:
+        return excellent;
+      case 1:
+        return positive;
+      case 0:
+        return neutral;
+      case -1:
+        return negative;
     }
     throw 'Unsupported Rating value: $value';
   }
+
   String get name => toString().split('.').last;
 }
 
@@ -49,7 +54,7 @@ class Feedback {
 class AgentFeedback extends Feedback {
   bool shareKudos = false;
 
-  AgentFeedback(): super();
+  AgentFeedback() : super();
 
   AgentFeedback.fromJson(super.json)
       : shareKudos = json['shareKudos'] ?? false,

@@ -4,5 +4,6 @@ class Session {
 
   Session(this.token, this.userId);
 
-  Session.fromJson(Map<String, dynamic> json) : this(json['token'], json['userId']);
+  Session.fromJson(Map<String, dynamic> json)
+      : this(json['token'], json['userId']);
 }

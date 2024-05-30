@@ -10,12 +10,17 @@ enum Language {
 
   static Language fromString(String value) {
     switch (value.toUpperCase()) {
-      case 'ENGLISH': return Language.English;
-      case 'FRENCH': return Language.French;
-      case 'SPANISH': return Language.Spanish;
-      default: throw UnimplementedError('Unsupported language: $value');
+      case 'ENGLISH':
+        return Language.English;
+      case 'FRENCH':
+        return Language.French;
+      case 'SPANISH':
+        return Language.Spanish;
+      default:
+        throw UnimplementedError('Unsupported language: $value');
     }
   }
+
   String get name => toString().split('.').last;
 }
 
@@ -40,6 +45,7 @@ class Profile {
 
   /// Duration Allowed for this Account in minutes
   final int durationAllowed;
+
   /// Duration Used for this Account in minutes
   final int durationUsed;
 
@@ -50,4 +56,5 @@ class Profile {
         durationUsed = _convertSecondsToMinutes(json['durationUsed']);
 }
 
-int _convertSecondsToMinutes(int seconds) => -1 == seconds ? -1 : Duration(seconds: seconds).inMinutes;
+int _convertSecondsToMinutes(int seconds) =>
+    -1 == seconds ? -1 : Duration(seconds: seconds).inMinutes;
