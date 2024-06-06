@@ -31,6 +31,9 @@ class ParticipantMessage {
           json['payload'],
         );
 
+  bool? get isAudio => bool.tryParse(payload['audio'].toString());
+  bool? get isVideo => bool.tryParse(payload['video'].toString());
+
   Map<String, dynamic> toJson() {
     return {
       'type': type.name,

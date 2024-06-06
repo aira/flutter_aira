@@ -562,8 +562,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
 
       case ParticipantMessageType.INCOMING_TRACK_CREATE:
-        final isAudio = bool.parse(participantMessage.payload['audio'].toString());
-        final isVideo = bool.parse(participantMessage.payload['video'].toString());
+        final isAudio = participantMessage.isAudio ?? false;
+        final isVideo = participantMessage.isVideo ?? false;
         final kind = (isAudio ? TrackKind.audio : (isVideo ? TrackKind.video : null));
         await _createIncomingTrack(participantMessage.trackId, kind);
         break;
