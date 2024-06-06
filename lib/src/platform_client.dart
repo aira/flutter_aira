@@ -25,8 +25,8 @@ class PlatformClient {
   /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
   PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
 
-  static const kEmailVerification= 'EMAIL_VERIFICATION';
-  static const kPhoneVerification= 'PHONE_VERIFICATION';
+  static const kEmailVerification = 'EMAIL_VERIFICATION';
+  static const kPhoneVerification = 'PHONE_VERIFICATION';
 
   final _log = Logger('PlatformClient');
 
@@ -1115,8 +1115,8 @@ class PlatformClient {
 
   /// Request agent validation for a chat message.
   Future<Map<String, dynamic>> requestAgentValidation(
-     int chatId,
-     int messageId,
+    int chatId,
+    int messageId,
   ) {
     _verifyIsLoggedIn();
 
