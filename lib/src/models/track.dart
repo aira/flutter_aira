@@ -2,13 +2,22 @@ class Track {
   int id;
   int participantId;
   int? incomingTrackId;
-  TrackKind? kind;
+  String? audioType;
+  String? videoType;
 
   Track.fromJson(Map<String, dynamic> json)
       : id = int.parse(json['id']),
         participantId = json['participantId'],
         incomingTrackId = int.tryParse(json['incomingTrackId'] ?? ''),
-        kind = json['audio'] ?? false ? TrackKind.audio : (json['video'] ?? false ? TrackKind.video : null);
+        // determines track type, values : recvonly - sendonly
+        audioType = json['audio'],
+        videoType = json['video'];
+
+  TrackKind? get kind {
+    if (audioType != null) return TrackKind.audio;
+    if (videoType != null) return TrackKind.video;
+    return null;
+  }
 
   bool get isOutgoing => incomingTrackId == null;
 }
