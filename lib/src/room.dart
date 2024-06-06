@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
+import 'package:flutter_aira/src/models/track.dart';
 import 'package:flutter_aira/src/platform_client.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
@@ -561,7 +562,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
 
       case ParticipantMessageType.INCOMING_TRACK_CREATE:
-        await _createIncomingTrack(participantMessage.trackId);
+        final isAudio = bool.parse(participantMessage.payload['audio'].toString());
+        final isVideo = bool.parse(participantMessage.payload['video'].toString());
+        final kind = (isAudio ? TrackKind.audio : (isVideo ? TrackKind.video : null));
+        await _createIncomingTrack(participantMessage.trackId, kind);
         break;
 
       case ParticipantMessageType.INCOMING_TRACK_REMOVE:
@@ -665,12 +669,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  Future<void> _connectTrack(int trackId, [MediaStream? stream]) async {
+  Future<void> _connectTrack(int trackId, [MediaStream? stream, TrackKind? kind]) async {
     if (_connectionByTrackId.containsKey(trackId)) {
       // We've already connected the track.
       return;
     }
-
     SfuConnection connection = SfuConnection(
       direction: stream != null ? SfuConnectionDirection.outgoing : SfuConnectionDirection.incoming,
       onConnectionState: _handleConnectionState,
@@ -683,7 +686,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _connectionByTrackId[trackId] = connection;
 
     if (stream == null) {
-      await connection.connect(_serviceRequest.stunServers, _serviceRequest.turnServers);
+      await connection.connect(
+        _serviceRequest.stunServers,
+        _serviceRequest.turnServers,
+        incomingTrackKind: kind,
+      );
     } else {
       MediaStreamTrack? outgoingAudioTrack;
       if (stream.getAudioTracks().isNotEmpty && !_isAudioMuted) {
@@ -829,13 +836,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   /// Creates and connects a track to receive a remote stream from Kurento.
-  Future<void> _createIncomingTrack(int outgoingTrackId) async {
+  Future<void> _createIncomingTrack(int outgoingTrackId, [TrackKind? kind]) async {
     Track track = await _client.createTrack(_serviceRequest.roomId, _serviceRequest.participantId, outgoingTrackId);
-    _log.info('created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId');
+    _log.info('created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId -- kind= ${track.kind}');
 
     _incomingTrackIdByOutgoingTrackId[outgoingTrackId] = track.id;
 
-    await _connectTrack(track.id);
+    await _connectTrack(track.id, null, kind);
   }
 
   /// Disconnects and disposes a track receiving a remote stream from Kurento.
@@ -884,7 +891,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         if (participant.id != _serviceRequest.participantId) {
           for (Track track in participant.tracks ?? []) {
             if (track.isOutgoing) {
-              await _createIncomingTrack(track.id);
+              await _createIncomingTrack(track.id, track.kind);
             }
           }
         }
