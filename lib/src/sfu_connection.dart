@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_aira/src/models/track.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 /// The direction of the connection to the selective forwarding unit (SFU).
@@ -44,6 +45,7 @@ class SfuConnection {
     List<dynamic> turnServers, {
     MediaStreamTrack? outgoingAudioTrack,
     MediaStreamTrack? outgoingVideoTrack,
+    TrackKind? incomingTrackKind,
   }) async {
     Map<String, dynamic> configuration = _getConfiguration(stunServers, turnServers);
 
@@ -55,10 +57,17 @@ class SfuConnection {
 
     if (_isIncoming) {
       // Add a transceiver for receiving audio.
-      _audio = await _peerConnection.addTransceiver(
-        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-        init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
-      );
+      if (incomingTrackKind == TrackKind.audio) {
+        _audio = await _peerConnection.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+        );
+      } else if (incomingTrackKind == TrackKind.video) {
+        _video = await _peerConnection.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+        );
+      }
     } else {
       // Add transceivers for sending audio and video.
       // REVIEW: Do we need to set any encoding options, similar to
@@ -92,8 +101,8 @@ class SfuConnection {
     // Create the SDP offer.
     RTCSessionDescription offer = await _peerConnection.createOffer({
       'mandatory': {
-        'OfferToReceiveAudio': _isIncoming,
-        'OfferToReceiveVideo': false,
+        'OfferToReceiveAudio': incomingTrackKind == TrackKind.audio,
+        'OfferToReceiveVideo': incomingTrackKind == TrackKind.video,
       },
       'optional': [],
     });
