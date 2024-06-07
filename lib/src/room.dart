@@ -18,7 +18,9 @@ import 'platform_mq.dart';
 import 'sfu_connection.dart';
 
 typedef AccessOfferChangeCallback = void Function(
-    AccessOfferDetails accessOffer, Duration? remainingTime);
+  AccessOfferDetails accessOffer,
+  Duration? remainingTime,
+);
 
 abstract class RoomHandler {
   /// Adds a remote stream. This signals the client application that a new
@@ -171,7 +173,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
     RoomHandler roomHandler,
   ) async {
     KurentoRoom room = KurentoRoom._(
-        env, client, session, messagingClient, serviceRequest, roomHandler);
+      env,
+      client,
+      session,
+      messagingClient,
+      serviceRequest,
+      roomHandler,
+    );
     try {
       await room._init(session);
       return room;
@@ -184,23 +192,41 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _init(Session session) async {
-    _mq = await PlatformMQImpl.create(_env, session,
-        lastWillMessage: _lastWillMessage, lastWillTopic: _lastWillTopic);
+    _mq = await PlatformMQImpl.create(
+      _env,
+      session,
+      lastWillMessage: _lastWillMessage,
+      lastWillTopic: _lastWillTopic,
+    );
     // Asynchronously subscribe to the room-related topics.
-    await _mq.subscribe(_participantEventTopic, MqttQos.atMostOnce,
-        _handleParticipantEventMessage);
     await _mq.subscribe(
-        _participantTopic, MqttQos.atMostOnce, _handleParticipantMessage);
-    await _mq.subscribe(_serviceRequestPresenceTopic, MqttQos.atLeastOnce,
-        _handleServiceRequestPresenceMessage);
+      _participantEventTopic,
+      MqttQos.atMostOnce,
+      _handleParticipantEventMessage,
+    );
     await _mq.subscribe(
-        _callEventsTopic, MqttQos.atLeastOnce, _handleCallEvents);
+      _participantTopic,
+      MqttQos.atMostOnce,
+      _handleParticipantMessage,
+    );
+    await _mq.subscribe(
+      _serviceRequestPresenceTopic,
+      MqttQos.atLeastOnce,
+      _handleServiceRequestPresenceMessage,
+    );
+    await _mq.subscribe(
+      _callEventsTopic,
+      MqttQos.atLeastOnce,
+      _handleCallEvents,
+    );
 
     // HACK: The `_serviceRequestPresenceTopic` has been unreliable and we haven't yet figured out why. Until then,
     // we're backing it up by periodically checking the status of the service request.
     // FIXME: This timer eats up the exceptions thrown by the '_getServiceRequestStatus()' function which is an issue when the token is not valid anymore.
     _getServiceRequestStatusTimer = Timer.periodic(
-        const Duration(seconds: 3), (_) => _getServiceRequestStatus());
+      const Duration(seconds: 3),
+      (_) => _getServiceRequestStatus(),
+    );
 
     if (defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android) {
@@ -211,7 +237,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _handleConnectionRecovery(
-      List<ConnectivityResult> results) async {
+    List<ConnectivityResult> results,
+  ) async {
     final result = results.firstOrNull;
     if (result != _currentlyUsedConnectionType) {
       // Status has changed
@@ -368,14 +395,18 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } else {
       // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
       // recreating the video track from scratch.
-      await _client.deleteTrack(_serviceRequest.roomId,
-          _serviceRequest.participantId, _localTrackId!);
+      await _client.deleteTrack(
+        _serviceRequest.roomId,
+        _serviceRequest.participantId,
+        _localTrackId!,
+      );
       await _createOutgoingTrack();
     }
 
     await _updateParticipantStatus();
     _log.info(
-        'started presenting track=${_presentationStream!.getVideoTracks()[0].label}');
+      'started presenting track=${_presentationStream!.getVideoTracks()[0].label}',
+    );
   }
 
   @override
@@ -407,14 +438,18 @@ class KurentoRoom extends ChangeNotifier implements Room {
       // Until we create a separate connection for screen sharing, we stop presenting by restoring the Explorer's video
       // track.
       await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
-          _isVideoMuted || !_hasVideoTrack
-              ? null
-              : _localStream!.getVideoTracks()[0]);
+        _isVideoMuted || !_hasVideoTrack
+            ? null
+            : _localStream!.getVideoTracks()[0],
+      );
     } else {
       // Hack! Since the "replaceVideoTrack" function causes sporadically a pixelation of the video on mobile, we are
       // recreating the video track from scratch.
-      await _client.deleteTrack(_serviceRequest.roomId,
-          _serviceRequest.participantId, _localTrackId!);
+      await _client.deleteTrack(
+        _serviceRequest.roomId,
+        _serviceRequest.participantId,
+        _localTrackId!,
+      );
       await _createOutgoingTrack();
     }
 
@@ -438,9 +473,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
       );
       if (!_isPresenting) {
         await _connectionByTrackId[_localTrackId]!.replaceVideoTrack(
-            _isVideoMuted || !_hasVideoTrack
-                ? null
-                : mediaStream.getVideoTracks()[0]);
+          _isVideoMuted || !_hasVideoTrack
+              ? null
+              : mediaStream.getVideoTracks()[0],
+        );
       }
 
       await _updateParticipantStatus();
@@ -455,7 +491,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
     if (ServiceRequestState.started != _serviceRequestState) {
       _log.warning(
-          'ServiceRequest is not started yet, not sending position ($_serviceRequestState)');
+        'ServiceRequest is not started yet, not sending position ($_serviceRequestState)',
+      );
       return;
     }
 
@@ -468,47 +505,47 @@ class KurentoRoom extends ChangeNotifier implements Room {
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'LAT',
-        'paramValue': position.latitude
+        'paramValue': position.latitude,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'LONG',
-        'paramValue': position.longitude
+        'paramValue': position.longitude,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'HORIZONTAL_ACCURACY',
-        'paramValue': position.accuracy
+        'paramValue': position.accuracy,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'BEARING',
-        'paramValue': position.heading
+        'paramValue': position.heading,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'BEARING_ACCURACY',
-        'paramValue': position.headingAccuracy
+        'paramValue': position.headingAccuracy,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'ALTITUDE',
-        'paramValue': position.altitude
+        'paramValue': position.altitude,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'VERTICAL_ACCURACY',
-        'paramValue': position.verticalAccuracy
+        'paramValue': position.verticalAccuracy,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'SPEED',
-        'paramValue': position.speed
+        'paramValue': position.speed,
       },
       {
         'instrumentationType': 'TYPE_GPS',
         'paramName': 'SPEED_ACCURACY',
-        'paramValue': position.speedAccuracy
+        'paramValue': position.speedAccuracy,
       },
     ];
 
@@ -520,18 +557,25 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     try {
       await Future.wait([
-        _mq.publish(_serviceInfoTopic, MqttQos.atMostOnce,
-            jsonEncode({'data': serviceInfoData})),
         _mq.publish(
-            _gpsLocationTopic, MqttQos.atMostOnce, jsonEncode(gpsLocationData)),
+          _serviceInfoTopic,
+          MqttQos.atMostOnce,
+          jsonEncode({'data': serviceInfoData}),
+        ),
+        _mq.publish(
+          _gpsLocationTopic,
+          MqttQos.atMostOnce,
+          jsonEncode(gpsLocationData),
+        ),
       ]);
       _log.finest(
           'Published location info\n\t$serviceInfoData\n\t$gpsLocationData'
           '\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
     } catch (e) {
       _log.warning(
-          'Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic',
-          e);
+        'Unable to send data to topic $_serviceInfoTopic & $_gpsLocationTopic',
+        e,
+      );
     }
   }
 
@@ -581,7 +625,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       try {
         await _client.uploadPhoto(
-            _serviceRequest.id, await _roomHandler.takePhoto());
+          _serviceRequest.id,
+          await _roomHandler.takePhoto(),
+        );
       } catch (e, s) {
         _log.shout('failed to take photo', e, s);
       }
@@ -654,8 +700,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       case ParticipantMessageType.SDP_ANSWER:
         RTCSessionDescription answer = RTCSessionDescription(
-            participantMessage.payload['sdp'],
-            participantMessage.payload['type']);
+          participantMessage.payload['sdp'],
+          participantMessage.payload['type'],
+        );
         if (_connectionByTrackId.containsKey(participantMessage.trackId)) {
           await _connectionByTrackId[participantMessage.trackId]!
               .handleSdpAnswer(answer);
@@ -667,7 +714,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       default:
         _log.warning(
-            'ignoring unsupported participant message type=${participantMessage.type}');
+          'ignoring unsupported participant message type=${participantMessage.type}',
+        );
     }
   }
 
@@ -676,7 +724,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
         await _client.getServiceRequestStatus(_serviceRequest.id);
 
     await _updateServiceRequestStatus(
-        response['status']!, response['agentFirstName']);
+      response['status']!,
+      response['agentFirstName'],
+    );
   }
 
   Future<void> _handleServiceRequestPresenceMessage(String message) async {
@@ -687,7 +737,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _updateServiceRequestStatus(
-      String status, String? agentFirstName) async {
+    String status,
+    String? agentFirstName,
+  ) async {
     _log.info('updating service request status=$status');
 
     switch (status) {
@@ -708,7 +760,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // HACK: If we still think we're queued, we missed a message. Notify listeners that we're assigned, and let
           // our periodic timer change this to started the next time it fires.
           _log.warning(
-              'missed service request status message topic=$_serviceRequestPresenceTopic');
+            'missed service request status message topic=$_serviceRequestPresenceTopic',
+          );
           await _updateServiceRequestStatus('ASSIGNED', agentFirstName);
         } else if (_serviceRequestState == ServiceRequestState.assigned) {
           _serviceRequestState = ServiceRequestState.started;
@@ -756,8 +809,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  Future<void> _connectTrack(int trackId,
-      [MediaStream? stream, TrackKind? kind]) async {
+  Future<void> _connectTrack(
+    int trackId, [
+    MediaStream? stream,
+    TrackKind? kind,
+  ]) async {
     if (_connectionByTrackId.containsKey(trackId)) {
       // We've already connected the track.
       return;
@@ -818,7 +874,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
   }
 
   Future<void> _handleIceCandidate(
-      int trackId, RTCIceCandidate candidate) async {
+    int trackId,
+    RTCIceCandidate candidate,
+  ) async {
     ParticipantMessage message = ParticipantMessage(
       ParticipantMessageType.ICE_CANDIDATE,
       trackId,
@@ -830,11 +888,16 @@ class KurentoRoom extends ChangeNotifier implements Room {
       },
     );
     await _mq.publish(
-        _roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+      _roomTopic,
+      MqttQos.atMostOnce,
+      jsonEncode(message.toJson()),
+    );
   }
 
   Future<void> _handleSdpOffer(
-      int trackId, RTCSessionDescription sessionDescription) async {
+    int trackId,
+    RTCSessionDescription sessionDescription,
+  ) async {
     ParticipantMessage message = ParticipantMessage(
       ParticipantMessageType.SDP_OFFER,
       trackId,
@@ -845,7 +908,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
       },
     );
     await _mq.publish(
-        _roomTopic, MqttQos.atMostOnce, jsonEncode(message.toJson()));
+      _roomTopic,
+      MqttQos.atMostOnce,
+      jsonEncode(message.toJson()),
+    );
   }
 
   Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
@@ -874,7 +940,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     try {
       await _client.updateParticipantStatus(
-          _serviceRequest.roomId, _serviceRequest.participantId, status);
+        _serviceRequest.roomId,
+        _serviceRequest.participantId,
+        status,
+      );
       _log.info('updated participant status=${status.name}');
     } catch (e) {
       _log.shout('failed to update participant status=${status.name}', e);
@@ -926,22 +995,32 @@ class KurentoRoom extends ChangeNotifier implements Room {
   /// Creates and connects a track to send the [_localStream] to Kurento.
   Future<void> _createOutgoingTrack() async {
     Track track = await _client.createTrack(
-        _serviceRequest.roomId, _serviceRequest.participantId);
+      _serviceRequest.roomId,
+      _serviceRequest.participantId,
+    );
     _log.info('created outgoing track id=${track.id}');
 
     _localTrackId = track.id;
 
     await _connectTrack(
-        _localTrackId!, _isPresenting ? _presentationStream : _localStream);
+      _localTrackId!,
+      _isPresenting ? _presentationStream : _localStream,
+    );
   }
 
   /// Creates and connects a track to receive a remote stream from Kurento.
-  Future<void> _createIncomingTrack(int outgoingTrackId,
-      [TrackKind? kind]) async {
+  Future<void> _createIncomingTrack(
+    int outgoingTrackId, [
+    TrackKind? kind,
+  ]) async {
     Track track = await _client.createTrack(
-        _serviceRequest.roomId, _serviceRequest.participantId, outgoingTrackId);
+      _serviceRequest.roomId,
+      _serviceRequest.participantId,
+      outgoingTrackId,
+    );
     _log.info(
-        'created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId -- kind= ${track.kind}');
+      'created incoming track id=${track.id} outgoing_track_id=$outgoingTrackId -- kind= ${track.kind}',
+    );
 
     _incomingTrackIdByOutgoingTrackId[outgoingTrackId] = track.id;
 
@@ -954,7 +1033,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _incomingTrackIdByOutgoingTrackId.remove(outgoingTrackId);
     if (incomingTrackId == null) {
       _log.warning(
-          'incoming track not found outgoing_track_id=$outgoingTrackId');
+        'incoming track not found outgoing_track_id=$outgoingTrackId',
+      );
       return;
     }
     await _roomHandler.removeRemoteStream(incomingTrackId);
@@ -965,9 +1045,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
 
     await _client.deleteTrack(
-        _serviceRequest.roomId, _serviceRequest.participantId, incomingTrackId);
+      _serviceRequest.roomId,
+      _serviceRequest.participantId,
+      incomingTrackId,
+    );
     _log.info(
-        'removed incoming track id=$incomingTrackId outgoing_track_id=$outgoingTrackId');
+      'removed incoming track id=$incomingTrackId outgoing_track_id=$outgoingTrackId',
+    );
   }
 
   Future<void> _reconnect() async {
@@ -984,7 +1068,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
       // Delete the old tracks.
       await _client.deleteTracks(
-          _serviceRequest.roomId, _serviceRequest.participantId);
+        _serviceRequest.roomId,
+        _serviceRequest.participantId,
+      );
 
       // Close the old connections.
       for (SfuConnection connection in _connectionByTrackId.values) {

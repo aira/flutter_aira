@@ -14,8 +14,10 @@ extension ParticipantMessageTypeExtension on ParticipantMessageType {
   get name => toString().split('.').last;
 
   static ParticipantMessageType fromName(String name) =>
-      ParticipantMessageType.values.firstWhere((type) => type.name == name,
-          orElse: () => throw UnimplementedError(name));
+      ParticipantMessageType.values.firstWhere(
+        (type) => type.name == name,
+        orElse: () => throw UnimplementedError(name),
+      );
 }
 
 class ParticipantMessage {
