@@ -164,7 +164,7 @@ class PlatformClient {
         throw const PlatformInvalidTokenException();
       }
 
-      _session = Session(token, userId);
+      _session = Session.fromJson(response);
 
       await _initMessagingClient();
 
