@@ -2,15 +2,15 @@ import 'package:flutter_aira/src/throttler.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('Throttler tests', ()
-  {
+  group('Throttler tests', () {
     test('First call is never throttled', () async {
       Throttler throttler = Throttler(delay: 50);
       await Future.delayed(const Duration(milliseconds: 10));
       expect(throttler.shouldThrottle, isFalse); // first call is always false
     });
 
-    test('First call is never throttled even when called long after creation', () async {
+    test('First call is never throttled even when called long after creation',
+        () async {
       Throttler throttler = Throttler(delay: 50);
       await Future.delayed(const Duration(milliseconds: 75));
       expect(throttler.shouldThrottle, isFalse); // first call is always false

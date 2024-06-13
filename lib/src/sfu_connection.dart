@@ -47,12 +47,14 @@ class SfuConnection {
     MediaStreamTrack? outgoingVideoTrack,
     TrackKind? incomingTrackKind,
   }) async {
-    Map<String, dynamic> configuration = _getConfiguration(stunServers, turnServers);
+    Map<String, dynamic> configuration =
+        _getConfiguration(stunServers, turnServers);
 
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
       ..onConnectionState = ((state) => onConnectionState.call(trackId, state))
-      ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
+      ..onIceCandidate =
+          ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
     if (_isIncoming) {
@@ -137,10 +139,12 @@ class SfuConnection {
   }
 
   /// Handles an ICE candidate from the SFU.
-  Future<void> handleIceCandidate(RTCIceCandidate candidate) => _peerConnection.addCandidate(candidate);
+  Future<void> handleIceCandidate(RTCIceCandidate candidate) =>
+      _peerConnection.addCandidate(candidate);
 
   /// Handles an SDP answer from the SFU.
-  Future<void> handleSdpAnswer(RTCSessionDescription answer) => _peerConnection.setRemoteDescription(answer);
+  Future<void> handleSdpAnswer(RTCSessionDescription answer) =>
+      _peerConnection.setRemoteDescription(answer);
 
   /// Disconnects from the SFU.
   Future<void> dispose() {

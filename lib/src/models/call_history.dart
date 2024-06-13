@@ -5,14 +5,22 @@ import 'package:flutter_aira/src/models/feedback.dart';
 
 /// Object containing all the Feedback Information.
 class SessionFeedback {
-  SessionFeedback({required this.serviceId, this.requestReview = false, this.appFeedback, this.agentFeedback});
+  SessionFeedback({
+    required this.serviceId,
+    this.requestReview = false,
+    this.appFeedback,
+    this.agentFeedback,
+  });
+
   factory SessionFeedback.fromJson(Map<String, dynamic> json) {
     String? commentRaw = json['comment'];
     Map<String, dynamic> commentJson;
     try {
       // If the feedback is from the new generation of application, the feedback will be stored as JSON within "comment".
       // If the "comment" is null, the feedback comes from Legacy.
-      commentJson = null == commentRaw ? _convertFeedbackFromLegacy(json) : jsonDecode(commentRaw);
+      commentJson = null == commentRaw
+          ? _convertFeedbackFromLegacy(json)
+          : jsonDecode(commentRaw);
     } catch (e) {
       // If the content of "comment" is not parsable as JSON, this is a legacy feedback.
       commentJson = _convertFeedbackFromLegacy(json);
@@ -21,8 +29,12 @@ class SessionFeedback {
     return SessionFeedback(
       serviceId: json['serviceId'],
       requestReview: requestReview,
-      appFeedback: null == commentJson['app'] ? null : Feedback.fromJson(commentJson['app']),
-      agentFeedback: null == commentJson['agent'] ? null : AgentFeedback.fromJson(commentJson['agent']),
+      appFeedback: null == commentJson['app']
+          ? null
+          : Feedback.fromJson(commentJson['app']),
+      agentFeedback: null == commentJson['agent']
+          ? null
+          : AgentFeedback.fromJson(commentJson['agent']),
     );
   }
 
@@ -38,7 +50,9 @@ class SessionFeedback {
   /// Explorer's Feedback about the Agent.
   AgentFeedback? agentFeedback;
 
-  static Map<String, dynamic> _convertFeedbackFromLegacy(Map<String, dynamic> json) =>
+  static Map<String, dynamic> _convertFeedbackFromLegacy(
+    Map<String, dynamic> json,
+  ) =>
       {
         'agent': {
           'comment': json['comment'],
@@ -60,7 +74,9 @@ class CallSession {
         status = json['status'],
         userFirstname = json['firstname'],
         userId = json['userId'],
-        userFeedback = null == json['userFeedback'] ? null : SessionFeedback.fromJson(json['userFeedback']);
+        userFeedback = null == json['userFeedback']
+            ? null
+            : SessionFeedback.fromJson(json['userFeedback']);
 
   /// ID representing the Agent.
   int? agentId;

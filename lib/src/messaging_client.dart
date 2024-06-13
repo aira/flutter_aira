@@ -32,7 +32,11 @@ abstract class MessagingClient {
   /// Sends the provided message to the Agent.
   ///
   /// If the application does not support messaging, this will throw an exception.
-  Future<SentFileInfo> sendFile(String fileName, List<int> file, {String? text});
+  Future<SentFileInfo> sendFile(
+    String fileName,
+    List<int> file, {
+    String? text,
+  });
 
   Uri getFileUrl(String fileId, String fileName);
 
@@ -43,7 +47,11 @@ abstract class MessagingClient {
 }
 
 class MessagingClientPubNub implements MessagingClient {
-  MessagingClientPubNub(PlatformMessagingKeys messagingKeys, int userId, String token) : _userId = userId {
+  MessagingClientPubNub(
+    PlatformMessagingKeys messagingKeys,
+    int userId,
+    String token,
+  ) : _userId = userId {
     _pubnub = pn.PubNub(
       defaultKeyset: pn.Keyset(
         // TODO: Setting the `authKey` shouldn't be necessary, but there is a bug in the PubNub SDK where
@@ -129,7 +137,11 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
   }
 
   @override
-  Future<SentFileInfo> sendFile(String fileName, List<int> file, {String? text}) async {
+  Future<SentFileInfo> sendFile(
+    String fileName,
+    List<int> file, {
+    String? text,
+  }) async {
     Map<String, dynamic> content = {
       'senderId': _userId,
       'serviceId': _serviceRequestId,
@@ -137,14 +149,20 @@ content={message: {senderId: 6187, serviceId: 88697, text: with one picture}, fi
     };
 
     // TODO add cipher key for more privacy
-    pn.PublishFileMessageResult result =
-        await _pubnub.files.sendFile(_messageChannel, fileName, file, fileMessage: content);
+    pn.PublishFileMessageResult result = await _pubnub.files
+        .sendFile(_messageChannel, fileName, file, fileMessage: content);
     if (true == result.isError) {
-      throw PlatformUnknownException(result.description ?? 'No provided error detail');
+      throw PlatformUnknownException(
+        result.description ?? 'No provided error detail',
+      );
     }
 
     _log.finest('sent file $fileName with message: $content');
-    return SentFileInfo(result.fileInfo!.id, url: result.fileInfo!.url, name: result.fileInfo!.name);
+    return SentFileInfo(
+      result.fileInfo!.id,
+      url: result.fileInfo!.url,
+      name: result.fileInfo!.name,
+    );
   }
 
   @override

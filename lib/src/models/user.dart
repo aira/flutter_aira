@@ -36,13 +36,17 @@ class User {
             .cast<Language>()
             .toList(growable: false),
         lastName = json['lastName'] ?? '',
-        linkedAccounts =
-            (json['providers'] as List<dynamic>).map((json) => json['serviceName'] as String).toList(growable: false),
+        linkedAccounts = (json['providers'] as List<dynamic>)
+            .map((json) => json['serviceName'] as String)
+            .toList(growable: false),
         phoneNumber = json['phoneNumber'],
         tosAccepted = json['tosAccepted'],
-        profiles = (json['accounts'] as List<dynamic>).map((e) => Profile.fromJson(e)).toList(growable: false),
+        profiles = (json['accounts'] as List<dynamic>)
+            .map((e) => Profile.fromJson(e))
+            .toList(growable: false),
         referralLink = json['referralLink'],
-        aiDailyMessageLimit = _getAIDailyMessageLimitProperty(json['properties']);
+        aiDailyMessageLimit =
+            _getAIDailyMessageLimitProperty(json['properties']);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({

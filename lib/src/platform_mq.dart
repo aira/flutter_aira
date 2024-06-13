@@ -8,14 +8,19 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'models/session.dart';
 import 'platform_client.dart';
 import 'platform_exceptions.dart';
-import 'platform_mq_server_client.dart' if (dart.library.html) 'platform_mq_browser_client.dart' as mqttsetup;
+import 'platform_mq_server_client.dart'
+    if (dart.library.html) 'platform_mq_browser_client.dart' as mqttsetup;
 
 typedef MessageCallback = Future<void> Function(String message);
 
 abstract class PlatformMQ {
   bool get isConnected;
 
-  Future<void> subscribe(String topic, MqttQos qosLevel, MessageCallback onMessage);
+  Future<void> subscribe(
+    String topic,
+    MqttQos qosLevel,
+    MessageCallback onMessage,
+  );
 
   Future<void> unsubscribe(String topic);
 
@@ -34,8 +39,15 @@ class PlatformMQImpl implements PlatformMQ {
 
   PlatformMQImpl._(this._session);
 
-  Future<void> _init(PlatformEnvironment env, {String? lastWillMessage, String? lastWillTopic}) async {
-    _client = mqttsetup.setup('wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws', _clientId)
+  Future<void> _init(
+    PlatformEnvironment env, {
+    String? lastWillMessage,
+    String? lastWillTopic,
+  }) async {
+    _client = mqttsetup.setup(
+      'wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws',
+      _clientId,
+    )
       ..autoReconnect = true
       ..keepAlivePeriod = 30
       ..setProtocolV311()
@@ -56,7 +68,10 @@ class PlatformMQImpl implements PlatformMQ {
 
     // Connect to the server (the connect happens asynchronously, so we'll complete _isConnected in _onConnected)
     // TODO: How should we handle connection errors?
-    await _client.connect('Token-${_session.token}', 'x'); // The password can be any non-empty string
+    await _client.connect(
+      'Token-${_session.token}',
+      'x',
+    ); // The password can be any non-empty string
 
     // Register our message handler (this needs to be done after calling `connect` to avoid a null value)
     _client.published!.listen(_handleData);
@@ -69,7 +84,11 @@ class PlatformMQImpl implements PlatformMQ {
     String? lastWillTopic,
   }) async {
     PlatformMQImpl instance = PlatformMQImpl._(session);
-    await instance._init(env, lastWillMessage: lastWillMessage, lastWillTopic: lastWillTopic);
+    await instance._init(
+      env,
+      lastWillMessage: lastWillMessage,
+      lastWillTopic: lastWillTopic,
+    );
     return instance;
   }
 
@@ -84,10 +103,14 @@ class PlatformMQImpl implements PlatformMQ {
   void _handleData(MqttPublishMessage message) {
     String topic = message.variableHeader!.topicName;
     String decoded = utf8.decode(message.payload.message);
-    _log.finest('received message client_id=${_client.clientIdentifier} topic=$topic message=$decoded');
+    _log.finest(
+      'received message client_id=${_client.clientIdentifier} topic=$topic message=$decoded',
+    );
 
     for (final MessageCallback callback in _callbacksByTopic[topic] ?? []) {
-      callback(decoded).catchError((e) => _log.shout('failed to handle message topic=$topic', e));
+      callback(decoded).catchError(
+        (e) => _log.shout('failed to handle message topic=$topic', e),
+      );
     }
   }
 
@@ -95,17 +118,24 @@ class PlatformMQImpl implements PlatformMQ {
   bool get isConnected => _connectCompleter.isCompleted;
 
   @override
-  Future<void> subscribe(String topic, MqttQos qosLevel, MessageCallback onMessage) async {
+  Future<void> subscribe(
+    String topic,
+    MqttQos qosLevel,
+    MessageCallback onMessage,
+  ) async {
     await _connectCompleter.future;
 
-    _log.info('subscribe client_id=${_client.clientIdentifier} topic=$topic qosLevel=$qosLevel');
+    _log.info(
+      'subscribe client_id=${_client.clientIdentifier} topic=$topic qosLevel=$qosLevel',
+    );
 
     Subscription? subscription = _client.subscribe(topic, qosLevel);
     if (subscription == null) {
       throw const PlatformUnknownException('Topic subscription failed');
     }
 
-    List<MessageCallback> callbacks = _callbacksByTopic.putIfAbsent(topic, () => []);
+    List<MessageCallback> callbacks =
+        _callbacksByTopic.putIfAbsent(topic, () => []);
     callbacks.add(onMessage);
 
     // REVIEW: If the subscription fails, the caller will not know. That's probably okay for now (we'll have the logs)
@@ -127,7 +157,9 @@ class PlatformMQImpl implements PlatformMQ {
   Future<int> publish(String topic, MqttQos qosLevel, String message) async {
     await _connectCompleter.future;
 
-    _log.finest('publishing message client_id=${_client.clientIdentifier} topic=$topic message=$message');
+    _log.finest(
+      'publishing message client_id=${_client.clientIdentifier} topic=$topic message=$message',
+    );
 
     MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
@@ -150,11 +182,15 @@ class PlatformMQImpl implements PlatformMQ {
   }
 
   void _handleSubscribeFail(String topic) {
-    _log.shout('subscribe failed client_id=${_client.clientIdentifier} topic=$topic');
+    _log.shout(
+      'subscribe failed client_id=${_client.clientIdentifier} topic=$topic',
+    );
   }
 
   void _handleUnsubscribed(String? topic) {
-    _log.info('unsubscribed client_id=${_client.clientIdentifier} topic=$topic');
+    _log.info(
+      'unsubscribed client_id=${_client.clientIdentifier} topic=$topic',
+    );
   }
 
   @override
