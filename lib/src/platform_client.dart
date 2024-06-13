@@ -636,6 +636,18 @@ class PlatformClient {
     );
   }
 
+  /// Confirms the email address change by sending authCode to the backend.
+  Future<void> confirmEmailUpdate(String email, String authCode) async {
+    await _httpPut(
+      '/api/user/me/email',
+      body: jsonEncode({
+        'email': email,
+        'authCode': authCode,
+        'userId': _userId,
+      }),
+    );
+  }
+
   /// Retrieves a page of photos shared with the user.
   ///
   /// A page can contain up to 25 photos. If there are more photos available, [PhotosPage.hasMore] will be `true`.
