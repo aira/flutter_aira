@@ -1,3 +1,5 @@
+import 'package:flutter_aira/flutter_aira.dart';
+
 import 'profile.dart';
 
 class User {
@@ -12,6 +14,8 @@ class User {
   final String? referralLink;
   final bool tosAccepted;
   final int aiDailyMessageLimit;
+  final AiLanguageLevel aiLanguageLevel;
+  final AiVerbosity aiVerbosity;
 
   User({
     required this.id,
@@ -25,6 +29,8 @@ class User {
     this.referralLink,
     required this.tosAccepted,
     required this.aiDailyMessageLimit,
+    required this.aiLanguageLevel,
+    required this.aiVerbosity,
   });
 
   User.fromJson(Map<String, dynamic> json)
@@ -46,7 +52,9 @@ class User {
             .toList(growable: false),
         referralLink = json['referralLink'],
         aiDailyMessageLimit =
-            _getAIDailyMessageLimitProperty(json['properties']);
+            _getAIDailyMessageLimitProperty(json['properties']),
+        aiVerbosity = _getAIVerbosityProperty(json['properties']),
+        aiLanguageLevel = _getAILanguageLevelProperty(json['properties']);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
@@ -61,6 +69,8 @@ class User {
     List<Profile>? profiles,
     String? referralLink,
     int? aiDailyMessageLimit,
+    AiVerbosity? aiVerbosity,
+    AiLanguageLevel? aiLanguageLevel,
   }) =>
       User(
         id: id ?? this.id,
@@ -74,9 +84,73 @@ class User {
         tosAccepted: tosAccepted ?? this.tosAccepted,
         referralLink: referralLink ?? this.referralLink,
         aiDailyMessageLimit: aiDailyMessageLimit ?? this.aiDailyMessageLimit,
+        aiLanguageLevel: aiLanguageLevel ?? this.aiLanguageLevel,
+        aiVerbosity: aiVerbosity ?? this.aiVerbosity,
       );
 }
 
 ///Returns the value of the property [aiDailyMessageLimit] from the [json] object.
 int _getAIDailyMessageLimitProperty(Map<String, dynamic> json) =>
     int.tryParse(json['aiDailyMessageLimit']?.first?['value'] ?? '0') ?? 0;
+
+AiLanguageLevel _getAILanguageLevelProperty(Map<String, dynamic> json) =>
+    AiLanguageLevel.fromValue(json['aiLanguageLevel']?.first?['value']);
+
+AiVerbosity _getAIVerbosityProperty(Map<String, dynamic> json) =>
+    AiVerbosity.fromValue(json['aiVerbosity']?.first?['value']);
+
+enum AiLanguageLevel {
+  basic,
+  preset,
+  advanced;
+
+  factory AiLanguageLevel.fromValue(String? value) {
+    switch (value) {
+      case 'basic':
+        return AiLanguageLevel.basic;
+      case 'advanced':
+        return AiLanguageLevel.advanced;
+      default:
+        return AiLanguageLevel.preset;
+    }
+  }
+
+  String toValue() {
+    switch (this) {
+      case AiLanguageLevel.basic:
+        return 'basic';
+      case AiLanguageLevel.preset:
+        return 'default';
+      case AiLanguageLevel.advanced:
+        return 'advanced';
+    }
+  }
+}
+
+enum AiVerbosity {
+  low,
+  preset,
+  high;
+
+  factory AiVerbosity.fromValue(String? value) {
+    switch (value) {
+      case 'low':
+        return AiVerbosity.low;
+      case 'high':
+        return AiVerbosity.high;
+      default:
+        return AiVerbosity.preset;
+    }
+  }
+
+  String toValue() {
+    switch (this) {
+      case AiVerbosity.low:
+        return 'low';
+      case AiVerbosity.preset:
+        return 'default';
+      case AiVerbosity.high:
+        return 'high';
+    }
+  }
+}
