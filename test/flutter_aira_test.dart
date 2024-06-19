@@ -40,6 +40,8 @@ void main() {
           jsonEncode({
             'response': {'status': 'SUCCESS'},
             'userId': 5678, // Different user ID.
+            'token': 'testToken',
+            'firebaseCustomToken': 'testFirebaseCustomToken',
           }),
           200,
         );
@@ -64,6 +66,8 @@ void main() {
           jsonEncode({
             'response': {'status': 'SUCCESS'},
             'userId': 1234,
+            'token': 'testToken',
+            'firebaseCustomToken': 'testFirebaseCustomToken',
           }),
           200,
         );
