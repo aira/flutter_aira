@@ -584,6 +584,21 @@ class PlatformClient {
     );
   }
 
+  /// Used to update the preferred ai language level of a user.
+  Future<void> updateAiLanguageLevel(AiLanguageLevel languageLevel) async {
+    await setUserProperty(
+      UserProperty.aiLanguageLevel,
+      languageLevel.toValue(),
+    );
+  }
+
+  Future<void> updateAiVerbosity(AiVerbosity aiVerbosity) async {
+    await setUserProperty(
+      UserProperty.aiVerbosity,
+      aiVerbosity.toValue(),
+    );
+  }
+
   /// Used to set the value of a user property. See [UserProperty] for available properties.
   Future<void> setUserProperty(
     UserProperty propertyName,

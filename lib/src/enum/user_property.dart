@@ -6,6 +6,8 @@ enum UserProperty {
   lastName,
   preferredLang,
   showReferrerRewardSplash,
+  aiLanguageLevel,
+  aiVerbosity,
   ;
 
   String get name => toString().split('.').last;
