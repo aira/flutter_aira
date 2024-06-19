@@ -5,11 +5,11 @@ export 'src/models/access_offer.dart'
 export 'src/models/account.dart' show Account, AccountType;
 export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/call_history.dart' show CallSession, SessionFeedback;
+export 'src/models/chat/agent_feedback_info.dart'
+    show AgentFeedbackInfo, AgentFeedbackState;
 export 'src/models/chat/chat.dart'
     show ChatMessageInfo, ChatSessionInfo, SenderRole;
 export 'src/models/chat/user_feedback_info.dart' show UserFeedbackInfo;
-export 'src/models/chat/agent_feedback_info.dart'
-    show AgentFeedbackInfo, AgentFeedbackState;
 export 'src/models/credentials.dart' show Credentials;
 export 'src/models/feedback.dart' show AgentFeedback, Feedback, Rating;
 export 'src/models/message.dart' show Message;
@@ -25,7 +25,7 @@ export 'src/models/service_request.dart'
 export 'src/models/session.dart' show Session;
 export 'src/models/track.dart' show Track;
 export 'src/models/usage.dart' show Usage, PlanUsageBreakdown;
-export 'src/models/user.dart' show User;
+export 'src/models/user.dart' show User, AiLanguageLevel, AiVerbosity;
 export 'src/platform_client.dart'
     show
         PlatformClient,
