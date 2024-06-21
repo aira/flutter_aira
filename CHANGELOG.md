@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2024-06-20
+### Added
+- Added new user property `buildAiProgramJoined` to check if a user has joined the BuildAI program. (#126)
+- `BuildAI` added to the CallHistory model (#126)
+- `updateSessionShareStatus` to update new BuildAi user property (#126)
+- `getCallHistorySingleCall` to get call history response for the single session (#126)
+
+
 ## [2.8.0] - 2024-06-19
 
 ### Added

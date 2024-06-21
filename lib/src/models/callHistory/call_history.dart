@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_aira/src/models/callHistory/build_ai.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 import 'package:flutter_aira/src/models/feedback.dart';
 
@@ -76,7 +77,9 @@ class CallSession {
         userId = json['userId'],
         userFeedback = null == json['userFeedback']
             ? null
-            : SessionFeedback.fromJson(json['userFeedback']);
+            : SessionFeedback.fromJson(json['userFeedback']),
+        buildAi =
+            json['buildAi'] != null ? BuildAi.fromJson(json['buildAi']) : null;
 
   /// ID representing the Agent.
   int? agentId;
@@ -111,4 +114,7 @@ class CallSession {
 
   /// The Explorer's feedback.
   SessionFeedback? userFeedback;
+
+  ///BuildAi program data.
+  BuildAi? buildAi;
 }

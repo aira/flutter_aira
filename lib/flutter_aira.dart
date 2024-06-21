@@ -4,7 +4,10 @@ export 'src/models/access_offer.dart'
     show AccessOfferDetails, AccessOfferType, AccountDetails, SiteAddress;
 export 'src/models/account.dart' show Account, AccountType;
 export 'src/models/billing_info.dart' show PartialBillingInformation;
-export 'src/models/call_history.dart' show CallSession, SessionFeedback;
+export 'src/models/callHistory/build_ai.dart'
+    show BuildAi, BuildAiStatus, NotAllowSharingReason;
+export 'src/models/callHistory/call_history.dart'
+    show CallSession, SessionFeedback;
 export 'src/models/chat/agent_feedback_info.dart'
     show AgentFeedbackInfo, AgentFeedbackState;
 export 'src/models/chat/chat.dart'

@@ -415,6 +415,19 @@ class PlatformClient {
     await _httpPut('/api/service-request/$serviceRequestId/END');
   }
 
+  /// Update service request's Build AI Program allow sharing status.
+  Future<void> updateSessionShareStatus(
+    int serviceId,
+    bool value,
+  ) async {
+    await _httpPut(
+      '/api/service-request/$serviceId/build-ai/allow-sharing',
+      body: jsonEncode(
+        {'value': value},
+      ),
+    );
+  }
+
   /// Gets the participants in a room.
   Future<List<Participant>> getParticipants(int roomId) async {
     _verifyIsLoggedIn();
@@ -737,6 +750,25 @@ class PlatformClient {
           .map((p) => CallSession.fromJson(p))
           .toList(growable: false),
     );
+  }
+
+  /// This API returns the same data as on the call-history API, just for a single session.
+  Future<CallSession> getCallHistorySingleCall(int serviceRequestId) async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response = await _httpGet(
+      '/api/user/service/history/bu',
+      queryParameters: {
+        'userId': _userId.toString(),
+        'serviceId': serviceRequestId.toString(),
+      },
+    );
+
+    return (response['requests'] as List<dynamic>)
+        .where((json) => null != json['startTimeStamp'])
+        .where((json) => null != json['endTimeStamp'])
+        .map((p) => CallSession.fromJson(p))
+        .toList(growable: false)[0];
   }
 
   /// This function pauses or resumes minutes sharing with secondary users.

@@ -6,6 +6,7 @@ enum UserProperty {
   lastName,
   preferredLang,
   showReferrerRewardSplash,
+  buildAiProgramJoined,
   aiLanguageLevel,
   aiVerbosity,
   ;
