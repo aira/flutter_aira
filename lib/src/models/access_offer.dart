@@ -13,33 +13,36 @@ enum AccessOfferType {
 }
 
 class AccessOfferDetails {
-  AccessOfferDetails.fromJson(Map<String, dynamic> json) :
-    account = null == json['account'] ? null : AccountDetails.fromJson(json['account']),
-    activated = json['activated'],
-    activatedEffectiveSeconds = json['activatedEffectiveSeconds'],
-    availableToGuests = json['availableToGuests'],
-    description = json['description'],
-    distanceMiles = json['distanceMiles'],
-    durationAllowed = json['durationAllowed'],
-    durationPerCall = json['durationPerCall'],
-    durationUsed = json['durationUsed'],
-    effectiveFrom = (json['effectiveFrom'] as String?)?.dateTimeZ,
-    effectiveTo = (json['effectiveTo'] as String?)?.dateTimeZ,
-    enabled = json['enabled'],
-    expired = json['expired'],
-    id = json['id'],
-    key = json['key'],
-    message = json['message'],
-    name = json['name'],
-    offerType = AccessOfferType.from(json['class']!)!,
-    requireAgentApproval = json['requireAgentApproval'],
-    siteAddress = null == json['siteAddress'] ? null : SiteAddress.fromJson(json['siteAddress']),
-    siteId = json['siteId'],
-    sticky = json['sticky'],
-    // tasks = json['tasks'],
-    termsAndConditionsUrl = json['termsAndConditionsUrl'],
-    type = json['type']
-  ;
+  AccessOfferDetails.fromJson(Map<String, dynamic> json)
+      : account = null == json['account']
+            ? null
+            : AccountDetails.fromJson(json['account']),
+        activated = json['activated'],
+        activatedEffectiveSeconds = json['activatedEffectiveSeconds'],
+        availableToGuests = json['availableToGuests'],
+        description = json['description'],
+        distanceMiles = json['distanceMiles'],
+        durationAllowed = json['durationAllowed'],
+        durationPerCall = json['durationPerCall'],
+        durationUsed = json['durationUsed'],
+        effectiveFrom = (json['effectiveFrom'] as String?)?.dateTimeZ,
+        effectiveTo = (json['effectiveTo'] as String?)?.dateTimeZ,
+        enabled = json['enabled'],
+        expired = json['expired'],
+        id = json['id'],
+        key = json['key'],
+        message = json['message'],
+        name = json['name'],
+        offerType = AccessOfferType.from(json['class']!)!,
+        requireAgentApproval = json['requireAgentApproval'],
+        siteAddress = null == json['siteAddress']
+            ? null
+            : SiteAddress.fromJson(json['siteAddress']),
+        siteId = json['siteId'],
+        sticky = json['sticky'],
+        // tasks = json['tasks'],
+        termsAndConditionsUrl = json['termsAndConditionsUrl'],
+        type = json['type'];
 
   AccountDetails? account;
   bool? activated;
@@ -92,19 +95,19 @@ class AccessOfferDetails {
         'sticky': sticky,
         'termsAndConditionsUrl': termsAndConditionsUrl,
         'type': type,
-  };
+      };
 }
 
 class AccountDetails {
-  AccountDetails.fromJson(Map<String, dynamic> json) :
-    acceptBusinessUsers = json['acceptBusinessUsers'],
-    accountCode = json['accountCode'],
-    accountId = json['accountId'],
-    accountType = AccountType.fromName(json['accountType']),
-    email = json['email'],
-    firstname = json['firstname'],
-    name = json['name'],
-    type = json['type'];
+  AccountDetails.fromJson(Map<String, dynamic> json)
+      : acceptBusinessUsers = json['acceptBusinessUsers'],
+        accountCode = json['accountCode'],
+        accountId = json['accountId'],
+        accountType = AccountType.fromName(json['accountType']),
+        email = json['email'],
+        firstname = json['firstname'],
+        name = json['name'],
+        type = json['type'];
 
   bool? acceptBusinessUsers;
   String? accountCode;
@@ -115,8 +118,7 @@ class AccountDetails {
   String? name;
   String? type; // TODO: could be an enum! PUBLIC, PRIVATE, ???
 
-  Map<String, dynamic> toJson() =>
-      {
+  Map<String, dynamic> toJson() => {
         'acceptBusinessUsers': acceptBusinessUsers,
         'accountCode': accountCode,
         'accountId': accountId,
@@ -136,7 +138,9 @@ class SiteAddress {
         city = json['city'],
         country = json['country'],
         county = json['county'],
-        latitudeLongitude = (json['latitudeLongitude'] as List<dynamic>).cast<double>().toList(growable: false),
+        latitudeLongitude = (json['latitudeLongitude'] as List<dynamic>)
+            .cast<double>()
+            .toList(growable: false),
         state = json['state'],
         zip = json['zip'];
 
@@ -150,8 +154,7 @@ class SiteAddress {
   String? state;
   String? zip;
 
-  Map<String, dynamic> toJson() =>
-      {
+  Map<String, dynamic> toJson() => {
         'address1': address1,
         'address2': address2,
         'address3': address3,

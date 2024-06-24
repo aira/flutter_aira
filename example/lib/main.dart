@@ -21,7 +21,8 @@ void main() {
   // Configure logging.
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
-    print('${record.time} | ${record.level.name} | ${record.loggerName} | ${record.message}'); // ignore: avoid_print
+    debugPrint(
+        '${record.time} | ${record.level.name} | ${record.loggerName} | ${record.message}'); // ignore: avoid_print
     if (record.error != null) {
       print(record.error); // ignore: avoid_print
     }
@@ -53,11 +54,14 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _clientIdController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  final TextEditingController _messagingReceiveKeyController = TextEditingController();
-  final TextEditingController _messagingSendKeyController = TextEditingController();
+  final TextEditingController _messagingReceiveKeyController =
+      TextEditingController();
+  final TextEditingController _messagingSendKeyController =
+      TextEditingController();
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _userIdController = TextEditingController();
-  final TextEditingController _verificationCodeController = TextEditingController();
+  final TextEditingController _verificationCodeController =
+      TextEditingController();
 
   final Map<int, RTCVideoRenderer> _remoteRenderers = {};
 
@@ -70,7 +74,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   bool _isTorchOn = false;
 
   bool get _isMessagingEnabled =>
-      _messagingSendKeyController.text.isNotEmpty && _messagingReceiveKeyController.text.isNotEmpty;
+      _messagingSendKeyController.text.isNotEmpty &&
+      _messagingReceiveKeyController.text.isNotEmpty;
 
   @override
   void initState() {
@@ -121,7 +126,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: LayoutBuilder(builder: (BuildContext context, BoxConstraints viewportConstraints) {
+          child: LayoutBuilder(builder:
+              (BuildContext context, BoxConstraints viewportConstraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -162,7 +168,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _hangUp,
-          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error),
           child: const Text('End Call'),
         ),
       ],
@@ -214,8 +221,12 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                     child: Row(
                       children: <Widget>[
                         Icon(
-                          e.account.type == AccountType.business ? Icons.work : Icons.account_circle,
-                          semanticLabel: e.account.type == AccountType.business ? 'Business' : 'Personal',
+                          e.account.type == AccountType.business
+                              ? Icons.work
+                              : Icons.account_circle,
+                          semanticLabel: e.account.type == AccountType.business
+                              ? 'Business'
+                              : 'Personal',
                         ),
                         const SizedBox(width: 5),
                         Text(e.account.name),
@@ -229,13 +240,15 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _callAira,
-          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary),
           child: const Text('Call an Aira Agent'),
         ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _logout,
-          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error),
           child: const Text('Logout'),
         ),
       ],
@@ -252,16 +265,20 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
               Expanded(
                 child: RadioListTile<LoginType>(
                   groupValue: _loginType,
-                  onChanged: (LoginType? newValue) => setState(() => _loginType = newValue!),
-                  title: const Text('Login with Verification Code', overflow: TextOverflow.ellipsis),
+                  onChanged: (LoginType? newValue) =>
+                      setState(() => _loginType = newValue!),
+                  title: const Text('Login with Verification Code',
+                      overflow: TextOverflow.ellipsis),
                   value: LoginType.verificationCode,
                 ),
               ),
               Expanded(
                 child: RadioListTile<LoginType>(
                   groupValue: _loginType,
-                  onChanged: (LoginType? newValue) => setState(() => _loginType = newValue!),
-                  title: const Text('Login with Token', overflow: TextOverflow.ellipsis),
+                  onChanged: (LoginType? newValue) =>
+                      setState(() => _loginType = newValue!),
+                  title: const Text('Login with Token',
+                      overflow: TextOverflow.ellipsis),
                   value: LoginType.token,
                 ),
               ),
@@ -311,7 +328,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       labelText: 'Verification Code',
                     ),
                     validator: (String? value) {
-                      if (_loginType == LoginType.verificationCode && (value?.isEmpty ?? true)) {
+                      if (_loginType == LoginType.verificationCode &&
+                          (value?.isEmpty ?? true)) {
                         return 'A verification code is required';
                       }
                       return null;
@@ -328,7 +346,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       labelText: 'User ID',
                     ),
                     validator: (String? value) {
-                      if (_loginType == LoginType.token && (value?.isEmpty ?? true)) {
+                      if (_loginType == LoginType.token &&
+                          (value?.isEmpty ?? true)) {
                         return 'A user ID is required';
                       }
                       return null;
@@ -344,7 +363,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
                       labelText: 'Token',
                     ),
                     validator: (String? value) {
-                      if (_loginType == LoginType.token && (value?.isEmpty ?? true)) {
+                      if (_loginType == LoginType.token &&
+                          (value?.isEmpty ?? true)) {
                         return 'A token is required';
                       }
                       return null;
@@ -370,7 +390,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _login,
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary),
             child: const Text('Log In'),
           ),
         ],
@@ -424,7 +445,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       // Create the [PlatformClient]. Normally, you would do this at startup and expose the client using a [Provider].
       PlatformMessagingKeys? messagingKeys;
       if (_isMessagingEnabled) {
-        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text, _messagingReceiveKeyController.text);
+        messagingKeys = PlatformMessagingKeys(_messagingSendKeyController.text,
+            _messagingReceiveKeyController.text);
       }
       _platformClient = PlatformClient(PlatformClientConfig(
         apiKey: _apiKeyController.text,
@@ -435,14 +457,16 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
       // Log in.
       if (_loginType == LoginType.verificationCode) {
-        Session session = await _platformClient!.loginWithClientVerificationCode(_verificationCodeController.text);
+        Session session = await _platformClient!
+            .loginWithClientVerificationCode(_verificationCodeController.text);
 
         // The verification code can only be used once, so switch to logging in with the returned token.
         _loginType = LoginType.token;
         _tokenController.text = session.token;
         _userIdController.text = session.userId.toString();
       } else {
-        await _platformClient!.loginWithToken(_tokenController.text, int.parse(_userIdController.text));
+        await _platformClient!.loginWithToken(
+            _tokenController.text, int.parse(_userIdController.text));
       }
 
       _user = await _platformClient!.getUser();
@@ -472,7 +496,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   Future<void> _callAira() async {
     try {
       String progressText = 'Calling...';
-      StateSetter? progressSetState; // Idea from https://stackoverflow.com/a/62129750.
+      StateSetter?
+          progressSetState; // Idea from https://stackoverflow.com/a/62129750.
 
       // Show the call progress dialog.
       showDialog(
@@ -512,16 +537,19 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       );
 
       // Get the local audio and video. Do this before calling, because if access to the media is blocked, why call?
-      _localStream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': true});
+      _localStream = await navigator.mediaDevices
+          .getUserMedia({'audio': true, 'video': true});
 
       // Call Aira.
-      _room = await _platformClient!.createServiceRequest(this, accountId: _accountId);
+      _room = await _platformClient!
+          .createServiceRequest(this, accountId: _accountId);
 
       // Listen for room updates.
       progressSetState!(() => progressText = 'Waiting for an Aira Agent...');
       _room!.addListener(() {
         if (_room!.serviceRequestState == ServiceRequestState.assigned) {
-          progressSetState!(() => progressText = 'Connecting to Agent ${_room!.agentName}...');
+          progressSetState!(() =>
+              progressText = 'Connecting to Agent ${_room!.agentName}...');
         } else if (_room!.serviceRequestState == ServiceRequestState.started) {
           // Close the call progress dialog.
           Navigator.pop(context);

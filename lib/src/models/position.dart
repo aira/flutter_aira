@@ -60,8 +60,8 @@ class Position extends Equatable {
   /// The speedAccuracy is not available on all devices. In these cases the value should be null.
   final double? speedAccuracy;
 
-  Position.fromJson(Map<String, dynamic> json):
-        longitude = json['longitude'],
+  Position.fromJson(Map<String, dynamic> json)
+      : longitude = json['longitude'],
         latitude = json['latitude'],
         timestamp = json['timestamp'],
         altitude = json['altitude'],
@@ -73,20 +73,20 @@ class Position extends Equatable {
         speedAccuracy = json['speedAccuracy'];
 
   Map<String, dynamic> toJson() => {
-    'longitude': longitude,
-    'latitude': latitude,
-    'timestamp': timestamp,
-    'altitude': altitude,
-    'accuracy': accuracy,
-    'verticalAccuracy': verticalAccuracy,
-    'heading': heading,
-    'headingAccuracy': headingAccuracy,
-    'speed': speed,
-    'speedAccuracy': speedAccuracy,
-  };
+        'longitude': longitude,
+        'latitude': latitude,
+        'timestamp': timestamp,
+        'altitude': altitude,
+        'accuracy': accuracy,
+        'verticalAccuracy': verticalAccuracy,
+        'heading': heading,
+        'headingAccuracy': headingAccuracy,
+        'speed': speed,
+        'speedAccuracy': speedAccuracy,
+      };
 
   @override
-  List<Object> get props => [longitude,latitude,heading ?? -1,timestamp];
+  List<Object> get props => [longitude, latitude, heading ?? -1, timestamp];
 
   @override
   bool get stringify => true;
@@ -105,7 +105,8 @@ class Position extends Equatable {
     double lat1 = _degreesToRadians(other.latitude);
     double lat2 = _degreesToRadians(latitude);
 
-    double a = sin(dLat / 2) * sin(dLat / 2) + sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return earthRadiusKm * c * 1000;
@@ -122,7 +123,8 @@ class Position extends Equatable {
       // Avoiding division by 0!!! This is the only case where we can return a negative value
       return -1;
     }
-    return distanceFrom(secondPosition) * 1000 / secondPosition.timestamp.difference(timestamp).inMilliseconds.abs();
+    return distanceFrom(secondPosition) *
+        1000 /
+        secondPosition.timestamp.difference(timestamp).inMilliseconds.abs();
   }
 }
-

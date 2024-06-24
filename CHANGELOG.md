@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2024-06-20
+### Added
+- Added new user property `buildAiProgramJoined` to check if a user has joined the BuildAI program. (#126)
+- `BuildAI` added to the CallHistory model (#126)
+- `updateSessionShareStatus` to update new BuildAi user property (#126)
+- `getCallHistorySingleCall` to get call history response for the single session (#126)
+
+
+## [2.8.0] - 2024-06-19
+
+### Added
+- Added new property `aiVerbosity` to `User`
+- Added new property `aiLanguageLevel` to `User`
+- Added new function `updateAiLanguageLevel` to `PlatformClient`
+- Added new function `updateAiVerbosity` to `PlatformClient`
+
+
+## [2.7.0] - 2024-06-13
+
+### Added
+- Added new property `firebaseCustomToken` to `Session`
+- Added new function `confirmEmailUpdate` to `PlatformClient`
+
+
+## [2.6.0] - 2024-05-27
+
+### Added
+- Added `TrackKind` to `ParticipantMessage`
+
+### Changed
+- Updated [SFUConnection] to add video configs to sdp offer based on track kind
+
+
+## [2.5.0] - 2024-05-27
+
+### Added
+- Added const `PlatformClient.kEmailVerification`
+- Added const `PlatformClient.kPhoneVerification`
+
+## [2.4.1] - 2024-05-22
+
+### Changed
+Updated the following plugins which is required to use with flutter v3.22.1 (#122)
+- connectivity_plus: ^6.0.3 and updated its breaking changes.
+- device_info_plus: ^10.1.0
+- flutter_webrtc: ^0.10.6
+- meta: ^1.12.0
+- package_info_plus: ^8.0.0
+ 
 ## [2.3.0] - 2024-04-11
 
 ### Changed

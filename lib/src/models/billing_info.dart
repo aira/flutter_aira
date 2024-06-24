@@ -4,26 +4,37 @@ import 'package:equatable/equatable.dart';
 class PartialBillingInformation extends Equatable {
   /// Billing address: First line address
   final String? address1;
+
   /// Billing address: Second line address
   final String? address2;
+
   /// Billing card type
   final String? cardType;
+
   /// Billing address: city
   final String? city;
+
   /// Billing address: country
   final String? country;
+
   /// Credit card: First name
   final String? firstName;
+
   /// Credit card: Last four digits
   final String? lastFour;
+
   /// Credit card: Last name
   final String? lastName;
+
   /// Billing address: state
   final String? state;
+
   /// Billing address: zip or postal code
   final String? zip;
+
   /// Credit card: expiration month
   final int? month;
+
   /// Credit card: expiration year
   final int? year;
 

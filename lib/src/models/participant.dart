@@ -25,5 +25,7 @@ class Participant {
 
   Participant.fromJson(Map<String, dynamic> json)
       : id = json['id'],
-        tracks = (json['tracks'] as List<dynamic>).map((track) => Track.fromJson(track)).toList(growable: false);
+        tracks = (json['tracks'] as List<dynamic>)
+            .map((track) => Track.fromJson(track))
+            .toList(growable: false);
 }

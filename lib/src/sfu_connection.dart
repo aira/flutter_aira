@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_aira/src/models/track.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mutex/mutex.dart';
 
@@ -53,21 +54,31 @@ class SfuConnection {
     List<dynamic> turnServers, {
     MediaStreamTrack? outgoingAudioTrack,
     MediaStreamTrack? outgoingVideoTrack,
+    TrackKind? incomingTrackKind,
   }) async {
-    Map<String, dynamic> configuration = _getConfiguration(stunServers, turnServers);
+    Map<String, dynamic> configuration =
+        _getConfiguration(stunServers, turnServers);
 
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
       ..onConnectionState = ((state) => onConnectionState.call(trackId, state))
-      ..onIceCandidate = ((candidate) => onIceCandidate.call(trackId, candidate))
+      ..onIceCandidate =
+          ((candidate) => onIceCandidate.call(trackId, candidate))
       ..onTrack = ((event) => onTrack.call(trackId, event));
 
     if (_isIncoming) {
       // Add a transceiver for receiving audio.
-      _audio = await _peerConnection.addTransceiver(
-        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-        init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
-      );
+      if (incomingTrackKind == TrackKind.audio) {
+        _audio = await _peerConnection.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+        );
+      } else if (incomingTrackKind == TrackKind.video) {
+        _video = await _peerConnection.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
+        );
+      }
     } else {
       // Add transceivers for sending audio and video.
       // REVIEW: Do we need to set any encoding options, similar to
@@ -101,8 +112,8 @@ class SfuConnection {
     // Create the SDP offer.
     RTCSessionDescription offer = await _peerConnection.createOffer({
       'mandatory': {
-        'OfferToReceiveAudio': _isIncoming,
-        'OfferToReceiveVideo': false,
+        'OfferToReceiveAudio': incomingTrackKind == TrackKind.audio,
+        'OfferToReceiveVideo': incomingTrackKind == TrackKind.video,
       },
       'optional': [],
     });
@@ -161,7 +172,8 @@ class SfuConnection {
     await _peerConnection.setRemoteDescription(answer);
     try {
       await _pendingIceCandidatesMutex.acquire();
-      assert(_pendingIceCandidates != null, 'Pending ice candidates should not be null at this point');
+      assert(_pendingIceCandidates != null,
+          'Pending ice candidates should not be null at this point');
       for (RTCIceCandidate candidate in _pendingIceCandidates ?? []) {
         await _peerConnection.addCandidate(candidate);
       }

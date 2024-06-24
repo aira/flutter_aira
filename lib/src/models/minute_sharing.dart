@@ -1,5 +1,3 @@
-
-
 /// Object containing all the required information to manage secondary users.
 class MinuteSharingMember {
   /// Explorer's first name.
@@ -27,8 +25,8 @@ class MinuteSharingMember {
 
   MinuteSharingMember.fromJson(Map<String, dynamic> json)
       : firstName = json['firstName'],
-  // See endpoint implementation in Platform 'AccountUserMapper.toDTO' and 'SmartAppManager.getUsageInfoSafe' to
-  // validate this logic.
+        // See endpoint implementation in Platform 'AccountUserMapper.toDTO' and 'SmartAppManager.getUsageInfoSafe' to
+        // validate this logic.
         isPaused = json['status'].toString().toUpperCase() == 'PAUSED',
         lastName = json['lastName'],
         userId = json['userId'],

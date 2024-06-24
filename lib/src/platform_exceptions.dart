@@ -26,7 +26,8 @@ class PlatformDeleteAccountException extends PlatformLocalizedException {
 }
 
 /// Exception thrown when the operation requires the user to log in with their business credentials.
-class PlatformBusinessLoginRequiredException extends PlatformLocalizedException {
+class PlatformBusinessLoginRequiredException
+    extends PlatformLocalizedException {
   final String _connection;
 
   const PlatformBusinessLoginRequiredException(

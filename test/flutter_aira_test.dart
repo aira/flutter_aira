@@ -40,6 +40,8 @@ void main() {
           jsonEncode({
             'response': {'status': 'SUCCESS'},
             'userId': 5678, // Different user ID.
+            'token': 'testToken',
+            'firebaseCustomToken': 'testFirebaseCustomToken',
           }),
           200,
         );
@@ -64,6 +66,8 @@ void main() {
           jsonEncode({
             'response': {'status': 'SUCCESS'},
             'userId': 1234,
+            'token': 'testToken',
+            'firebaseCustomToken': 'testFirebaseCustomToken',
           }),
           200,
         );
@@ -85,13 +89,15 @@ void main() {
     test('Calculated Distance', () {
       var now = DateTime.now();
       var p1 = Position(
-          latitude: 36.00282558105645,
-          longitude: -78.93345583177252,
-          timestamp: now.subtract(const Duration(seconds: 10)),);
+        latitude: 36.00282558105645,
+        longitude: -78.93345583177252,
+        timestamp: now.subtract(const Duration(seconds: 10)),
+      );
       var p2 = Position(
-          latitude: 36.00404070162735,
-          longitude: -78.93306959369106,
-          timestamp: now,);
+        latitude: 36.00404070162735,
+        longitude: -78.93306959369106,
+        timestamp: now,
+      );
       var distanceFrom = p1.distanceFrom(p2);
       expect(distanceFrom, lessThan(139.6));
       expect(distanceFrom, greaterThan(139.5));
@@ -102,9 +108,10 @@ void main() {
         () {
       var now = DateTime.now();
       var p1 = Position(
-          latitude: 51.5,
-          longitude: 0,
-          timestamp: now.subtract(const Duration(seconds: 10)),);
+        latitude: 51.5,
+        longitude: 0,
+        timestamp: now.subtract(const Duration(seconds: 10)),
+      );
       var p2 = Position(latitude: 38.8, longitude: -77.1, timestamp: now);
       var distanceFrom = p1.distanceFrom(p2);
       expect(distanceFrom, lessThan(5918185.1));
@@ -114,13 +121,15 @@ void main() {
     test('Calculated Speed', () {
       var now = DateTime.now();
       var p1 = Position(
-          latitude: 36.00282558105645,
-          longitude: -78.93345583177252,
-          timestamp: now.subtract(const Duration(seconds: 30)),);
+        latitude: 36.00282558105645,
+        longitude: -78.93345583177252,
+        timestamp: now.subtract(const Duration(seconds: 30)),
+      );
       var p2 = Position(
-          latitude: 36.00404070162735,
-          longitude: -78.93306959369106,
-          timestamp: now,);
+        latitude: 36.00404070162735,
+        longitude: -78.93306959369106,
+        timestamp: now,
+      );
       var speed1 = p1.speedFrom(p2);
       var speed2 = p2.speedFrom(p1);
       expect(speed1, greaterThan(4));
@@ -130,13 +139,15 @@ void main() {
     test('Same timestamp could cause a division by zero', () {
       var now = DateTime.now();
       var p1 = Position(
-          latitude: 36.00282558105645,
-          longitude: -78.93345583177252,
-          timestamp: now,);
+        latitude: 36.00282558105645,
+        longitude: -78.93345583177252,
+        timestamp: now,
+      );
       var p2 = Position(
-          latitude: 36.00404070162735,
-          longitude: -78.93306959369106,
-          timestamp: now,);
+        latitude: 36.00404070162735,
+        longitude: -78.93306959369106,
+        timestamp: now,
+      );
       var speed = p1.speedFrom(p2);
       expect(speed, equals(-1));
     });
