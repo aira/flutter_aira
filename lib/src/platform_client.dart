@@ -275,6 +275,7 @@ class PlatformClient {
     Position? position,
     int? accessOfferId,
     AccessOfferType? accessOfferType,
+    String? chatRoomId,
   }) async {
     _verifyIsLoggedIn();
 
@@ -297,6 +298,7 @@ class PlatformClient {
       'message': preCallMessage,
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
+      'chatRoomId': chatRoomId,
       if (null != accessOfferId && null != accessOfferType)
         'accessOffer': {
           'access': {
