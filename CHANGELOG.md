@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.11.0] - 2024-06-25
 ### Added
 - `buildAiAvailable` was added to the AccessOfferDetails (#128)
+- `AccessOfferGPSResponse` was added to the AccessOffer (#128)
 
 ## [2.10.0] - 2024-06-25
 

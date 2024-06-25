@@ -99,6 +99,25 @@ class AccessOfferDetails {
       };
 }
 
+class AccessOfferGPSResponse {
+  AccessOfferGPSResponse.fromJson(Map<String, dynamic> json)
+      : accessOfferDetails = json['site'] != null
+            ? AccessOfferDetails.fromJson(json['site'])
+            : null,
+        buildAiAvailable = json['buildAiAvailable'],
+        atSite = json['atSite'];
+
+  AccessOfferDetails? accessOfferDetails;
+  bool? buildAiAvailable;
+  bool? atSite;
+
+  Map<String, dynamic> toJson() => {
+        'site': accessOfferDetails?.toJson(),
+        'buildAiAvailable': buildAiAvailable,
+        'atSite': atSite,
+      };
+}
+
 class AccountDetails {
   AccountDetails.fromJson(Map<String, dynamic> json)
       : acceptBusinessUsers = json['acceptBusinessUsers'],
