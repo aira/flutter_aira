@@ -37,6 +37,24 @@ class BuildAi {
           reasonForNotAllowingChangeSharingStatus?.value,
     };
   }
+
+  BuildAi copyWith({
+    BuildAiStatus? status,
+    bool? isExplorerAllowedToShare,
+    bool? explorerCanChangeAllowSharing,
+    NotAllowSharingReason? reasonForNotAllowingChangeSharingStatus,
+  }) {
+    return BuildAi(
+      status: status ?? this.status,
+      isExplorerAllowedToShare:
+          isExplorerAllowedToShare ?? this.isExplorerAllowedToShare,
+      explorerCanChangeAllowSharing:
+          explorerCanChangeAllowSharing ?? this.explorerCanChangeAllowSharing,
+      reasonForNotAllowingChangeSharingStatus:
+          reasonForNotAllowingChangeSharingStatus ??
+              this.reasonForNotAllowingChangeSharingStatus,
+    );
+  }
 }
 
 /// The status of the session, whether the call can be shared or not.
