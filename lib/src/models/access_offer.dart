@@ -40,7 +40,7 @@ class AccessOfferDetails {
             : SiteAddress.fromJson(json['siteAddress']),
         siteId = json['siteId'],
         sticky = json['sticky'],
-        // tasks = json['tasks'],
+        buildAiAvailable = json['buildAiAvailable'],
         termsAndConditionsUrl = json['termsAndConditionsUrl'],
         type = json['type'];
 
@@ -66,7 +66,7 @@ class AccessOfferDetails {
   SiteAddress? siteAddress;
   int? siteId;
   bool? sticky;
-  // List<Task>? tasks;
+  bool? buildAiAvailable;
   String? termsAndConditionsUrl;
   String? type;
 
@@ -93,8 +93,28 @@ class AccessOfferDetails {
         'siteAddress': siteAddress?.toJson(),
         'siteId': siteId,
         'sticky': sticky,
+        'buildAiAvailable': buildAiAvailable,
         'termsAndConditionsUrl': termsAndConditionsUrl,
         'type': type,
+      };
+}
+
+class AccessOfferGPSResponse {
+  AccessOfferGPSResponse.fromJson(Map<String, dynamic> json)
+      : accessOfferDetails = json['site'] != null
+            ? AccessOfferDetails.fromJson(json['site'])
+            : null,
+        buildAiAvailable = json['buildAiAvailable'],
+        atSite = json['atSite'];
+
+  AccessOfferDetails? accessOfferDetails;
+  bool? buildAiAvailable;
+  bool? atSite;
+
+  Map<String, dynamic> toJson() => {
+        'site': accessOfferDetails?.toJson(),
+        'buildAiAvailable': buildAiAvailable,
+        'atSite': atSite,
       };
 }
 

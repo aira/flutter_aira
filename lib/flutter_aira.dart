@@ -1,7 +1,12 @@
 export 'src/enum/user_property.dart' show UserProperty;
 export 'src/messaging_client.dart' show MessagingClient;
 export 'src/models/access_offer.dart'
-    show AccessOfferDetails, AccessOfferType, AccountDetails, SiteAddress;
+    show
+        AccessOfferDetails,
+        AccessOfferType,
+        AccountDetails,
+        SiteAddress,
+        AccessOfferGPSResponse;
 export 'src/models/account.dart' show Account, AccountType;
 export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/callHistory/build_ai.dart'

@@ -49,7 +49,7 @@ class PlatformClient {
 
   final Throttler _lastLocationUpdateThrottler =
       Throttler(delay: 2000); // every 2 seconds
-  AccessOfferDetails? _lastAccessOfferUpdate;
+  AccessOfferGPSResponse? _accessOfferGPSResponse;
 
   /// Discards any resources associated with the [PlatformClient].
   ///
@@ -1130,14 +1130,14 @@ class PlatformClient {
   /// WARNING! This function is Throttled to avoid overhead on the server side. If it is called more than every seconds,
   /// it will return the latest valid AccessOfferDetails. This is done to simplify the handling of the function as now,
   /// we only have to worry about nulls and valid AccessOfferDetails.
-  Future<AccessOfferDetails?> inquireForGPSActivatedOffer(
+  Future<AccessOfferGPSResponse?> inquireForGPSActivatedOffer(
     Position position,
   ) async {
     _verifyIsLoggedIn();
 
     if (shouldThrottlePositionUpdate) {
       // Same throttling delay as `KurrentoRoom.updateLocation`.
-      return _lastAccessOfferUpdate;
+      return _accessOfferGPSResponse;
     }
 
     String body = jsonEncode({
@@ -1148,10 +1148,8 @@ class PlatformClient {
 
     Map<String, dynamic> gpsResponse =
         await _httpPost('/api/user/location', body);
-    Map<String, dynamic>? site = gpsResponse['site'];
-    _lastAccessOfferUpdate =
-        null == site ? null : AccessOfferDetails.fromJson(site);
-    return _lastAccessOfferUpdate;
+    _accessOfferGPSResponse = AccessOfferGPSResponse.fromJson(gpsResponse);
+    return _accessOfferGPSResponse;
   }
 
   /// Creates a new Aira AI chat session.
