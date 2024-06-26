@@ -767,8 +767,6 @@ class PlatformClient {
     );
 
     return (response['requests'] as List<dynamic>)
-        .where((json) => null != json['startTimeStamp'])
-        .where((json) => null != json['endTimeStamp'])
         .map((p) => CallSession.fromJson(p))
         .toList(growable: false)[0];
   }

@@ -67,7 +67,7 @@ class CallSession {
   CallSession.fromJson(Map<String, dynamic> json)
       : agentId = json['agentId'],
         agentFirstName = json['agentfirstname'],
-        endTimeStamp = (json['endTimeStamp']! as String).dateTime,
+        endTimeStamp = (json['endTimeStamp'] as String?)?.dateTime,
         requestSource = json['requestSource'],
         requestTimeStamp = (json['requestTimeStamp'] as String?)?.dateTime,
         serviceId = json['serviceid'],
@@ -88,7 +88,7 @@ class CallSession {
   String? agentFirstName;
 
   /// End time of the call.
-  DateTime endTimeStamp;
+  DateTime? endTimeStamp;
 
   /// Identification of the application initiating the call.
   String? requestSource;
