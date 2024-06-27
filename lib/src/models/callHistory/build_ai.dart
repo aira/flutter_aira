@@ -58,14 +58,29 @@ class BuildAi {
 }
 
 /// The status of the session, whether the call can be shared or not.
-///All status can be found here https://github.com/aira/platform/blob/master/core/server/AiraPlatformManager/src/main/java/io/aira/manager/service/request/ServiceRequestManager.java.
+/// All statuses can be found here https://github.com/aira/platform/blob/master/core/server/AiraPlatformManager/src/main/java/io/aira/dto/buildai/BuildAiStatus.java
 enum BuildAiStatus {
+  /// The explorer has chosen NOT to share the session
   doNotAllowSharing('DO_NOT_ALLOW_SHARING'),
+
+  /// All the business rules were met to allow sharing with the AI partner, the 72-hour time window did not pass
   allowSharing('ALLOW_SHARING'),
+
+  /// All the business rules were met to allow sharing with the AI partner, the 72-hour time window passed
   shared('SHARED'),
+
+  /// The session is ineligible as it contains sensitive information (marked by a VI)
   ineligibleContent('INELIGIBLE_CONTENT'),
+
+  /// The session was initiated from a country that is not eligible for sharing
   ineligibleCountry('INELIGIBLE_COUNTRY'),
-  ineligibleBilling('INELIGIBLE_BILLING');
+
+  /// The session is ineligible to share due to not using the eligible access offer during the session
+  ineligibleBilling('INELIGIBLE_BILLING'),
+
+  /// The session is ineligible as it was part of a call transfer
+  ineligibleCallTransfer('INELIGIBLE_CALL_TRANSFER'),
+  ;
 
   final String value;
 
