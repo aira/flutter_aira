@@ -16,6 +16,7 @@ class User {
   final int aiDailyMessageLimit;
   final AiLanguageLevel aiLanguageLevel;
   final AiVerbosity aiVerbosity;
+  final bool isASL;
 
   User({
     required this.id,
@@ -31,6 +32,7 @@ class User {
     required this.aiDailyMessageLimit,
     required this.aiLanguageLevel,
     required this.aiVerbosity,
+    required this.isASL,
   });
 
   User.fromJson(Map<String, dynamic> json)
@@ -54,24 +56,25 @@ class User {
         aiDailyMessageLimit =
             _getAIDailyMessageLimitProperty(json['properties']),
         aiVerbosity = _getAIVerbosityProperty(json['properties']),
-        aiLanguageLevel = _getAILanguageLevelProperty(json['properties']);
+        aiLanguageLevel = _getAILanguageLevelProperty(json['properties']),
+        isASL = _getIsASLProperty(json['properties']);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
-  User cloneWith({
-    int? id,
-    String? email,
-    String? firstName,
-    List<Language>? languages,
-    String? lastName,
-    List<String>? linkedAccounts,
-    String? phoneNumber,
-    bool? tosAccepted,
-    List<Profile>? profiles,
-    String? referralLink,
-    int? aiDailyMessageLimit,
-    AiVerbosity? aiVerbosity,
-    AiLanguageLevel? aiLanguageLevel,
-  }) =>
+  User cloneWith(
+          {int? id,
+          String? email,
+          String? firstName,
+          List<Language>? languages,
+          String? lastName,
+          List<String>? linkedAccounts,
+          String? phoneNumber,
+          bool? tosAccepted,
+          List<Profile>? profiles,
+          String? referralLink,
+          int? aiDailyMessageLimit,
+          AiVerbosity? aiVerbosity,
+          AiLanguageLevel? aiLanguageLevel,
+          bool? isASL}) =>
       User(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -86,12 +89,17 @@ class User {
         aiDailyMessageLimit: aiDailyMessageLimit ?? this.aiDailyMessageLimit,
         aiLanguageLevel: aiLanguageLevel ?? this.aiLanguageLevel,
         aiVerbosity: aiVerbosity ?? this.aiVerbosity,
+        isASL: isASL ?? this.isASL,
       );
 }
 
 ///Returns the value of the property [aiDailyMessageLimit] from the [json] object.
 int _getAIDailyMessageLimitProperty(Map<String, dynamic> json) =>
     int.tryParse(json['aiDailyMessageLimit']?.first?['value'] ?? '0') ?? 0;
+
+bool _getIsASLProperty(Map<String, dynamic> json) =>
+    bool.tryParse(json['aslUser']?.first?['value'].toString() ?? 'false') ??
+    false;
 
 AiLanguageLevel _getAILanguageLevelProperty(Map<String, dynamic> json) =>
     AiLanguageLevel.fromValue(json['aiLanguageLevel']?.first?['value']);
