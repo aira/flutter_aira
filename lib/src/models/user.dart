@@ -60,21 +60,22 @@ class User {
         isASL = _getIsASLProperty(json['properties']);
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
-  User cloneWith(
-          {int? id,
-          String? email,
-          String? firstName,
-          List<Language>? languages,
-          String? lastName,
-          List<String>? linkedAccounts,
-          String? phoneNumber,
-          bool? tosAccepted,
-          List<Profile>? profiles,
-          String? referralLink,
-          int? aiDailyMessageLimit,
-          AiVerbosity? aiVerbosity,
-          AiLanguageLevel? aiLanguageLevel,
-          bool? isASL}) =>
+  User cloneWith({
+    int? id,
+    String? email,
+    String? firstName,
+    List<Language>? languages,
+    String? lastName,
+    List<String>? linkedAccounts,
+    String? phoneNumber,
+    bool? tosAccepted,
+    List<Profile>? profiles,
+    String? referralLink,
+    int? aiDailyMessageLimit,
+    AiVerbosity? aiVerbosity,
+    AiLanguageLevel? aiLanguageLevel,
+    bool? isASL,
+  }) =>
       User(
         id: id ?? this.id,
         email: email ?? this.email,
