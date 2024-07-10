@@ -99,7 +99,9 @@ int _getAIDailyMessageLimitProperty(Map<String, dynamic> json) =>
     int.tryParse(json['aiDailyMessageLimit']?.first?['value'] ?? '0') ?? 0;
 
 bool _getIsASLProperty(Map<String, dynamic> json) =>
-    bool.tryParse(json['aslUser']?.first?['value'].toString() ?? 'false') ??
+    (json['routingGroup'] as List?)?.any(
+      (element) => element['value']?.toString() == 'ASL required',
+    ) ??
     false;
 
 AiLanguageLevel _getAILanguageLevelProperty(Map<String, dynamic> json) =>
