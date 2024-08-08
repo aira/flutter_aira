@@ -551,6 +551,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     Map<String, dynamic> gpsLocationData = {
       'userId': _serviceRequest.userId,
+      'clientId': _client.clientId,
       'lt': position.latitude,
       'lg': position.longitude,
     };
