@@ -45,6 +45,8 @@ class PlatformClient {
 
   String get _token => _session!.token;
 
+  String get clientId => _config.clientId;
+
   MessagingClient? get messagingClient => _messagingClient;
 
   final Throttler _lastLocationUpdateThrottler =
