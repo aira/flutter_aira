@@ -9,7 +9,7 @@ enum UserProperty {
   buildAiProgramJoined,
   aiLanguageLevel,
   aiVerbosity,
+  googleEmail,
+  appleEmail,
   ;
-
-  String get name => toString().split('.').last;
 }
