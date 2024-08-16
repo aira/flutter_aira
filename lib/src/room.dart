@@ -836,6 +836,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await connection.connect(
         _serviceRequest.stunServers,
         _serviceRequest.turnServers,
+        _serviceRequest.iceServers,
         incomingTrackKind: kind,
       );
     } else {
@@ -852,6 +853,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       await connection.connect(
         _serviceRequest.stunServers,
         _serviceRequest.turnServers,
+        _serviceRequest.iceServers,
         outgoingAudioTrack: outgoingAudioTrack,
         outgoingVideoTrack: outgoingVideoTrack,
       );
