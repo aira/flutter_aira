@@ -51,13 +51,14 @@ class SfuConnection {
   /// Connects to the SFU.
   Future<void> connect(
     List<dynamic> stunServers,
-    List<dynamic> turnServers, {
+    List<dynamic> turnServers,
+    List<dynamic> iceServers, {
     MediaStreamTrack? outgoingAudioTrack,
     MediaStreamTrack? outgoingVideoTrack,
     TrackKind? incomingTrackKind,
   }) async {
     Map<String, dynamic> configuration =
-        _getConfiguration(stunServers, turnServers);
+        _getConfiguration(stunServers, turnServers, iceServers);
 
     // Create the peer connection.
     _peerConnection = await createPeerConnection(configuration)
@@ -191,26 +192,34 @@ class SfuConnection {
   Map<String, dynamic> _getConfiguration(
     List<dynamic> stunServers,
     List<dynamic> turnServers,
+    List<dynamic> iceServers,
   ) {
     Map<String, dynamic> configuration = {
       'sdpSemantics': 'unified-plan',
     };
 
-    List<dynamic> iceServers = [];
+    if (iceServers.isNotEmpty) {
+      // We have a server defined set of ice servers, so we use them verbatim.
+      configuration['iceServers'] = iceServers;
+    } else {
+      // Server didn't specify ice servers directly, so we build ice servers
+      // from the given stun and turn servers.
+      List<dynamic> iceServers = [];
 
-    for (Map<String, dynamic> stunServer in stunServers) {
-      iceServers.add({'urls': 'stun:${stunServer['address']}'});
+      for (Map<String, dynamic> stunServer in stunServers) {
+        iceServers.add({'urls': 'stun:${stunServer['address']}'});
+      }
+
+      for (Map<String, dynamic> turnServer in turnServers) {
+        iceServers.add({
+          'urls': 'turn:${turnServer['address']}',
+          'username': turnServer['username'],
+          'credential': turnServer['password'],
+        });
+      }
+
+      configuration['iceServers'] = iceServers;
     }
-
-    for (Map<String, dynamic> turnServer in turnServers) {
-      iceServers.add({
-        'urls': 'turn:${turnServer['address']}',
-        'username': turnServer['username'],
-        'credential': turnServer['password'],
-      });
-    }
-
-    configuration['iceServers'] = iceServers;
 
     return configuration;
   }

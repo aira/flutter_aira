@@ -19,6 +19,9 @@ class ServiceRequest {
   final int userId;
   final List<dynamic> stunServers;
   final List<dynamic> turnServers;
+  /// If iceService is not empty, it should be used instead of building the
+  /// ice server list from stunServers and turnServers.
+  final List<dynamic> iceServers;
 
   ServiceRequest.fromJson(Map<String, dynamic> json)
       : id = json['serviceId'],
@@ -26,5 +29,6 @@ class ServiceRequest {
         roomId = json['webrtcRoomId'],
         userId = json['userId'],
         stunServers = json['stunServers'],
-        turnServers = json['turnServers'];
+        turnServers = json['turnServers'],
+        iceServers = json['iceServers'] ?? [];
 }
