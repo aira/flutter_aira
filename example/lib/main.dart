@@ -548,8 +548,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       progressSetState!(() => progressText = 'Waiting for an Aira Agent...');
       _room!.addListener(() {
         if (_room!.serviceRequestState == ServiceRequestState.assigned) {
-          progressSetState!(() =>
-              progressText = 'Connecting to Agent ${_room!.agentsNames}...');
+          progressSetState!(() => progressText =
+              'Connecting to Agent ${_room!.agentsNames.values.lastOrNull.toString()}...');
         } else if (_room!.serviceRequestState == ServiceRequestState.started) {
           // Close the call progress dialog.
           Navigator.pop(context);
@@ -557,7 +557,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           // Rebuild the UI.
           setState(() {});
 
-          _showSnackBar('Connected to Agent ${_room!.agentsNames}');
+          _showSnackBar(
+              'Connected to Agent ${_room!.agentsNames.values.lastOrNull}');
         } else if (_room!.serviceRequestState == ServiceRequestState.ended) {
           // The call was ended by the Agent or Platform, so hang up.
           _hangUp();
