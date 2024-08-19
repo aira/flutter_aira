@@ -549,7 +549,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       _room!.addListener(() {
         if (_room!.serviceRequestState == ServiceRequestState.assigned) {
           progressSetState!(() =>
-              progressText = 'Connecting to Agent ${_room!.agentName}...');
+              progressText = 'Connecting to Agent ${_room!.agentsNames}...');
         } else if (_room!.serviceRequestState == ServiceRequestState.started) {
           // Close the call progress dialog.
           Navigator.pop(context);
@@ -557,7 +557,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
           // Rebuild the UI.
           setState(() {});
 
-          _showSnackBar('Connected to Agent ${_room!.agentName}');
+          _showSnackBar('Connected to Agent ${_room!.agentsNames}');
         } else if (_room!.serviceRequestState == ServiceRequestState.ended) {
           // The call was ended by the Agent or Platform, so hang up.
           _hangUp();

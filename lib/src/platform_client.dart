@@ -400,6 +400,7 @@ class PlatformClient {
           .split(' ')
           .first, // Split the first name and last initial.
       'status': response['serviceStatus'],
+      'agentId': response['agentId'].toString()
     };
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_aira/flutter_aira.dart';
@@ -68,7 +69,7 @@ abstract class Room implements Listenable {
   /// The name of the Agent assigned to the service request.
   ///
   /// If the service request has not yet been assigned, this will return `null`.
-  String? get agentName;
+  Map<String, String> get agentsNames;
 
   /// Getter providing the [MessagingClient].
   ///
@@ -145,6 +146,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final Map<int, SfuConnection> _connectionByTrackId = {};
   final Map<int, int> _incomingTrackIdByOutgoingTrackId = {};
+  final Map<String, List<int>> _tracksByAgentId = {};
 
   bool _isDisposed = false;
   bool _isAudioMuted = false;
@@ -155,7 +157,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   bool get _isPresenting => null != _presentationStream;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
-  String? _agentName;
+  final Map<String, String> _agentsNames = {};
+
   MediaStream? _localStream;
   int? _localTrackId;
   Timer? _getServiceRequestStatusTimer;
@@ -288,7 +291,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   ServiceRequestState get serviceRequestState => _serviceRequestState;
 
   @override
-  String? get agentName => _agentName;
+  Map<String, String> get agentsNames => _agentsNames;
 
   @override
   bool get isAudioMuted => _isAudioMuted;
@@ -687,7 +690,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
               'type=${participantMessage.type} track_id=${participantMessage.trackId}');
         }
         break;
-
       case ParticipantMessageType.INCOMING_TRACK_CREATE:
         await _createIncomingTrack(
           participantMessage.trackId,
@@ -727,6 +729,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     await _updateServiceRequestStatus(
       response['status']!,
       response['agentFirstName'],
+      response['agentId'],
     );
   }
 
@@ -734,12 +737,17 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Map<String, dynamic> json = jsonDecode(message);
     if (json['id'] != _serviceRequest.id) return;
 
-    await _updateServiceRequestStatus(json['status'], json['agentFirstName']);
+    await _updateServiceRequestStatus(
+      json['status'],
+      json['agentFirstName'],
+      json['agentId'].toString(),
+    );
   }
 
   Future<void> _updateServiceRequestStatus(
     String status,
     String? agentFirstName,
+    String? agentId,
   ) async {
     _log.info('updating service request status=$status');
 
@@ -751,9 +759,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
       case 'ASSIGNED':
         if (_serviceRequestState == ServiceRequestState.queued) {
           _serviceRequestState = ServiceRequestState.assigned;
-          _agentName = agentFirstName;
+          _agentsNames[agentId!] = agentFirstName!;
           notifyListeners();
+          break;
         }
+        _agentsNames[agentId!] = agentFirstName!;
         break;
 
       case 'STARTED':
@@ -763,7 +773,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
           _log.warning(
             'missed service request status message topic=$_serviceRequestPresenceTopic',
           );
-          await _updateServiceRequestStatus('ASSIGNED', agentFirstName);
+          await _updateServiceRequestStatus(
+            'ASSIGNED',
+            agentFirstName,
+            agentId,
+          );
         } else if (_serviceRequestState == ServiceRequestState.assigned) {
           _serviceRequestState = ServiceRequestState.started;
           notifyListeners();
@@ -793,7 +807,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
       // Handles the case when the Agent leaves the room on a call transfer, name is turned to null to represent that agent is no longer in the call
       case 'LEFT':
-        _agentName = null;
+        _agentsNames.remove(agentId.toString());
+        final tracks = _tracksByAgentId[agentId];
+        tracks?.forEach((trackId) async {
+          await _roomHandler.removeRemoteStream(trackId);
+        });
         notifyListeners();
         break;
 
@@ -819,6 +837,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       // We've already connected the track.
       return;
     }
+
     SfuConnection connection = SfuConnection(
       direction: stream != null
           ? SfuConnectionDirection.outgoing
@@ -919,6 +938,13 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
     await _roomHandler.addRemoteStream(trackId, event.streams[0]);
+    // adds latest incoming tracks to the last agent
+    final currentAgent = agentsNames.keys.last;
+    if (_tracksByAgentId[currentAgent] == null) {
+      _tracksByAgentId[currentAgent] = [trackId];
+    } else {
+      _tracksByAgentId[currentAgent]!.add(trackId);
+    }
   }
 
   Future<void> _updateParticipantStatus() async {
@@ -1004,7 +1030,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _log.info('created outgoing track id=${track.id}');
 
     _localTrackId = track.id;
-
     await _connectTrack(
       _localTrackId!,
       _isPresenting ? _presentationStream : _localStream,
@@ -1041,7 +1066,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
     await _roomHandler.removeRemoteStream(incomingTrackId);
-
+    _removeTracksByAgent(incomingTrackId);
     SfuConnection? connection = _connectionByTrackId.remove(incomingTrackId);
     if (connection != null) {
       await connection.dispose();
@@ -1081,6 +1106,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       }
       _connectionByTrackId.clear();
       _incomingTrackIdByOutgoingTrackId.clear();
+      _tracksByAgentId.clear();
 
       // Create and connect new tracks to receive the remote streams from the other participant(s). (Do this before our
       // local stream, since we want to be able to hear the Agent ASAP.)
@@ -1106,5 +1132,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
     } finally {
       _isReconnecting = false;
     }
+  }
+
+  void _removeTracksByAgent(int incomingTrackId) {
+    _tracksByAgentId.removeWhere((key, value) {
+      return value.firstWhereOrNull((item) => item == incomingTrackId) != null;
+    });
   }
 }
