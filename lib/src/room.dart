@@ -939,12 +939,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
     await _roomHandler.addRemoteStream(trackId, event.streams[0]);
     // adds latest incoming tracks to the last agent
-    final currentAgent = agentsNames.keys.last;
-    if (_tracksByAgentId[currentAgent] == null) {
-      _tracksByAgentId[currentAgent] = [trackId];
-    } else {
-      _tracksByAgentId[currentAgent]!.add(trackId);
-    }
+    final currentAgentId = agentsNames.keys.last;
+    _tracksByAgentId.putIfAbsent(currentAgentId, () => []).add(trackId);
   }
 
   Future<void> _updateParticipantStatus() async {
