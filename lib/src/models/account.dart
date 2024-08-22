@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 enum AccountType {
   /// A business account.
   business,
@@ -15,21 +17,20 @@ enum AccountType {
   }
 }
 
-enum AccessAi {
+enum AccessAiRestriction {
   fullAccess('FULL_ACCESS'),
   noHistory('NO_HISTORY'),
   noAccess('NO_ACCESS');
 
   final String value;
 
-  const AccessAi(this.value);
+  const AccessAiRestriction(this.value);
 
-  /// Gets the [AccessAi] from the given value.
+  /// Gets the [AccessAiRestriction] from the given value.
   ///
-  /// If the value is not found, [noAccess] is returned.
-  static AccessAi fromValue(String? value) {
-    return AccessAi.values
-        .firstWhere((e) => e.value == value, orElse: () => AccessAi.noAccess);
+  /// If the value is not found, [null] is returned.
+  static AccessAiRestriction? fromValue(String? value) {
+    return AccessAiRestriction.values.firstWhereOrNull((e) => e.value == value);
   }
 }
 
@@ -39,11 +40,11 @@ class Account {
   final AccountType type;
 
   ///The Account(Profile) access limitations to AccessAI.
-  final AccessAi? accessAI;
+  final AccessAiRestriction? accessAI;
 
   Account.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         name = json['name'],
         type = AccountType.fromName(json['accountType']),
-        accessAI = AccessAi.fromValue(json['accessAi']);
+        accessAI = AccessAiRestriction.fromValue(json['accessAi']);
 }
