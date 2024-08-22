@@ -7,7 +7,7 @@ export 'src/models/access_offer.dart'
         AccountDetails,
         SiteAddress,
         AccessOfferGPSResponse;
-export 'src/models/account.dart' show Account, AccessAi, AccountType;
+export 'src/models/account.dart' show Account, AccessAiRestriction, AccountType;
 export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/callHistory/build_ai.dart'
     show BuildAi, BuildAiStatus, NotAllowSharingReason;
