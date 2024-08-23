@@ -16,8 +16,8 @@ class Track {
   // determining kind of incoming track based on nullity check of audio and video type
   // only one is not null for incoming track
   TrackKind? get kind {
-    if (audioType != null) return TrackKind.audio;
-    if (videoType != null) return TrackKind.video;
+    if (audioType != null && audioType!.isNotEmpty) return TrackKind.audio;
+    if (videoType != null && videoType!.isNotEmpty) return TrackKind.video;
     return null;
   }
 
