@@ -1100,10 +1100,14 @@ class KurentoRoom extends ChangeNotifier implements Room {
       for (SfuConnection connection in _connectionByTrackId.values) {
         await connection.dispose();
       }
+
+      _connectionByTrackId.keys.forEach((trackId) async {
+        await _roomHandler.removeRemoteStream(trackId);
+      });
+
       _connectionByTrackId.clear();
       _incomingTrackIdByOutgoingTrackId.clear();
       _tracksByAgentId.clear();
-
       // Create and connect new tracks to receive the remote streams from the other participant(s). (Do this before our
       // local stream, since we want to be able to hear the Agent ASAP.)
       for (Participant participant
