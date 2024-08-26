@@ -157,7 +157,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   bool get _isPresenting => null != _presentationStream;
   ServiceRequestState _serviceRequestState = ServiceRequestState.queued;
-  final Map<String, String> _agentsNames = {};
+  final Map<String, String> _agentsName = {};
 
   MediaStream? _localStream;
   int? _localTrackId;
@@ -291,7 +291,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   ServiceRequestState get serviceRequestState => _serviceRequestState;
 
   @override
-  Map<String, String> get agentsName => _agentsNames;
+  Map<String, String> get agentsName => _agentsName;
 
   @override
   bool get isAudioMuted => _isAudioMuted;
@@ -759,11 +759,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
       case 'ASSIGNED':
         if (_serviceRequestState == ServiceRequestState.queued) {
           _serviceRequestState = ServiceRequestState.assigned;
-          _agentsNames[agentId!] = agentFirstName!;
+          _agentsName[agentId!] = agentFirstName!;
           notifyListeners();
           break;
         }
-        _agentsNames[agentId!] = agentFirstName!;
+        _agentsName[agentId!] = agentFirstName!;
         break;
 
       case 'STARTED':
@@ -807,7 +807,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         break;
       // Handles the case when the Agent leaves the room on a call transfer, name is turned to null to represent that agent is no longer in the call
       case 'LEFT':
-        _agentsNames.remove(agentId.toString());
+        _agentsName.remove(agentId.toString());
         final tracks = _tracksByAgentId[agentId];
         tracks?.forEach((trackId) async {
           await _roomHandler.removeRemoteStream(trackId);
