@@ -69,7 +69,7 @@ abstract class Room implements Listenable {
   /// The name of the Agent assigned to the service request.
   ///
   /// If the service request has not yet been assigned, this will return `null`.
-  Map<String, String> get agentsNames;
+  Map<String, String> get agentsName;
 
   /// Getter providing the [MessagingClient].
   ///
@@ -291,7 +291,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   ServiceRequestState get serviceRequestState => _serviceRequestState;
 
   @override
-  Map<String, String> get agentsNames => _agentsNames;
+  Map<String, String> get agentsName => _agentsNames;
 
   @override
   bool get isAudioMuted => _isAudioMuted;
@@ -939,7 +939,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   Future<void> _handleTrack(int trackId, RTCTrackEvent event) async {
     await _roomHandler.addRemoteStream(trackId, event.streams[0]);
     // adds latest incoming tracks to the last agent
-    final currentAgentId = agentsNames.keys.last;
+    final currentAgentId = agentsName.keys.last;
     _tracksByAgentId.putIfAbsent(currentAgentId, () => []).add(trackId);
   }
 
