@@ -1,3 +1,5 @@
+import 'package:flutter_aira/src/extension/string_extension.dart';
+
 class Track {
   int id;
   int participantId;
@@ -14,10 +16,10 @@ class Track {
         videoType = json['video'];
 
   // determining kind of incoming track based on nullity check of audio and video type
-  // only one is not null for incoming track
+  // only one is not null for ``incoming track``
   TrackKind? get kind {
-    if (audioType != null && audioType!.isNotEmpty) return TrackKind.audio;
-    if (videoType != null && videoType!.isNotEmpty) return TrackKind.video;
+    if (audioType.isNotNullOrEmpty) return TrackKind.audio;
+    if (videoType.isNotNullOrEmpty) return TrackKind.video;
     return null;
   }
 
