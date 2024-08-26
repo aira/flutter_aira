@@ -808,10 +808,11 @@ class KurentoRoom extends ChangeNotifier implements Room {
       // Handles the case when the Agent leaves the room on a call transfer, name is turned to null to represent that agent is no longer in the call
       case 'LEFT':
         _agentsName.remove(agentId.toString());
-        final tracks = _tracksByAgentId[agentId];
-        tracks?.forEach((trackId) async {
+        final trackIds = _tracksByAgentId[agentId];
+        for (var trackId in trackIds!) {
           await _roomHandler.removeRemoteStream(trackId);
-        });
+          _removeTracksOfAgent(trackId);
+        }
         notifyListeners();
         break;
 
@@ -1062,7 +1063,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       return;
     }
     await _roomHandler.removeRemoteStream(incomingTrackId);
-    _removeTracksByAgent(incomingTrackId);
+    _removeTracksOfAgent(incomingTrackId);
     SfuConnection? connection = _connectionByTrackId.remove(incomingTrackId);
     if (connection != null) {
       await connection.dispose();
@@ -1134,7 +1135,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     }
   }
 
-  void _removeTracksByAgent(int incomingTrackId) {
+  void _removeTracksOfAgent(int incomingTrackId) {
     _tracksByAgentId.removeWhere((key, value) {
       return value.contains(incomingTrackId);
     });
