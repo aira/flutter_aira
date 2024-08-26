@@ -1136,7 +1136,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   void _removeTracksByAgent(int incomingTrackId) {
     _tracksByAgentId.removeWhere((key, value) {
-      return value.firstWhereOrNull((item) => item == incomingTrackId) != null;
+      return value.contains(incomingTrackId);
     });
   }
 }
