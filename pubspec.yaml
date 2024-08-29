@@ -1,6 +1,6 @@
 name: flutter_aira
 description: The Aira Flutter SDK.
-version: 2.14.2
+version: 2.15.0
 homepage: https://github.com/aira/flutter_aira
 
 environment:

@@ -236,6 +236,8 @@ class PlatformClient {
     Credentials credentials, {
     List<Language>? preferredLanguages,
     String? referralCode,
+    String? firstName,
+    String? lastName,
   }) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
@@ -246,6 +248,8 @@ class PlatformClient {
       'referralCode': referralCode ?? '',
       'tosAccepted': true,
       'verificationCode': credentials.password,
+      if (firstName != null && firstName.isNotEmpty) 'firstName': firstName,
+      if (lastName != null && lastName.isNotEmpty) 'lastName': lastName,
     });
 
     await _httpPost('/api/order/guest/basic', body);
