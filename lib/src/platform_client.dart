@@ -1503,7 +1503,7 @@ class PlatformClient {
     if (errorCode == 'SEC-001') {
       return const PlatformInvalidTokenException();
     }
-    final errorMessage = json['response']?['errorMessage'];
+    final errorMessage = json['response']?['errorMessage'] as String? ?? '';
     final metadataConnection = json['metadata']?['connection'];
     if (errorCode == 'AIRA-ACCESS-017' && metadataConnection != null) {
       return PlatformBusinessLoginRequiredException(
@@ -1515,7 +1515,7 @@ class PlatformClient {
     if (errorCode == 'KN-UM-065') {
       return PlatformDeleteAccountException(errorCode, errorMessage);
     }
-    if (json['response']?['errorMessage'] != null) {
+    if (errorMessage.isNotEmpty) {
       return PlatformLocalizedException(errorCode, errorMessage);
     }
     return PlatformUnknownException('Platform returned unexpected body: $body');
