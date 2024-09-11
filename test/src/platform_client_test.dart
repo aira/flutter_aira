@@ -91,12 +91,12 @@ void main() {
       });
 
       test(
-          'should return PlatformLocalizedException if errorMessage is not null',
+          'should return PlatformLocalizedException if errorMessage is not empty',
           () {
         final json = {
           'response': {
-            'errorCode': 'KN-UM-065',
-            'errorMessage': '',
+            'errorCode': 'some-error-code',
+            'errorMessage': 'non-empty-error-message',
           },
         };
         final e = PlatformClient.getExceptionFromApiResponse(
@@ -105,8 +105,8 @@ void main() {
         );
         expect(e, isA<PlatformLocalizedException>());
         if (e is PlatformLocalizedException) {
-          expect(e.code, 'KN-UM-065');
-          expect(e.toString(), isEmpty);
+          expect(e.code, 'some-error-code');
+          expect(e.toString(), 'non-empty-error-message');
         }
       });
     });
