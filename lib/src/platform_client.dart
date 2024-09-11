@@ -1112,6 +1112,7 @@ class PlatformClient {
   /// `token` is the Base64-encoded Apple Push Notification service (APNs) device token on iOS or the Firebase Cloud
   /// Messaging (FCM) registration token on Android. It can be obtained using the
   /// [`plain_notification_token`](https://pub.dev/packages/plain_notification_token) package.
+  @Deprecated('Use `registerFcmToken` instead.')
   Future<void> registerPushToken(String token) async {
     _verifyIsLoggedIn();
 
@@ -1125,6 +1126,23 @@ class PlatformClient {
     });
 
     await _httpPost('/api/smartapp/token', body);
+  }
+
+  /// Send FCM token to the backend for sending push notifications.
+  /// [fcmToken] is Firebase Cloud Messaging (FCM) registration token.
+  Future<void> registerFcmToken(String fcmToken) async {
+    _verifyIsLoggedIn();
+
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+      throw UnsupportedError('Unsupported platform');
+    }
+
+    String body = jsonEncode({
+      'token': fcmToken,
+      'type': Platform.isAndroid ? 'ANDROID' : 'IOS',
+    });
+
+    await _httpPost('/api/smartapp/fcmtoken', body);
   }
 
   /// Requests Platform if there is an available Site Offer at the current position.
