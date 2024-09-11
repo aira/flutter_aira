@@ -1480,33 +1480,45 @@ class PlatformClient {
       json = {};
     }
 
-    if (json['response']?['status'] == 'SUCCESS') {
+    final exception = getExceptionFromApiResponse(json: json, body: body);
+    if (exception == null) {
       return json;
-    } else if (json['response']?['errorCode'] == 'SEC-001') {
-      _session = null;
-      throw const PlatformInvalidTokenException();
-    } else if (json['response']?['errorCode'] == 'AIRA-ACCESS-017' &&
-        json['metadata']?['connection'] != null) {
-      throw PlatformBusinessLoginRequiredException(
-        json['response']['errorCode'],
-        json['response']['errorMessage'],
-        json['metadata']['connection'],
-      );
-    } else if (json['response']?['errorCode'] == 'KN-UM-065') {
-      throw PlatformDeleteAccountException(
-        json['response']['errorCode'],
-        json['response']['errorMessage'],
-      );
-    } else if (json['response']?['errorMessage'] != null) {
-      throw PlatformLocalizedException(
-        json['response']?['errorCode'],
-        json['response']['errorMessage'],
-      );
     } else {
-      throw PlatformUnknownException(
-        'Platform returned unexpected body: $body',
+      if (exception is PlatformInvalidTokenException) {
+        _session = null;
+      }
+      throw exception;
+    }
+  }
+
+  @visibleForTesting
+  static Exception? getExceptionFromApiResponse({
+    required Map<String, dynamic> json,
+    required String body,
+  }) {
+    if (json['response']?['status'] == 'SUCCESS') {
+      return null;
+    }
+    final errorCode = json['response']?['errorCode'];
+    if (errorCode == 'SEC-001') {
+      return const PlatformInvalidTokenException();
+    }
+    final errorMessage = json['response']?['errorMessage'];
+    final metadataConnection = json['metadata']?['connection'];
+    if (errorCode == 'AIRA-ACCESS-017' && metadataConnection != null) {
+      return PlatformBusinessLoginRequiredException(
+        errorCode,
+        errorMessage,
+        metadataConnection,
       );
     }
+    if (errorCode == 'KN-UM-065') {
+      return PlatformDeleteAccountException(errorCode, errorMessage);
+    }
+    if (json['response']?['errorMessage'] != null) {
+      return PlatformLocalizedException(errorCode, errorMessage);
+    }
+    return PlatformUnknownException('Platform returned unexpected body: $body');
   }
 }
 
