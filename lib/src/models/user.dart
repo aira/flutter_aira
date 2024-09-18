@@ -21,6 +21,7 @@ class User {
   final String? appleEmail;
   final bool? buildAiProgramJoined;
   final bool? showReferrerRewardSplash;
+  final bool? hasMetaGlasses;
 
   User({
     required this.id,
@@ -41,6 +42,7 @@ class User {
     this.googleEmail,
     this.buildAiProgramJoined,
     this.showReferrerRewardSplash,
+    this.hasMetaGlasses,
   });
 
   User.fromJson(Map<String, dynamic> json)
@@ -71,7 +73,8 @@ class User {
         appleEmail = _getProperty(json, 'appleEmail'),
         buildAiProgramJoined = _getProperty(json, 'buildAiProgramJoined'),
         showReferrerRewardSplash =
-            _getProperty(json, 'showReferrerRewardSplash');
+            _getProperty(json, 'showReferrerRewardSplash'),
+        hasMetaGlasses = _getProperty(json, 'hasMetaGlasses');
 
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
