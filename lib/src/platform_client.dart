@@ -282,6 +282,7 @@ class PlatformClient {
     int? accessOfferId,
     AccessOfferType? accessOfferType,
     String? chatRoomId,
+    List<String>? intents,
   }) async {
     _verifyIsLoggedIn();
 
@@ -293,6 +294,7 @@ class PlatformClient {
       'device': await _deviceContext,
       'permissions': {'location': position != null},
       'intent': 'NONE',
+      'intents': intents,
     };
 
     Map<String, dynamic> params = {
