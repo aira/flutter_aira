@@ -203,7 +203,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
   }
 
   void _sendMessage() async {
-    _room!.messagingClient!.sendMessage(_messageController.text);
+    // You may send message here ...
 
     setState(() => _messageController.clear());
 
@@ -568,11 +568,8 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
       });
 
       if (_isMessagingEnabled) {
-        _room!.messagingClient!.messageStream.listen((Message message) {
-          if (message.isRemote) {
-            _showSnackBar('Agent: ${message.text}');
-          }
-        });
+        // you may listen for messages here ...
+        // to show snack bar when a message is received etc.
       }
 
       _room!.onReconnect = () => _showSnackBar('Reconnecting');

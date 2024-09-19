@@ -8,8 +8,6 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
-import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
@@ -39,15 +37,12 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  MessagingClientPubNub? _messagingClient;
 
   int get _userId => _session!.userId;
 
   String get _token => _session!.token;
 
   String get clientId => _config.clientId;
-
-  MessagingClient? get messagingClient => _messagingClient;
 
   final Throttler _lastLocationUpdateThrottler =
       Throttler(delay: 2000); // every 2 seconds
@@ -58,7 +53,6 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
-    _messagingClient?.dispose();
   }
 
   /// Sends a verification code to a phone number.
@@ -172,8 +166,6 @@ class PlatformClient {
 
       _session = Session.fromJson(response);
 
-      await _initMessagingClient();
-
       return _session!;
     } on PlatformLocalizedException catch (e) {
       // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
@@ -197,8 +189,6 @@ class PlatformClient {
     });
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
-
-    await _initMessagingClient();
 
     return _session!;
   }
@@ -321,10 +311,6 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
-    if (preCallMessage.isNotEmpty) {
-      await _sendPreCallMessage(message, fileMap);
-    }
-
     ServiceRequest serviceRequest = ServiceRequest.fromJson(
       await _httpPost(
         '/api/user/$_userId/service-request',
@@ -332,56 +318,13 @@ class PlatformClient {
       ),
     );
 
-    _messagingClient?.serviceRequestId = serviceRequest.id;
-
     return KurentoRoom.create(
       _config.environment,
       this,
       _session!,
-      _messagingClient,
       serviceRequest,
       roomHandler,
     );
-  }
-
-  Future<List<String>> _sendPreCallMessage(
-    String? text,
-    Map<String, List<int>>? fileMap,
-  ) async {
-    if (null == _messagingClient) {
-      throw UnsupportedError('The application does not support messaging');
-    }
-    _log.finest(
-      'Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})',
-    );
-    String? message = text?.trim();
-    if (null != fileMap && fileMap.isNotEmpty) {
-      if (fileMap.length == 1) {
-        // If we have only one file, send it with the file.
-        var fileEntry = fileMap.entries.first;
-        SentFileInfo fileInfo = await _messagingClient!
-            .sendFile(fileEntry.key, fileEntry.value, text: message);
-        return [fileInfo.id];
-      } else {
-        // if we have multiple files, send them separately from teh message
-        if (null != message && message.isNotEmpty) {
-          // Waiting on first message separately to insure it gets to the server first.
-          await _messagingClient!.sendMessage(message);
-        }
-
-        List<Future<SentFileInfo>> futureFileInfo = fileMap.entries
-            .map((e) => _messagingClient!.sendFile(e.key, e.value))
-            .toList(growable: false);
-        List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
-
-        List<String> fileIds =
-            fileInfoList.map((fi) => fi.id).toList(growable: false);
-        return fileIds;
-      }
-    } else if (null != text && text.isNotEmpty) {
-      await _messagingClient!.sendMessage(text);
-    }
-    return [];
   }
 
   /// Gets the status of a service request.
@@ -1491,15 +1434,6 @@ class PlatformClient {
       throw PlatformUnknownException(
         'Platform returned unexpected body: $body',
       );
-    }
-  }
-
-  Future<void> _initMessagingClient() async {
-    if (_config.messagingKeys != null) {
-      // Initialize the PubNub client.
-      String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      _messagingClient =
-          MessagingClientPubNub(_config.messagingKeys!, _userId, token);
     }
   }
 }
