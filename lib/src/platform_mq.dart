@@ -45,7 +45,7 @@ class PlatformMQImpl implements PlatformMQ {
     String? lastWillTopic,
   }) async {
     _client = mqttsetup.setup(
-      'wss://${env == PlatformEnvironment.dev ? 'dev-' : ''}mqtt.aira.io/ws',
+      'wss://${_getEnvPrefix(env)}mqtt.aira.io/ws',
       _clientId,
     )
       ..autoReconnect = true
@@ -198,5 +198,16 @@ class PlatformMQImpl implements PlatformMQ {
     _log.info('disconnecting client_id=${_client.clientIdentifier}');
     _client.disconnect();
     _callbacksByTopic.clear();
+  }
+
+  String _getEnvPrefix(PlatformEnvironment env) {
+    switch (env) {
+      case PlatformEnvironment.dev:
+        return 'dev-';
+      case PlatformEnvironment.prod:
+        return '';
+      case PlatformEnvironment.staging:
+        return 'staging-';
+    }
   }
 }

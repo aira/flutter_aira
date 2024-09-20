@@ -1358,6 +1358,8 @@ class PlatformClient {
         return 'dev-platform.aira.io';
       case PlatformEnvironment.prod:
         return 'platform.aira.io';
+      case PlatformEnvironment.staging:
+        return 'staging-platform.aira.io';
       default:
         throw UnimplementedError();
     }
@@ -1506,6 +1508,7 @@ class PlatformClient {
 enum PlatformEnvironment {
   dev,
   prod,
+  staging,
   ;
 
   get name => toString().split('.').last;
