@@ -202,12 +202,12 @@ class PlatformMQImpl implements PlatformMQ {
 
   String _getEnvPrefix(PlatformEnvironment env) {
     switch (env) {
+      case PlatformEnvironment.staging:
+        return 'staging-';
       case PlatformEnvironment.dev:
         return 'dev-';
       case PlatformEnvironment.prod:
         return '';
-      case PlatformEnvironment.staging:
-        return 'staging-';
     }
   }
 }
