@@ -257,8 +257,7 @@ class PlatformClient {
   /// If the Explorer has more than one [Profile], specify the [accountId] to use for the service request; if no
   /// [accountId] is specified, the Explorer's default account will be used.
   ///
-  /// The service request can be started with a [message] and/or [fileMap] (a [Map] of file names to bytes). If the
-  /// Explorer will be communicating with messages exclusively, set [cannotTalk] to `true`.
+  ///  If the Explorer will be communicating with messages exclusively, set [cannotTalk] to `true`.
   ///
   /// If the Explorer has allowed access to their location, include their starting [position]. If there is an Aira
   /// Access offer for that location, it will be automatically activated.
@@ -266,8 +265,6 @@ class PlatformClient {
     RoomHandler roomHandler, {
     int? accountId,
     bool? cannotTalk,
-    Map<String, List<int>>? fileMap,
-    String? message,
     Position? position,
     int? accessOfferId,
     AccessOfferType? accessOfferType,
@@ -275,9 +272,6 @@ class PlatformClient {
     List<String>? intents,
   }) async {
     _verifyIsLoggedIn();
-
-    String preCallMessage =
-        '${message ?? ''}${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
@@ -292,8 +286,7 @@ class PlatformClient {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
-      'hasMessage': preCallMessage.isNotEmpty || cannotTalk == true,
-      'message': preCallMessage,
+      'hasMessage': cannotTalk == true,
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
       'chatRoomId': chatRoomId,
