@@ -71,11 +71,6 @@ abstract class Room implements Listenable {
   /// If the service request has not yet been assigned, this will return `null`.
   Map<String, String> get agentsName;
 
-  /// Getter providing the [MessagingClient].
-  ///
-  /// If the application does not support messaging, the returned value will be null.
-  MessagingClient? get messagingClient;
-
   /// Joins the room with the provided local audio and video stream.
   Future<void> join(MediaStream localStream);
 
@@ -129,7 +124,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
     this._env,
     this._client,
     Session session,
-    this.messagingClient,
     this._serviceRequest,
     this._roomHandler,
   );
@@ -140,7 +134,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
   final PlatformClient _client;
   late final PlatformMQ _mq;
   @override
-  final MessagingClient? messagingClient;
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
 
@@ -171,7 +164,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
     PlatformEnvironment env,
     PlatformClient client,
     Session session,
-    MessagingClient? messagingClient,
     ServiceRequest serviceRequest,
     RoomHandler roomHandler,
   ) async {
@@ -179,7 +171,6 @@ class KurentoRoom extends ChangeNotifier implements Room {
       env,
       client,
       session,
-      messagingClient,
       serviceRequest,
       roomHandler,
     );
