@@ -77,6 +77,9 @@ abstract class Room implements Listenable {
   /// Whether the local audio is muted.
   bool get isAudioMuted;
 
+  ///Whether the camera focus is centered.
+  bool? get isCameraFocusCentered;
+
   /// Mutes or un-mutes the local audio.
   Future<void> setAudioMuted(bool muted);
 
@@ -146,6 +149,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
   bool _isVideoMuted = false;
   bool _isPresentationMuted = false;
   bool _isReconnecting = false;
+  bool? _isCameraFocusCentered = false;
   MediaStream? _presentationStream;
 
   bool get _isPresenting => null != _presentationStream;
@@ -286,6 +290,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   bool get isAudioMuted => _isAudioMuted;
+
+  @override
+  bool? get isCameraFocusCentered => _isCameraFocusCentered;
 
   @override
   bool get isVideoMuted => _isVideoMuted;
@@ -617,6 +624,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
         _log.warning('cannot take photo when presenting');
         return;
       }
+      bool isCenterFocus = json['payload']?['centerFocus'] ?? false;
+      _isCameraFocusCentered = isCenterFocus;
 
       try {
         await _client.uploadPhoto(
