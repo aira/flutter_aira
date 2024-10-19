@@ -6,6 +6,7 @@ enum Language {
   English,
   French,
   Spanish,
+  ASL,
   ;
 
   static Language fromString(String value) {
@@ -16,6 +17,8 @@ enum Language {
         return Language.French;
       case 'SPANISH':
         return Language.Spanish;
+      case 'ASL':
+        return Language.ASL;
       default:
         throw UnimplementedError('Unsupported language: $value');
     }
