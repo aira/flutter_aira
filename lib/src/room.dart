@@ -53,6 +53,8 @@ abstract class Room implements Listenable {
   /// wifi, mobile data, bluetooth, ethernet or any other communication means.
   VoidCallback? onConnectionLost;
 
+  VoidCallback? onConnectedSuccessfully;
+
   /// Called when a participant to the call has failed to connect.
   /// [isOutgoingConnection] indicates which type of connection failed.
   void Function(bool isOutgoingConnection)? onConnectionFailed;
@@ -269,6 +271,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   VoidCallback? onReconnectionFailed;
+
+  @override
+  VoidCallback? onConnectedSuccessfully;
 
   @override
   VoidCallback? onConnectionLost;
@@ -888,6 +893,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
     // REVIEW: Should the room expose the connection state (e.g. `isAgentStreamConnected`, `isExplorerStreamConnected`)?
     _log.info('connection state changed track_id=$trackId state=$state');
+    if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+      onConnectedSuccessfully?.call();
+    }
     if (RTCPeerConnectionState.RTCPeerConnectionStateFailed == state) {
       SfuConnection connection = _connectionByTrackId.remove(trackId)!;
       onConnectionFailed
