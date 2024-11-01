@@ -19,6 +19,8 @@ class ServiceRequest {
   final int userId;
   final List<dynamic> stunServers;
   final List<dynamic> turnServers;
+  final bool motionSensorDataCollectionEnabled;
+
   /// If iceService is not empty, it should be used instead of building the
   /// ice server list from stunServers and turnServers.
   final List<dynamic> iceServers;
@@ -30,5 +32,7 @@ class ServiceRequest {
         userId = json['userId'],
         stunServers = json['stunServers'],
         turnServers = json['turnServers'],
-        iceServers = json['iceServers'] ?? [];
+        iceServers = json['iceServers'] ?? [],
+        motionSensorDataCollectionEnabled =
+            json['motionSensorDataCollectionEnabled'] ?? false;
 }

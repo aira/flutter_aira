@@ -6,7 +6,7 @@ import 'dart:typed_data';
 
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
 import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
@@ -342,7 +342,7 @@ class PlatformClient {
           .split(' ')
           .first, // Split the first name and last initial.
       'status': response['serviceStatus'],
-      'agentId': response['agentId'].toString()
+      'agentId': response['agentId'].toString(),
     };
   }
 
@@ -360,6 +360,85 @@ class PlatformClient {
   Future<void> endServiceRequest(int serviceRequestId) async {
     _verifyIsLoggedIn();
     await _httpPut('/api/service-request/$serviceRequestId/END');
+  }
+
+  static Future<void> uploadSensorData({
+    required String apiKey,
+    required String airaToken,
+    required String serviceRequestId,
+    required String platformHost,
+    required int batchNumber,
+    required Map<String, dynamic> body,
+  }) async {
+    // Send the request
+    final uri = Uri.https(
+      platformHost,
+      '/api/service-request/$serviceRequestId/sensors/$batchNumber',
+    );
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'X-Api-Key': apiKey,
+      'X-Aira-Token': airaToken,
+    };
+
+    int attempts = 0;
+    const maxAttempts = 3;
+    const delay = Duration(seconds: 2);
+
+    while (attempts < maxAttempts) {
+      try {
+        final res = await http.post(
+          uri,
+          headers: headers,
+          body: jsonEncode(body),
+        );
+
+        if (res.statusCode == 204) {
+          debugPrint('Sensor data (batch $batchNumber) uploaded successfully.');
+          return;
+        } else {
+          throw Exception(
+            'Failed to upload sensor data (batch $batchNumber): ${res.statusCode}',
+          );
+        }
+      } catch (e) {
+        attempts++;
+        debugPrint('Attempt $attempts (batch $batchNumber) failed: $e');
+        if (attempts >= maxAttempts) {
+          debugPrint('All retry attempts (batch $batchNumber) failed.');
+          break;
+        }
+        await Future.delayed(delay);
+      }
+    }
+  }
+
+  /// Calculate the time offset between the local device and the server.
+  /// If the client is behind the server, the offset will be positive.
+  /// To estimate server time, use `localTime + offset`.
+  /// Returns a pair: (Duration offset, Duration roundTripTime).
+  static Future<(Duration, Duration)> calcTimeOffset({
+    required String apiKey,
+    required String platformHost,
+  }) async {
+    // Fetch server time (response is in milliseconds since epoch)
+    final startTime = DateTime.now();
+    final uri = Uri.https(platformHost, '/api/dashboard/time');
+    final res = await http.get(uri, headers: {'X-Api-Key': apiKey});
+    if (res.statusCode != 200) {
+      throw Exception('Failed to get server time: ${res.statusCode}');
+    }
+    final endTime = DateTime.now();
+    final serverTimeMillis = int.parse(res.body);
+    final serverTime = DateTime.fromMillisecondsSinceEpoch(serverTimeMillis);
+
+    // Calculate the time offset, accounting for network latency
+    final rtt = endTime.difference(startTime);
+    final oneWayDelay = endTime.difference(startTime) ~/ 2;
+    final adjustedServerTime = serverTime.add(oneWayDelay);
+    final offset = adjustedServerTime.difference(endTime);
+    return (offset, rtt);
   }
 
   /// Update service request's Build AI Program allow sharing status.
@@ -464,7 +543,7 @@ class PlatformClient {
   Future<void> uploadPhoto(int serviceRequestId, ByteBuffer photo) async {
     _verifyIsLoggedIn();
 
-    Uri uri = Uri.https(_platformHost, '/api/files/upload');
+    Uri uri = Uri.https(platformHost, '/api/files/upload');
     int traceId = _nextTraceId();
     Map<String, String> headers = await _getHeaders(traceId);
 
@@ -993,7 +1072,7 @@ class PlatformClient {
     // FIXME: This endpoint doesn't return a "classic" `response` with `status`, `errorCode` or `errorMessage`.
     // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
 
-    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/$_userId');
+    Uri uri = Uri.https(platformHost, '/api/lyft/oauth/$_userId');
     int traceId = _nextTraceId();
     Map<String, String> headers = await _getHeaders(traceId);
     http.Response response = await _httpClient.get(uri, headers: headers);
@@ -1011,7 +1090,7 @@ class PlatformClient {
     // If this is ever fixed, it would be nice to use a call to `_httpPost` instead of directly using `_httpClient`.
     int traceId = _nextTraceId();
     Map<String, String> headers = await _getHeaders(traceId);
-    Uri uri = Uri.https(_platformHost, '/api/lyft/oauth/redirect');
+    Uri uri = Uri.https(platformHost, '/api/lyft/oauth/redirect');
     http.Response response = await _httpClient.post(
       uri,
       body: jsonEncode({
@@ -1199,7 +1278,7 @@ class PlatformClient {
     Object? body,
   }) async {
     try {
-      Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
+      Uri uri = Uri.https(platformHost, unencodedPath, queryParameters);
       int traceId = _nextTraceId();
       Map<String, String> headers =
           await _getHeaders(traceId, additionalHeaders: additionalHeaders);
@@ -1288,7 +1367,7 @@ class PlatformClient {
     }
   }
 
-  String get _platformHost {
+  String get platformHost {
     switch (_config.environment) {
       case PlatformEnvironment.dev:
         return 'dev-platform.aira.io';
