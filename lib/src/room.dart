@@ -92,6 +92,9 @@ abstract class Room implements Listenable {
   /// Whether the presentation is muted.
   bool get isPresentationMuted;
 
+  ///Whether the sensor data collection is enabled.
+  bool get isSensorDataCollectionEnabled;
+
   /// Mutes or un-mutes the presentation.
   Future<void> setPresentationMuted(bool muted);
 
@@ -299,6 +302,10 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   bool get isPresentationMuted => _isPresentationMuted;
+
+  @override
+  bool get isSensorDataCollectionEnabled =>
+      _serviceRequest.motionSensorDataCollectionEnabled;
 
   bool get _hasVideoTrack => _localStream?.getVideoTracks().isNotEmpty ?? false;
 
