@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add `motionSensorDataCollectionEnabled` to ServiceRequest to  indicate if motion sensor data should be captured (#148)
 - Add `getMotionSensorData` to PlatformClient to get motion sensor data (#148)
-- 'calcTimeOffset' added to PlatformClient to calculate the time offset between the client and the server (#148)
+- Add `calcTimeOffset` to PlatformClient to calculate the time offset between the client and the server (#148)
 
 ## [2.15.5] - 2024-10-04
 ### Added
