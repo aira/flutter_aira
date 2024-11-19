@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.8] - 2024-11-18
+### Added
+- Add `ringbackUrl` to ServiceRequest to return the MP3 path to the ringback tone ad (#149)
+
 ## [2.15.7] - 2024-10-31
 ### Added
 - Add `motionSensorDataCollectionEnabled` to ServiceRequest to  indicate if motion sensor data should be captured (#148)
