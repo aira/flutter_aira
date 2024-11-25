@@ -290,6 +290,7 @@ class PlatformClient {
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
       'chatRoomId': chatRoomId,
+      'livekitSupported': livekitSupported,
       if (null != accessOfferId && null != accessOfferType)
         'accessOffer': {
           'access': {
