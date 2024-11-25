@@ -262,13 +262,13 @@ class PlatformClient {
   /// If the Explorer has allowed access to their location, include their starting [position]. If there is an Aira
   /// Access offer for that location, it will be automatically activated.
   Future<ServiceRequest> createServiceRequest({
-    Position? position,
-    List<String>? intents,
     int? accountId,
     bool? cannotTalk,
-    String? chatRoomId,
+    Position? position,
     int? accessOfferId,
     AccessOfferType? accessOfferType,
+    String? chatRoomId,
+    List<String>? intents,
     bool livekitSupported = false,
   }) async {
     _verifyIsLoggedIn();
