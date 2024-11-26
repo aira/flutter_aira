@@ -34,8 +34,8 @@ class ServiceRequest {
         participantId = json['userWebrtcParticipantId'],
         roomId = json['webrtcRoomId'],
         userId = json['userId'],
-        stunServers = json['stunServers'],
-        turnServers = json['turnServers'],
+        stunServers = json['stunServers'] ?? [],
+        turnServers = json['turnServers'] ?? [],
         iceServers = json['iceServers'] ?? [],
         motionSensorDataCollectionEnabled =
             json['motionSensorDataCollectionEnabled'] ?? false,
