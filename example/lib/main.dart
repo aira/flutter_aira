@@ -542,7 +542,7 @@ class _MyAppState extends State<MyApp> implements RoomHandler {
 
       // Call Aira.
       _room = await _platformClient!
-          .createServiceRequest(this, accountId: _accountId);
+          .createServiceRequestWithKurento(this, accountId: _accountId);
 
       // Listen for room updates.
       progressSetState!(() => progressText = 'Waiting for an Aira Agent...');
