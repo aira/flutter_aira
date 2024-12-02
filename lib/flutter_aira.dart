@@ -1,3 +1,5 @@
+import 'package:mqtt_client/mqtt_client.dart' show MqttQos;
+
 export 'src/enum/user_property.dart' show UserProperty;
 export 'src/livekit.dart' show LiveKit;
 export 'src/models/access_offer.dart'
@@ -47,4 +49,6 @@ export 'src/platform_exceptions.dart'
         PlatformInvalidTokenException,
         PlatformLocalizedException,
         PlatformUnknownException;
-export 'src/room.dart' show Room, RoomHandler;
+export 'src/room.dart' show Room, RoomHandler, AccessOfferChangeCallback;
+export 'src/platform_mq.dart' show PlatformMQ, PlatformMQImpl, MessageCallback;
+export 'src/models/conversion_extension.dart' show StringConversion;

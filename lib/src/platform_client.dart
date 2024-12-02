@@ -348,7 +348,6 @@ class PlatformClient {
   /// If the `status` is `ASSIGNED`, this will also return the `agentFirstName`.
   ///
   /// This API is not intended for public consumption and is subject to change.
-  @internal
   Future<Map<String, String?>> getServiceRequestStatus(
     int serviceRequestId,
   ) async {
