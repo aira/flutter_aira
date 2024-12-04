@@ -38,6 +38,8 @@ class PlatformClient {
   final PlatformClientConfig _config;
   Session? _session;
 
+  Session? get session => _session;
+
   int get _userId => _session!.userId;
 
   String get _token => _session!.token;

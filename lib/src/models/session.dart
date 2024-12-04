@@ -1,11 +1,11 @@
 class Session {
-  String token;
-  int userId;
-  String? login;
-  String? authProvider;
-  String? email;
-  String? phone;
-  String firebaseCustomToken;
+  final String token;
+  final int userId;
+  final String? login;
+  final String? authProvider;
+  final String? email;
+  final String? phone;
+  final String firebaseCustomToken;
 
   Session({
     required this.token,
