@@ -63,6 +63,9 @@ abstract class Room implements Listenable {
   /// The ID of the service request.
   int get serviceRequestId;
 
+  /// The Id of Room created.
+  String? get id;
+
   /// The state of the service request.
   ServiceRequestState get serviceRequestState;
 
@@ -135,6 +138,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Session session,
     this._serviceRequest,
     this._roomHandler,
+    this._id,
   );
 
   static final Logger _log = Logger('KurentoRoom');
@@ -169,6 +173,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
       _connectivityMonitoringSubscription;
   ConnectivityResult? _currentlyUsedConnectionType;
 
+  final String? _id;
+
   // Factory for creating an initialized room (idea borrowed from https://stackoverflow.com/a/59304510).
   static Future<Room> create(
     PlatformEnvironment env,
@@ -176,6 +182,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     Session session,
     ServiceRequest serviceRequest,
     RoomHandler roomHandler,
+    String? roomId,
   ) async {
     KurentoRoom room = KurentoRoom._(
       env,
@@ -183,6 +190,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
       session,
       serviceRequest,
       roomHandler,
+      roomId,
     );
     try {
       await room._init(session);
@@ -312,6 +320,9 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   String? get ringbackUrl => _serviceRequest.ringbackUrl;
+
+  @override
+  String? get id => _id;
 
   bool get _hasVideoTrack => _localStream?.getVideoTracks().isNotEmpty ?? false;
 
