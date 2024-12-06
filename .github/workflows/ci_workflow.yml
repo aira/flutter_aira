@@ -1,0 +1,51 @@
+name: Flutter CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Flutter
+      - name: Setup Flutter
+        id: flutter-step
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      # Cache dependencies
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
+      # Run Flutter Analyze
+      - name: Flutter Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      # Run Flutter Tests
+      - name: Run Flutter Tests
+        run: flutter test
+
+      # Build Flutter Web
+      - name: Build Flutter Web
+        run: flutter build web --web-renderer html
+

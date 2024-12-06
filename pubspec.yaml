@@ -4,7 +4,7 @@ version: 2.15.7
 homepage: https://github.com/aira/flutter_aira
 
 environment:
-  flutter: ">=3.0.0"
+  flutter: "3.24.1"
   sdk: ">3.0.0"
 
 dependencies:
