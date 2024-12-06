@@ -261,8 +261,7 @@ class PlatformClient {
   ///
   /// If the Explorer has allowed access to their location, include their starting [position]. If there is an Aira
   /// Access offer for that location, it will be automatically activated.
-  Future<Room> createServiceRequest(
-    RoomHandler roomHandler, {
+  Future<ServiceRequest> createServiceRequest({
     int? accountId,
     bool? cannotTalk,
     Position? position,
@@ -270,10 +269,11 @@ class PlatformClient {
     AccessOfferType? accessOfferType,
     String? chatRoomId,
     List<String>? intents,
+    bool livekitSupported = false,
   }) async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> context = {
+    final context = <String, dynamic>{
       'app': await _appContext,
       'device': await _deviceContext,
       'permissions': {'location': position != null},
@@ -281,7 +281,7 @@ class PlatformClient {
       'intents': intents,
     };
 
-    Map<String, dynamic> params = {
+    final params = <String, dynamic>{
       'accountId': accountId,
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
@@ -290,6 +290,7 @@ class PlatformClient {
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
       'chatRoomId': chatRoomId,
+      'livekitSupported': livekitSupported,
       if (null != accessOfferId && null != accessOfferType)
         'accessOffer': {
           'access': {
@@ -304,11 +305,33 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
-    ServiceRequest serviceRequest = ServiceRequest.fromJson(
+    final serviceRequest = ServiceRequest.fromJson(
       await _httpPost(
         '/api/user/$_userId/service-request',
         jsonEncode(params),
       ),
+    );
+    return serviceRequest;
+  }
+
+  Future<Room> createServiceRequestWithKurento(
+    RoomHandler roomHandler, {
+    int? accountId,
+    bool? cannotTalk,
+    Position? position,
+    int? accessOfferId,
+    AccessOfferType? accessOfferType,
+    String? chatRoomId,
+    List<String>? intents,
+  }) async {
+    final serviceRequest = await createServiceRequest(
+      position: position,
+      intents: intents,
+      accountId: accountId,
+      cannotTalk: cannotTalk,
+      chatRoomId: chatRoomId,
+      accessOfferId: accessOfferId,
+      accessOfferType: accessOfferType,
     );
 
     return KurentoRoom.create(

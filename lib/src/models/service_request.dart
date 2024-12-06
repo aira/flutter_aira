@@ -1,3 +1,5 @@
+import 'package:flutter_aira/src/liveKit.dart';
+
 enum ServiceRequestState {
   /// The service request is in the queue.
   queued,
@@ -20,6 +22,8 @@ class ServiceRequest {
   final List<dynamic> stunServers;
   final List<dynamic> turnServers;
   final bool motionSensorDataCollectionEnabled;
+  final String? ringbackUrl;
+  final LiveKit? livekit;
 
   /// If iceService is not empty, it should be used instead of building the
   /// ice server list from stunServers and turnServers.
@@ -30,9 +34,12 @@ class ServiceRequest {
         participantId = json['userWebrtcParticipantId'],
         roomId = json['webrtcRoomId'],
         userId = json['userId'],
-        stunServers = json['stunServers'],
-        turnServers = json['turnServers'],
+        stunServers = json['stunServers'] ?? [],
+        turnServers = json['turnServers'] ?? [],
         iceServers = json['iceServers'] ?? [],
         motionSensorDataCollectionEnabled =
-            json['motionSensorDataCollectionEnabled'] ?? false;
+            json['motionSensorDataCollectionEnabled'] ?? false,
+        ringbackUrl = json['ringbackUrl'],
+        livekit =
+            json['livekit'] == null ? null : LiveKit.fromMap(json['livekit']);
 }
