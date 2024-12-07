@@ -13,26 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Setup Flutter
-      - name: Setup Flutter
-        id: flutter-step
-        uses: subosito/flutter-action@v2
+      - name: Install dependencies
+        uses: ./.github/actions/install_dependencies
         with:
-          channel: stable
-          flutter-version-file: pubspec.yaml
-          cache: true
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          build-number: ${{ needs.unify-run-number.outputs.run_number }}
 
-      - name: Clean Flutter project
-        run: flutter clean
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      # Cache dependencies
       - name: Cache Flutter dependencies
         uses: actions/cache@v4
         with:
@@ -43,15 +32,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-flutter-
 
-      # Run Flutter Analyze
       - name: Flutter Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings .
 
-      # Run Flutter Tests
       - name: Run Flutter Tests
         run: flutter test
 
-      # Build Flutter Web
       - name: Build Flutter Web
         run: flutter build web --web-renderer html
+
+      - name: Cache Flutter build outputs
+        uses: actions/cache@v4
+        with:
+            path: |
+              build/web
+            key: ${{ runner.os }}-flutter-build-web-${{ hashFiles('**/pubspec.yaml') }}
+            restore-keys: |
+              ${{ runner.os }}-flutter-build-web-
 

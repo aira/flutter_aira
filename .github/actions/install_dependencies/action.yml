@@ -1,0 +1,32 @@
+name: "Install dependencies"
+description: Install dep
+inputs:
+  private-key:
+    required: true
+    description: "SSH private key"
+  build-number:
+    required: true
+    description: "Build number offset"
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: set variables
+      shell: bash
+      run: |
+        echo "BUILD_NUMBER=$((${{ inputs.build-number }}))" >> $GITHUB_ENV
+        git config --global core.compression 0
+
+    - name: Add ssh key
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ inputs.private-key }}
+
+    - name: Setup Flutter
+      id: flutter-step
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version-file: pubspec.yaml
+        cache: true
