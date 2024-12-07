@@ -26,11 +26,10 @@ jobs:
           flutter-version-file: pubspec.yaml
           cache: true
 
-      - name: Run flutter doctor
-        run: flutter doctor
+      - name: Clean Flutter project
+        run: flutter clean
 
-        # Install dependencies
-      - name: Install dependencies
+      - name: Get dependencies
         run: flutter pub get
 
       # Cache dependencies
