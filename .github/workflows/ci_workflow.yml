@@ -26,6 +26,13 @@ jobs:
           flutter-version-file: pubspec.yaml
           cache: true
 
+      - name: Check Flutter version
+        run: flutter --version
+
+        # Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
       # Cache dependencies
       - name: Cache Flutter dependencies
         uses: actions/cache@v4
