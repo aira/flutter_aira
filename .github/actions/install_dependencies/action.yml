@@ -12,7 +12,6 @@ runs:
     - name: set variables
       shell: bash
       run: |
-        echo "BUILD_NUMBER=$((${{ inputs.build-number }}))" >> $GITHUB_ENV
         git config --global core.compression 0
 
     - name: Add ssh key
