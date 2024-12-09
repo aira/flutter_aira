@@ -38,6 +38,7 @@ jobs:
         run: flutter test
 
       - name: Build Flutter Web
+        working-directory: example
         run: flutter build web --web-renderer html
 
       - name: Cache Flutter build outputs
