@@ -340,6 +340,7 @@ class PlatformClient {
       _session!,
       serviceRequest,
       roomHandler,
+      chatRoomId,
     );
   }
 
