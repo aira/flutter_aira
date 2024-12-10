@@ -4,8 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.16.0] - 2024-11-25
+## [2.17.0] - 2024-12-09
+### Added
+- Add Github Actions CI workflow (#152)
+- Remove Bitrise badge (#152)
 
+
+## [2.16.0] - 2024-11-25
 ### Added
 
 - Add `livekitSupported` to ServiceRequest for LiveKit support (#150)
