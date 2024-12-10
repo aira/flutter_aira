@@ -21,16 +21,6 @@ jobs:
         with:
           private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-
-
       - name: Flutter Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings .
 
