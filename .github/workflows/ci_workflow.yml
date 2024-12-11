@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  flutter-pr:
+  pr:
     runs-on: ubuntu-latest
 
     steps:
