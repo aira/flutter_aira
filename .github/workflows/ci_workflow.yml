@@ -1,0 +1,42 @@
+name: Flutter CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install_dependencies
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Flutter Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings .
+
+      - name: Run Flutter Tests
+        run: flutter test
+
+      - name: Build Flutter Web
+        working-directory: example
+        run: flutter build web --web-renderer html
+
+      - name: Cache Flutter build outputs
+        uses: actions/cache@v4
+        with:
+            path: |
+              build/web
+            key: ${{ runner.os }}-flutter-build-web-${{ hashFiles('**/pubspec.yaml') }}
+            restore-keys: |
+              ${{ runner.os }}-flutter-build-web-
+

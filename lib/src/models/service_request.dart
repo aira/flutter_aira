@@ -1,4 +1,4 @@
-import 'package:flutter_aira/src/liveKit.dart';
+import 'package:flutter_aira/src/livekit.dart';
 
 enum ServiceRequestState {
   /// The service request is in the queue.
