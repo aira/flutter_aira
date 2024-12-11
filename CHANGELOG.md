@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Github Actions CI workflow (#152)
 - Remove Bitrise badge (#152)
 
+## [2.16.1] - 2024-11-25
+### Added
+- Add `roomId` to Room  (#151)
+- Increase `flutter_webrtc` version to 0.12.3  (#151)
+
 
 ## [2.16.0] - 2024-11-25
 ### Added
-
 - Add `livekitSupported` to ServiceRequest for LiveKit support (#150)
 
 ## [2.15.8] - 2024-11-18
