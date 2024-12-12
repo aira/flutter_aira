@@ -567,6 +567,16 @@ class PlatformClient {
   Future<void> uploadPhoto(int serviceRequestId, ByteBuffer photo) async {
     _verifyIsLoggedIn();
 
+    return uploadPhotoWithUint8List(serviceRequestId, photo.asUint8List());
+  }
+
+  /// Uploads a photo for a service request.
+  Future<void> uploadPhotoWithUint8List(
+    int serviceRequestId,
+    Uint8List photo,
+  ) async {
+    _verifyIsLoggedIn();
+
     Uri uri = Uri.https(platformHost, '/api/files/upload');
     int traceId = _nextTraceId();
     Map<String, String> headers = await _getHeaders(traceId);
@@ -579,7 +589,7 @@ class PlatformClient {
     };
     http.MultipartFile file = http.MultipartFile.fromBytes(
       'file',
-      photo.asUint8List(),
+      photo,
       filename: 'photo', // Unused but required.
     );
 
