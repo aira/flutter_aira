@@ -26,6 +26,7 @@ class PlatformClient {
 
   static const kEmailVerification = 'EMAIL_VERIFICATION';
   static const kPhoneVerification = 'PHONE_VERIFICATION';
+  static const kDeviceKeyVerification = 'DEVICE_KEY';
 
   final _log = Logger('PlatformClient');
 
