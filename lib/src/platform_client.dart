@@ -179,7 +179,10 @@ class PlatformClient {
   }
 
   /// Logs in with [Credentials].
-  Future<Session> loginWithCredentials(Credentials credentials) async {
+  Future<Session> loginWithCredentials(
+    Credentials credentials, {
+    Map<String, dynamic>? extras,
+  }) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
       'device': await _deviceContext,
@@ -187,6 +190,7 @@ class PlatformClient {
       'loginfrom':
           'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
       'password': credentials.password,
+      'extras': extras,
     });
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
