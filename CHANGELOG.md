@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.0] - 2025-01-09
+
+**BREAKING:**
+
+- Rename `kEmailVerification` to `kEmailAuthProviderId`
+- Rename `kPhoneVerification` to `kPhoneAuthProviderId`
+- Rename `kDeviceKeyVerification` to `kMdmAuthProviderId` and change its value to `LOGIN_TOKEN`
+
 ## [2.20.0] - 2025-01-07
 
 - Add `extras` argument to `loginWithCredentials` (#156)
