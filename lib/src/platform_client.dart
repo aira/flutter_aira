@@ -24,9 +24,11 @@ class PlatformClient {
   PlatformClient(this._config, [http.Client? httpClient])
       : _httpClient = httpClient ?? http.Client();
 
-  static const kEmailVerification = 'EMAIL_VERIFICATION';
-  static const kPhoneVerification = 'PHONE_VERIFICATION';
-  static const kDeviceKeyVerification = 'DEVICE_KEY';
+  static const kEmailAuthProviderId = 'EMAIL_VERIFICATION';
+  static const kPhoneAuthProviderId = 'PHONE_VERIFICATION';
+
+  /// The id of the MDM auth provider used in enterprise managed mobile devices.
+  static const kMdmAuthProviderId = 'LOGIN_TOKEN';
 
   final _log = Logger('PlatformClient');
 
@@ -91,7 +93,7 @@ class PlatformClient {
         await _httpPost('/api/smartapp/verify/confirm', body);
 
     return Credentials(
-      PlatformClient.kPhoneVerification,
+      PlatformClient.kPhoneAuthProviderId,
       phoneNumber,
       response['verificationCode'],
       response['newUser'],
@@ -130,7 +132,7 @@ class PlatformClient {
         await _httpPost('/api/smartapp/verify/email/confirm', body);
 
     return Credentials(
-      PlatformClient.kEmailVerification,
+      PlatformClient.kEmailAuthProviderId,
       email,
       response['verificationCode'],
       response['newUser'],
@@ -211,7 +213,7 @@ class PlatformClient {
     );
 
     Credentials credentials = Credentials(
-      PlatformClient.kPhoneVerification,
+      PlatformClient.kPhoneAuthProviderId,
       response['verificationCode'],
       response['phoneVerificationId'].toString(),
       response['newUser'],
