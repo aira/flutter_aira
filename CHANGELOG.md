@@ -6,8 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.21.1] - 2025-01-10
 
-### Fixed
-- Remove no video tracks in call log (#158)
+### Added
+- Add service request id to no video sessions report (#158)
 
 
 ## [2.21.0] - 2025-01-09

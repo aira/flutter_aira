@@ -810,6 +810,19 @@ class KurentoRoom extends ChangeNotifier implements Room {
           // Agent-initiated end message, but the impact of that is low (the Explorer can end the call themselves).
           _getServiceRequestStatusTimer?.cancel();
 
+          final bool hasOutgoingVideoSenderTrack = null != _localTrackId &&
+              _connectionByTrackId[_localTrackId!]?.ownsVideoTrack == true;
+          if (!_hasVideoTrack || !hasOutgoingVideoSenderTrack || isVideoMuted) {
+            _log.shout(
+              'Starting a call without video. '
+              'sid: ${_serviceRequest.id}, '
+              'hasOutgoingVideoSenderTrack: $hasOutgoingVideoSenderTrack, '
+              '_hasVideoTrack: $_hasVideoTrack, '
+              '_localTrackId: ${null == _localTrackId ? 'null' : 'not null'}, '
+              'isVideoMuted: $isVideoMuted',
+            );
+          }
+
           // Now that the Agent has joined the room, publish our participant status.
           await _updateParticipantStatus();
         }
