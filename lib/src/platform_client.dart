@@ -8,8 +8,6 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
-import 'package:flutter_aira/src/messaging_client.dart';
-import 'package:flutter_aira/src/models/sent_file_info.dart';
 import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
@@ -23,7 +21,8 @@ class PlatformClient {
   ///
   /// [httpClient] can be provided if you want to use your own HTTP client (e.g. a
   /// [`SentryHttpClient`](https://docs.sentry.io/platforms/dart/usage/advanced-usage/)).
-  PlatformClient(this._config, [http.Client? httpClient]) : _httpClient = httpClient ?? http.Client();
+  PlatformClient(this._config, [http.Client? httpClient])
+      : _httpClient = httpClient ?? http.Client();
 
   final _log = Logger('PlatformClient');
 
@@ -35,15 +34,13 @@ class PlatformClient {
 
   final PlatformClientConfig _config;
   Session? _session;
-  MessagingClientPubNub? _messagingClient;
 
   int get _userId => _session!.userId;
 
   String get _token => _session!.token;
 
-  MessagingClient? get messagingClient => _messagingClient;
-
-  final Throttler _lastLocationUpdateThrottler = Throttler(delay: 2000); // every 2 seconds
+  final Throttler _lastLocationUpdateThrottler =
+      Throttler(delay: 2000); // every 2 seconds
   AccessOfferDetails? _lastAccessOfferUpdate;
 
   /// Discards any resources associated with the [PlatformClient].
@@ -51,7 +48,6 @@ class PlatformClient {
   /// After this is called, the object is not in a usable state and should be discarded.
   void dispose() {
     _httpClient.close();
-    _messagingClient?.dispose();
   }
 
   /// Sends a verification code to a phone number.
@@ -85,7 +81,8 @@ class PlatformClient {
       'phoneNumber': phoneNumber,
     });
 
-    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/confirm', body);
+    Map<String, dynamic> response =
+        await _httpPost('/api/smartapp/verify/confirm', body);
 
     return Credentials(
       'PHONE_VERIFICATION',
@@ -123,7 +120,8 @@ class PlatformClient {
       'email': email,
     });
 
-    Map<String, dynamic> response = await _httpPost('/api/smartapp/verify/email/confirm', body);
+    Map<String, dynamic> response =
+        await _httpPost('/api/smartapp/verify/email/confirm', body);
 
     return Credentials(
       'EMAIL_VERIFICATION',
@@ -163,8 +161,6 @@ class PlatformClient {
 
       _session = Session(token, userId);
 
-      await _initMessagingClient();
-
       return _session!;
     } on PlatformLocalizedException catch (e) {
       // Platform returns error code KN-UM-056 (NOT_A_USER_TOKEN) if the token is invalid.
@@ -182,13 +178,12 @@ class PlatformClient {
       'authProvider': credentials.provider,
       'device': await _deviceContext,
       'login': credentials.login,
-      'loginfrom': 'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
+      'loginfrom':
+          'AIRA SMART', // Platform knows the Explorer app as "AIRA SMART".
       'password': credentials.password,
     });
 
     _session = Session.fromJson(await _httpPost('/api/user/login', body));
-
-    await _initMessagingClient();
 
     return _session!;
   }
@@ -230,7 +225,9 @@ class PlatformClient {
     String body = jsonEncode({
       'authProvider': credentials.provider,
       'login': credentials.login,
-      'preferredLang': preferredLanguages?.map((language) => language.name).toList(growable: false),
+      'preferredLang': preferredLanguages
+          ?.map((language) => language.name)
+          .toList(growable: false),
       'referralCode': referralCode ?? '',
       'tosAccepted': true,
       'verificationCode': credentials.password,
@@ -251,25 +248,17 @@ class PlatformClient {
   /// If the Explorer has more than one [Profile], specify the [accountId] to use for the service request; if no
   /// [accountId] is specified, the Explorer's default account will be used.
   ///
-  /// The service request can be started with a [message] and/or [fileMap] (a [Map] of file names to bytes). If the
-  /// Explorer will be communicating with messages exclusively, set [cannotTalk] to `true`.
-  ///
   /// If the Explorer has allowed access to their location, include their starting [position]. If there is an Aira
   /// Access offer for that location, it will be automatically activated.
   Future<Room> createServiceRequest(
     RoomHandler roomHandler, {
     int? accountId,
     bool? cannotTalk,
-    Map<String, List<int>>? fileMap,
-    String? message,
     Position? position,
     int? accessOfferId,
     AccessOfferType? accessOfferType,
   }) async {
     _verifyIsLoggedIn();
-
-    String preCallMessage =
-        '${message ?? ''}${fileMap != null && fileMap.isNotEmpty ? ' (With files: ${fileMap.keys.join(', ')})' : ''}';
 
     Map<String, dynamic> context = {
       'app': await _appContext,
@@ -283,8 +272,6 @@ class PlatformClient {
       'context': jsonEncode(context),
       'requestSource': _config.clientId,
       'requestType': 'AIRA', // Required but unused.
-      'hasMessage': preCallMessage.isNotEmpty || cannotTalk == true,
-      'message': preCallMessage,
       'cannotTalk': cannotTalk == true,
       'useWebrtcRoom': true,
       if (null != accessOfferId && null != accessOfferType)
@@ -301,10 +288,6 @@ class PlatformClient {
       params['longitude'] = position.longitude;
     }
 
-    if (preCallMessage.isNotEmpty) {
-      await _sendPreCallMessage(message, fileMap);
-    }
-
     ServiceRequest serviceRequest = ServiceRequest.fromJson(
       await _httpPost(
         '/api/user/$_userId/service-request',
@@ -312,53 +295,13 @@ class PlatformClient {
       ),
     );
 
-    _messagingClient?.serviceRequestId = serviceRequest.id;
-
     return KurentoRoom.create(
       _config.environment,
       this,
       _session!,
-      _messagingClient,
       serviceRequest,
       roomHandler,
     );
-  }
-
-  Future<List<String>> _sendPreCallMessage(
-    String? text,
-    Map<String, List<int>>? fileMap,
-  ) async {
-    if (null == _messagingClient) {
-      throw UnsupportedError('The application does not support messaging');
-    }
-    _log.finest(
-      'Sending pre-call message (message: $text, files: ${fileMap?.keys.join(', ')})',
-    );
-    String? message = text?.trim();
-    if (null != fileMap && fileMap.isNotEmpty) {
-      if (fileMap.length == 1) {
-        // If we have only one file, send it with the file.
-        var fileEntry = fileMap.entries.first;
-        SentFileInfo fileInfo = await _messagingClient!.sendFile(fileEntry.key, fileEntry.value, text: message);
-        return [fileInfo.id];
-      } else {
-        // if we have multiple files, send them separately from teh message
-        if (null != message && message.isNotEmpty) {
-          // Waiting on first message separately to insure it gets to the server first.
-          await _messagingClient!.sendMessage(message);
-        }
-
-        List<Future<SentFileInfo>> futureFileInfo =
-            fileMap.entries.map((e) => _messagingClient!.sendFile(e.key, e.value)).toList(growable: false);
-        List<SentFileInfo> fileInfoList = await Future.wait(futureFileInfo);
-
-        List<String> fileIds = fileInfoList.map((fi) => fi.id).toList(growable: false);
-        return fileIds;
-      }
-    } else if (null != text && text.isNotEmpty) {
-      await _messagingClient!.sendMessage(text);
-    }
-    return [];
   }
 
   /// Gets the status of a service request.
@@ -378,7 +321,10 @@ class PlatformClient {
     );
 
     return {
-      'agentFirstName': response['agentName']?.toString().split(' ').first, // Split the first name and last initial.
+      'agentFirstName': response['agentName']
+          ?.toString()
+          .split(' ')
+          .first, // Split the first name and last initial.
       'status': response['serviceStatus'],
     };
   }
@@ -403,7 +349,8 @@ class PlatformClient {
   Future<List<Participant>> getParticipants(int roomId) async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response = await _httpGet('/api/webrtc/room/$roomId/participant');
+    Map<String, dynamic> response =
+        await _httpGet('/api/webrtc/room/$roomId/participant');
 
     return (response['payload'] as List<dynamic>)
         .map((participant) => Participant.fromJson(participant))
@@ -476,8 +423,8 @@ class PlatformClient {
       }),
       // This is to avoid the legacy logic to show non representative feedback data:
       //   if none of the rating is negative, consider the call to be a success.
-      'taskSuccess':
-          Rating.negative != feedback.agentFeedback?.rating && Rating.negative != feedback.appFeedback?.rating,
+      'taskSuccess': Rating.negative != feedback.agentFeedback?.rating &&
+          Rating.negative != feedback.appFeedback?.rating,
     });
 
     await _httpPost('/api/smartapp/feedback', body);
@@ -545,7 +492,8 @@ class PlatformClient {
   Future<PartialBillingInformation> getPartialBillingInformation() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response = await _httpGet('/api/user/$_userId/billing-info');
+    Map<String, dynamic> response =
+        await _httpGet('/api/user/$_userId/billing-info');
 
     return PartialBillingInformation.fromJson(response);
   }
@@ -573,11 +521,14 @@ class PlatformClient {
   ) async {
     _verifyIsLoggedIn();
 
-    List propertyValues = propertyValue is List ? propertyValue : [propertyValue];
+    List propertyValues =
+        propertyValue is List ? propertyValue : [propertyValue];
     await _httpPut(
       '/api/user/$_userId/property/${propertyName.name}/value',
       body: jsonEncode(
-        propertyValues.map((propertyValue) => {'value': propertyValue}).toList(growable: false),
+        propertyValues
+            .map((propertyValue) => {'value': propertyValue})
+            .toList(growable: false),
       ),
     );
   }
@@ -586,7 +537,8 @@ class PlatformClient {
   Future<List<dynamic>> getUserProperty(UserProperty propertyName) async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> result = await _httpGet('/api/user/$_userId/property/${propertyName.name}/value');
+    Map<String, dynamic> result = await _httpGet(
+        '/api/user/$_userId/property/${propertyName.name}/value');
     List<dynamic>? propertyList = result['payload'];
     return propertyList?.map((m) => m['value']).toList(growable: false) ?? [];
   }
@@ -646,7 +598,9 @@ class PlatformClient {
     return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
-      items: (response['photos'] as List<dynamic>).map((p) => Photo.fromJson(p)).toList(growable: false),
+      items: (response['photos'] as List<dynamic>)
+          .map((p) => Photo.fromJson(p))
+          .toList(growable: false),
     );
   }
 
@@ -663,7 +617,8 @@ class PlatformClient {
   Future<Usage> getUsage() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response = await _httpGet('/api/smartapp/usage/$_userId/v3');
+    Map<String, dynamic> response =
+        await _httpGet('/api/smartapp/usage/$_userId/v3');
     return Usage.fromJson(response);
   }
 
@@ -713,8 +668,10 @@ class PlatformClient {
     Future<Map<String, dynamic>> minuteSharingResponseFuture = _httpGet(
       '/api/account/sharing/$_userId',
     );
-    Map<String, dynamic> minuteSharingResponse = await minuteSharingResponseFuture;
-    minuteSharingResponse['maxAdditionalShared'] = planResponse['maxAdditionalShared'] ?? 0;
+    Map<String, dynamic> minuteSharingResponse =
+        await minuteSharingResponseFuture;
+    minuteSharingResponse['maxAdditionalShared'] =
+        planResponse['maxAdditionalShared'] ?? 0;
     minuteSharingResponse['isGuest'] = isGuest;
     return MinuteSharingInformation.fromJson(minuteSharingResponse);
   }
@@ -898,7 +855,8 @@ class PlatformClient {
     int page, {
     String payloadTag = 'payload',
   }) {
-    Set<String> handledAccessOfferTypes = AccessOfferType.values.map((aot) => aot.name).toSet();
+    Set<String> handledAccessOfferTypes =
+        AccessOfferType.values.map((aot) => aot.name).toSet();
     return Paged(
       page: page,
       hasMore: response['response']['hasMore'],
@@ -1056,9 +1014,11 @@ class PlatformClient {
       'lg': position.longitude,
     });
 
-    Map<String, dynamic> gpsResponse = await _httpPost('/api/user/location', body);
+    Map<String, dynamic> gpsResponse =
+        await _httpPost('/api/user/location', body);
     Map<String, dynamic>? site = gpsResponse['site'];
-    _lastAccessOfferUpdate = null == site ? null : AccessOfferDetails.fromJson(site);
+    _lastAccessOfferUpdate =
+        null == site ? null : AccessOfferDetails.fromJson(site);
     return _lastAccessOfferUpdate;
   }
 
@@ -1082,7 +1042,8 @@ class PlatformClient {
   ///
   /// If an image is provided, it must be encoded as a [data URI](https://en.wikipedia.org/wiki/Data_URI_scheme) (see
   /// [UriData.fromBytes]).
-  Future<ChatMessageInfo> sendChatMessage(int chatId, {String? message, String? image}) async {
+  Future<ChatMessageInfo> sendChatMessage(int chatId,
+      {String? message, String? image}) async {
     assert(message != null || image != null);
 
     _verifyIsLoggedIn();
@@ -1098,7 +1059,8 @@ class PlatformClient {
   }
 
   /// Sends user feedback on the AI response.
-  Future<void> sendChatMessageFeedback(int chatId, int messageId, int rating, String comment) async {
+  Future<void> sendChatMessageFeedback(
+      int chatId, int messageId, int rating, String comment) async {
     _verifyIsLoggedIn();
 
     await _httpPut(
@@ -1112,8 +1074,8 @@ class PlatformClient {
 
   /// Request agent validation for a chat message.
   Future<Map<String, dynamic>> requestAgentValidation(
-     int chatId,
-     int messageId,
+    int chatId,
+    int messageId,
   ) {
     _verifyIsLoggedIn();
 
@@ -1141,7 +1103,8 @@ class PlatformClient {
     try {
       Uri uri = Uri.https(_platformHost, unencodedPath, queryParameters);
       int traceId = _nextTraceId();
-      Map<String, String> headers = await _getHeaders(traceId, additionalHeaders: additionalHeaders);
+      Map<String, String> headers =
+          await _getHeaders(traceId, additionalHeaders: additionalHeaders);
 
       _log.finest(
         'trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}',
@@ -1150,7 +1113,8 @@ class PlatformClient {
       http.Response response;
       switch (method) {
         case 'DELETE':
-          response = await _httpClient.delete(uri, headers: headers, body: body);
+          response =
+              await _httpClient.delete(uri, headers: headers, body: body);
           break;
         case 'GET':
           response = await _httpClient.get(uri, headers: headers);
@@ -1250,7 +1214,8 @@ class PlatformClient {
 
     if (!kIsWeb) {
       // The http package does not automatically set the Accept-Language header on mobile.
-      headers[HttpHeaders.acceptLanguageHeader] = Platform.localeName.replaceAll('_', '-');
+      headers[HttpHeaders.acceptLanguageHeader] =
+          Platform.localeName.replaceAll('_', '-');
     }
 
     if (_session != null) {
@@ -1341,26 +1306,22 @@ class PlatformClient {
     } else if (json['response']?['errorCode'] == 'SEC-001') {
       _session = null;
       throw const PlatformInvalidTokenException();
-    } else if (json['response']?['errorCode'] == 'AIRA-ACCESS-017' && json['metadata']?['connection'] != null) {
+    } else if (json['response']?['errorCode'] == 'AIRA-ACCESS-017' &&
+        json['metadata']?['connection'] != null) {
       throw PlatformBusinessLoginRequiredException(
         json['response']['errorCode'],
         json['response']['errorMessage'],
         json['metadata']['connection'],
       );
     } else if (json['response']?['errorCode'] == 'KN-UM-065') {
-      throw PlatformDeleteAccountException(json['response']['errorCode'], json['response']['errorMessage']);
+      throw PlatformDeleteAccountException(
+          json['response']['errorCode'], json['response']['errorMessage']);
     } else if (json['response']?['errorMessage'] != null) {
-      throw PlatformLocalizedException(json['response']?['errorCode'], json['response']['errorMessage']);
+      throw PlatformLocalizedException(
+          json['response']?['errorCode'], json['response']['errorMessage']);
     } else {
-      throw PlatformUnknownException('Platform returned unexpected body: $body');
-    }
-  }
-
-  Future<void> _initMessagingClient() async {
-    if (_config.messagingKeys != null) {
-      // Initialize the PubNub client.
-      String token = (await _httpPost('/api/pubnub/token', null))['payload'];
-      _messagingClient = MessagingClientPubNub(_config.messagingKeys!, _userId, token);
+      throw PlatformUnknownException(
+          'Platform returned unexpected body: $body');
     }
   }
 }
@@ -1406,7 +1367,9 @@ class PlatformMessagingKeys {
 
 /// This extension is a way for us to expose and share location update timestamp functionality internally only.
 extension SDKPrivatePlatformClient on PlatformClient {
-  DateTime get lastLocationUpdateTimestamp => _lastLocationUpdateThrottler.lastTimestamp;
+  DateTime get lastLocationUpdateTimestamp =>
+      _lastLocationUpdateThrottler.lastTimestamp;
 
-  bool get shouldThrottlePositionUpdate => _lastLocationUpdateThrottler.shouldThrottle;
+  bool get shouldThrottlePositionUpdate =>
+      _lastLocationUpdateThrottler.shouldThrottle;
 }
