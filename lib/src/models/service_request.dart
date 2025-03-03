@@ -18,6 +18,7 @@ class ServiceRequest {
   final int id;
   final int participantId;
   final int roomId;
+  final String serviceUuid;
   final int userId;
   final List<dynamic> stunServers;
   final List<dynamic> turnServers;
@@ -33,6 +34,7 @@ class ServiceRequest {
       : id = json['serviceId'],
         participantId = json['userWebrtcParticipantId'],
         roomId = json['webrtcRoomId'],
+        serviceUuid = json['serviceUuid'],
         userId = json['userId'],
         stunServers = json['stunServers'] ?? [],
         turnServers = json['turnServers'] ?? [],
