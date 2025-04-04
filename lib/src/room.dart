@@ -145,7 +145,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   final PlatformEnvironment _env;
   final PlatformClient _client;
-  late final PlatformMQ _mq;
+  PlatformMQ? _mq;
   @override
   final ServiceRequest _serviceRequest;
   final RoomHandler _roomHandler;
@@ -211,22 +211,22 @@ class KurentoRoom extends ChangeNotifier implements Room {
       lastWillTopic: _lastWillTopic,
     );
     // Asynchronously subscribe to the room-related topics.
-    await _mq.subscribe(
+    await _mq?.subscribe(
       _participantEventTopic,
       MqttQos.atMostOnce,
       _handleParticipantEventMessage,
     );
-    await _mq.subscribe(
+    await _mq?.subscribe(
       _participantTopic,
       MqttQos.atMostOnce,
       _handleParticipantMessage,
     );
-    await _mq.subscribe(
+    await _mq?.subscribe(
       _serviceRequestPresenceTopic,
       MqttQos.atLeastOnce,
       _handleServiceRequestPresenceMessage,
     );
-    await _mq.subscribe(
+    await _mq?.subscribe(
       _callEventsTopic,
       MqttQos.atLeastOnce,
       _handleCallEvents,
@@ -510,7 +510,8 @@ class KurentoRoom extends ChangeNotifier implements Room {
 
   @override
   Future<void> updateLocation(Position position) async {
-    if (!_mq.isConnected) {
+    final isConnected = _mq?.isConnected ?? false;
+    if (!isConnected) {
       _log.warning('MQTT client is not connected, cannot send gps coordinates');
       return;
     }
@@ -582,18 +583,20 @@ class KurentoRoom extends ChangeNotifier implements Room {
     };
 
     try {
-      await Future.wait([
-        _mq.publish(
-          _serviceInfoTopic,
-          MqttQos.atMostOnce,
-          jsonEncode({'data': serviceInfoData}),
-        ),
-        _mq.publish(
-          _gpsLocationTopic,
-          MqttQos.atMostOnce,
-          jsonEncode(gpsLocationData),
-        ),
-      ]);
+      await Future.wait(
+        [
+          _mq?.publish(
+            _serviceInfoTopic,
+            MqttQos.atMostOnce,
+            jsonEncode({'data': serviceInfoData}),
+          ),
+          _mq?.publish(
+            _gpsLocationTopic,
+            MqttQos.atMostOnce,
+            jsonEncode(gpsLocationData),
+          ),
+        ].nonNulls,
+      );
       _log.finest(
           'Published location info\n\t$serviceInfoData\n\t$gpsLocationData'
           '\n\tat ${_client.lastLocationUpdateTimestamp.millisecondsSinceEpoch}');
@@ -619,7 +622,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
     _getServiceRequestStatusTimer?.cancel();
     await _connectivityMonitoringSubscription?.cancel();
 
-    _mq.dispose();
+    _mq?.dispose();
 
     if (_serviceRequestState != ServiceRequestState.ended) {
       if (_serviceRequestState == ServiceRequestState.queued) {
@@ -934,7 +937,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         'sdpMLineIndex': candidate.sdpMLineIndex,
       },
     );
-    await _mq.publish(
+    await _mq?.publish(
       _roomTopic,
       MqttQos.atMostOnce,
       jsonEncode(message.toJson()),
@@ -954,7 +957,7 @@ class KurentoRoom extends ChangeNotifier implements Room {
         'sdp': sessionDescription.sdp,
       },
     );
-    await _mq.publish(
+    await _mq?.publish(
       _roomTopic,
       MqttQos.atMostOnce,
       jsonEncode(message.toJson()),
