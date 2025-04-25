@@ -276,6 +276,7 @@ class PlatformClient {
     AccessOfferType? accessOfferType,
     String? chatRoomId,
     List<String>? intents,
+    String? intent,
     bool livekitSupported = false,
   }) async {
     _verifyIsLoggedIn();
@@ -284,7 +285,7 @@ class PlatformClient {
       'app': await _appContext,
       'device': await _deviceContext,
       'permissions': {'location': position != null},
-      'intent': 'NONE',
+      'intent': intent ?? 'NONE',
       'intents': intents,
     };
 
