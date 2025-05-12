@@ -11,5 +11,6 @@ enum UserProperty {
   aiVerbosity,
   googleEmail,
   appleEmail,
-  hasMetaGlasses;
+  hasMetaGlasses,
+  airaAiTosAccepted;
 }
