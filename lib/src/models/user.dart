@@ -20,6 +20,7 @@ class User {
   final String? googleEmail;
   final String? appleEmail;
   final bool? buildAiProgramJoined;
+  final bool? airaAiTosAccepted;
   final bool? showReferrerRewardSplash;
   final bool? hasMetaGlasses;
 
@@ -41,6 +42,7 @@ class User {
     this.appleEmail,
     this.googleEmail,
     this.buildAiProgramJoined,
+    this.airaAiTosAccepted,
     this.showReferrerRewardSplash,
     this.hasMetaGlasses,
   });
@@ -72,6 +74,7 @@ class User {
         googleEmail = _getProperty(json, 'googleEmail'),
         appleEmail = _getProperty(json, 'appleEmail'),
         buildAiProgramJoined = _getProperty(json, 'buildAiProgramJoined'),
+        airaAiTosAccepted = _getProperty(json, 'airaAiTosAccepted'),
         showReferrerRewardSplash =
             _getProperty(json, 'showReferrerRewardSplash'),
         hasMetaGlasses = _getProperty(json, 'hasMetaGlasses');
@@ -92,6 +95,7 @@ class User {
     AiVerbosity? aiVerbosity,
     AiLanguageLevel? aiLanguageLevel,
     bool? isASL,
+    bool? airaAiTosAccepted,
   }) =>
       User(
         id: id ?? this.id,
@@ -108,6 +112,7 @@ class User {
         aiLanguageLevel: aiLanguageLevel ?? this.aiLanguageLevel,
         aiVerbosity: aiVerbosity ?? this.aiVerbosity,
         isASL: isASL ?? this.isASL,
+        airaAiTosAccepted: airaAiTosAccepted ?? this.airaAiTosAccepted,
       );
 }
 
