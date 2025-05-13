@@ -71,7 +71,7 @@ class CallSession {
         requestSource = json['requestSource'],
         requestTimeStamp = (json['requestTimeStamp'] as String?)?.dateTime,
         serviceId = json['serviceid'],
-        startTimeStamp = (json['startTimeStamp'] as String).dateTime,
+        startTimeStamp = (json['startTimeStamp'] as String?)?.dateTime,
         status = json['status'],
         userFirstname = json['firstname'],
         userId = json['userId'],
@@ -100,7 +100,7 @@ class CallSession {
   int serviceId;
 
   /// Start time of the call.
-  DateTime startTimeStamp;
+  DateTime? startTimeStamp;
 
   /// Possible ending call statuses: ACCOUNT_IN_USE, CANCEL, END, ERROR, FAILED, OUT_OF_MINUTES, OUTSIDE_SERVICE_HOUR
   /// STALE, THROTTLED and TIMEOUT
