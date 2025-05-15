@@ -561,6 +561,7 @@ class PlatformClient {
         'schemaVersion': 2,
         'agent': agentFeedback,
         'app': feedback.appFeedback?.toJson(),
+        'ai': feedback.aiFeedback?.toJson(),
       }),
       // This is to avoid the legacy logic to show non representative feedback data:
       //   if none of the rating is negative, consider the call to be a success.
