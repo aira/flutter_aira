@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.24.0 - 2025-05-15
 
-- Make `startTimeStamp` in call session optional (#166)
+- Refactor feedback and add ai rating support (#166)
 
 ## [2.23.2 - 2025-05-13
 
