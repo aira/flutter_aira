@@ -31,40 +31,22 @@ enum Rating {
 class Feedback {
   String? comment;
   Rating? rating;
-  final Set<String> tags = {};
 
-  Feedback();
+  Feedback({this.comment, this.rating});
 
-  Feedback.fromJson(Map<String, dynamic> json)
-      : comment = json['comment'],
-        rating = Rating.fromValue(json['rating']) {
-    List<dynamic> newTags = json['tags'] ?? [];
-    tags.addAll(newTags.cast<String>().toList(growable: false));
+  static Feedback? fromJson(Map<String, dynamic>? map) {
+    if (map == null) return null;
+
+    return Feedback(
+      comment: map['comment'],
+      rating: Rating.fromValue(map['rating']),
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'comment': comment,
       'rating': rating?.value,
-      'tags': tags.toList(growable: false),
-    };
-  }
-}
-
-class AgentFeedback extends Feedback {
-  bool shareKudos = false;
-
-  AgentFeedback() : super();
-
-  AgentFeedback.fromJson(super.json)
-      : shareKudos = json['shareKudos'] ?? false,
-        super.fromJson();
-
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      ...super.toJson(),
-      'shareKudos': shareKudos,
     };
   }
 }

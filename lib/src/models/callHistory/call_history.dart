@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_aira/src/models/callHistory/build_ai.dart';
+import 'package:flutter_aira/src/models/callHistory/feedback_form.dart';
 import 'package:flutter_aira/src/models/conversion_extension.dart';
 import 'package:flutter_aira/src/models/feedback.dart';
 
@@ -11,6 +13,7 @@ class SessionFeedback {
     this.requestReview = false,
     this.appFeedback,
     this.agentFeedback,
+    this.aiFeedback,
   });
 
   factory SessionFeedback.fromJson(Map<String, dynamic> json) {
@@ -30,13 +33,20 @@ class SessionFeedback {
     return SessionFeedback(
       serviceId: json['serviceId'],
       requestReview: requestReview,
-      appFeedback: null == commentJson['app']
-          ? null
-          : Feedback.fromJson(commentJson['app']),
-      agentFeedback: null == commentJson['agent']
-          ? null
-          : AgentFeedback.fromJson(commentJson['agent']),
+      appFeedback: Feedback.fromJson(commentJson['app']),
+      agentFeedback: Feedback.fromJson(commentJson['agent']),
+      aiFeedback: Feedback.fromJson(commentJson['ai']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'serviceId': serviceId,
+      'requestReview': requestReview,
+      'app': appFeedback?.toJson(),
+      'agent': agentFeedback?.toJson(),
+      'ai': aiFeedback?.toJson(),
+    };
   }
 
   /// Service request ID.
@@ -49,7 +59,9 @@ class SessionFeedback {
   Feedback? appFeedback;
 
   /// Explorer's Feedback about the Agent.
-  AgentFeedback? agentFeedback;
+  Feedback? agentFeedback;
+
+  Feedback? aiFeedback;
 
   static Map<String, dynamic> _convertFeedbackFromLegacy(
     Map<String, dynamic> json,
@@ -79,7 +91,10 @@ class CallSession {
             ? null
             : SessionFeedback.fromJson(json['userFeedback']),
         buildAi =
-            json['buildAi'] != null ? BuildAi.fromJson(json['buildAi']) : null;
+            json['buildAi'] != null ? BuildAi.fromJson(json['buildAi']) : null,
+        userFeedbackForm = FeedbackForm.fromJson(json['userFeedbackForm']),
+        callType = CallType.fromString(json['callType']),
+        chatRoomId = json['chatRoomId'];
 
   /// ID representing the Agent.
   int? agentId;
@@ -117,4 +132,28 @@ class CallSession {
 
   ///BuildAi program data.
   BuildAi? buildAi;
+
+  FeedbackForm userFeedbackForm;
+
+  /// Default is [CallType.standard].
+  CallType callType;
+
+  String? chatRoomId;
+}
+
+enum CallType {
+  standard('STANDARD'),
+  aiVisualInterpreter('AI_VISUAL_INTERPRETER'),
+  ;
+
+  const CallType(this.value);
+
+  final String value;
+
+  static CallType fromString(String? value) {
+    if (value == null) return CallType.standard;
+
+    return CallType.values.firstWhereOrNull((e) => e.value == value) ??
+        CallType.standard;
+  }
 }

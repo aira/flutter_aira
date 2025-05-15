@@ -12,7 +12,7 @@ export 'src/models/billing_info.dart' show PartialBillingInformation;
 export 'src/models/callHistory/build_ai.dart'
     show BuildAi, BuildAiStatus, NotAllowSharingReason;
 export 'src/models/callHistory/call_history.dart'
-    show CallSession, SessionFeedback;
+    show CallSession, SessionFeedback, CallType;
 export 'src/models/chat/agent_feedback_info.dart'
     show AgentFeedbackInfo, AgentFeedbackState;
 export 'src/models/chat/chat.dart'
