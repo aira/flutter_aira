@@ -8,7 +8,6 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_aira/flutter_aira.dart';
-import 'package:flutter_aira/src/room.dart';
 import 'package:flutter_aira/src/throttler.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -320,36 +319,6 @@ class PlatformClient {
       ),
     );
     return serviceRequest;
-  }
-
-  Future<Room> createServiceRequestWithKurento(
-    RoomHandler roomHandler, {
-    int? accountId,
-    bool? cannotTalk,
-    Position? position,
-    int? accessOfferId,
-    AccessOfferType? accessOfferType,
-    String? chatRoomId,
-    List<String>? intents,
-  }) async {
-    final serviceRequest = await createServiceRequest(
-      position: position,
-      intents: intents,
-      accountId: accountId,
-      cannotTalk: cannotTalk,
-      chatRoomId: chatRoomId,
-      accessOfferId: accessOfferId,
-      accessOfferType: accessOfferType,
-    );
-
-    return KurentoRoom.create(
-      _config.environment,
-      this,
-      _session!,
-      serviceRequest,
-      roomHandler,
-      chatRoomId,
-    );
   }
 
   /// Gets the status of a service request.
