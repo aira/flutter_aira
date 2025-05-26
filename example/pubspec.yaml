@@ -36,7 +36,6 @@ dependencies:
 
   flutter_aira:
     path: ../
-  flutter_webrtc: 0.10.6
   logging: ^1.2.0
 
 dev_dependencies:

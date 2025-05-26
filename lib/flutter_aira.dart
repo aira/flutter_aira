@@ -47,4 +47,3 @@ export 'src/platform_exceptions.dart'
         PlatformInvalidTokenException,
         PlatformLocalizedException,
         PlatformUnknownException;
-export 'src/room.dart' show Room, RoomHandler;
