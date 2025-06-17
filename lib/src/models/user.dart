@@ -4,6 +4,7 @@ import 'profile.dart';
 
 class User {
   final int id;
+  final String uuid;
   final String? email;
   final String firstName;
   final List<Language> languages;
@@ -26,6 +27,7 @@ class User {
 
   User({
     required this.id,
+    required this.uuid,
     this.email,
     required this.firstName,
     required this.languages,
@@ -49,6 +51,7 @@ class User {
 
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
+        uuid = json['uuid'],
         email = json['email'],
         firstName = json['firstName'] ?? '',
         languages = (json['language'] ?? [] as List<String>)
@@ -82,6 +85,7 @@ class User {
   /// Keeping immutability of the class while providing a way to clone new instances of User with different values.
   User cloneWith({
     int? id,
+    String? uuid,
     String? email,
     String? firstName,
     List<Language>? languages,
@@ -99,6 +103,7 @@ class User {
   }) =>
       User(
         id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         email: email ?? this.email,
         firstName: firstName ?? this.firstName,
         languages: languages ?? this.languages,
