@@ -158,9 +158,10 @@ class SiteAddress {
         city = json['city'],
         country = json['country'],
         county = json['county'],
-        latitudeLongitude = (json['latitudeLongitude'] as List<dynamic>)
-            .cast<double>()
-            .toList(growable: false),
+        latitudeLongitude = (json['latitudeLongitude'] as List<dynamic>?)
+                ?.cast<double>()
+                .toList(growable: false) ??
+            [],
         state = json['state'],
         zip = json['zip'];
 
