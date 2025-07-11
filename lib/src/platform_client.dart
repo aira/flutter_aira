@@ -556,8 +556,8 @@ class PlatformClient {
     _verifyIsLoggedIn();
 
     Uri uri = Uri.https(platformHost, '/api/files/upload');
-    int traceId = _nextTraceId();
-    Map<String, String> headers = await _getHeaders(traceId);
+    int traceId = nextTraceId();
+    Map<String, String> headers = await getHeaders(traceId);
 
     Map<String, String> fields = {
       'category': 'sr_trigger',
@@ -1085,8 +1085,8 @@ class PlatformClient {
     // If this is ever fixed, it would be nice to use a call to `_httpGet` instead of directly using `_httpClient`.
 
     Uri uri = Uri.https(platformHost, '/api/lyft/oauth/$_userId');
-    int traceId = _nextTraceId();
-    Map<String, String> headers = await _getHeaders(traceId);
+    int traceId = nextTraceId();
+    Map<String, String> headers = await getHeaders(traceId);
     http.Response response = await _httpClient.get(uri, headers: headers);
     Map<String, dynamic> json = jsonDecode(response.body);
     return json['url'];
@@ -1100,8 +1100,8 @@ class PlatformClient {
     // Here is a sample of an error:
     //   {"response":{"pageNumber":0,"resultSize":0,"errorMessage":"Provider Error: invalid_grant: The supplied \"code\" is not valid.","hasMore":false,"messageCode":"","errorCode":"KN-SP-003","status":"FAILURE"}}
     // If this is ever fixed, it would be nice to use a call to `_httpPost` instead of directly using `_httpClient`.
-    int traceId = _nextTraceId();
-    Map<String, String> headers = await _getHeaders(traceId);
+    int traceId = nextTraceId();
+    Map<String, String> headers = await getHeaders(traceId);
     Uri uri = Uri.https(platformHost, '/api/lyft/oauth/redirect');
     http.Response response = await _httpClient.post(
       uri,
@@ -1291,9 +1291,9 @@ class PlatformClient {
   }) async {
     try {
       Uri uri = Uri.https(platformHost, unencodedPath, queryParameters);
-      int traceId = _nextTraceId();
+      int traceId = nextTraceId();
       Map<String, String> headers =
-          await _getHeaders(traceId, additionalHeaders: additionalHeaders);
+          await getHeaders(traceId, additionalHeaders: additionalHeaders);
 
       _log.finest(
         'trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}',
@@ -1392,7 +1392,7 @@ class PlatformClient {
     }
   }
 
-  Future<Map<String, String>> _getHeaders(
+  Future<Map<String, String>> getHeaders(
     int traceId, {
     Map<String, String>? additionalHeaders,
   }) async {
@@ -1426,7 +1426,7 @@ class PlatformClient {
     return headers;
   }
 
-  int _nextTraceId() {
+  int nextTraceId() {
     // Platform expects trace IDs to be long values, so we'll generate one and ensure that it's less than JavaScript's
     // MAX_SAFE_INTEGER (9007199254740991).
     return (_random.nextDouble() * 100000000000000).toInt();
