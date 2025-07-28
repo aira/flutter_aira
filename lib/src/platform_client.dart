@@ -1314,12 +1314,16 @@ class PlatformClient {
     final state = response['state'] as String?;
     final userId = response['userId'];
     final token = response['token'];
+    final email = response['email'];
+    final phoneNumber = response['phoneNumber'];
     final firebaseCustomToken = response['firebaseCustomToken'];
 
     if (userId != null && token != null && firebaseCustomToken != null) {
       _session = Session(
         userId: userId,
         token: token,
+        email: email,
+        phone: phoneNumber,
         firebaseCustomToken: firebaseCustomToken,
       );
     }
