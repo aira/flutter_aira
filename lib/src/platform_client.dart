@@ -1305,7 +1305,7 @@ class PlatformClient {
 
   /// If the token has expired or if the pairing request was rejected, the call will fail.
   /// If the pairing request is waiting for consent, the response will include the [state] (either REQUESTED or STARTED)
-  /// If the pairing request was accepted, the response will include the [userId], [token] and [firebaseCustomToken]
+  /// If the pairing request was accepted, the response will include the [userId], [token], [firebaseCustomToken], [email] and [phoneNumber].
   Future<(String? state, Session? session)> pairDevice(
     String pairingToken,
   ) async {
