@@ -1282,6 +1282,54 @@ class PlatformClient {
     return ChatMessageInfo.fromJson(response);
   }
 
+  /// Returns deviceName of the pairing device.
+  /// The name is used to show a consent screen to the user.
+  Future<Map<String, dynamic>> startPairing(String pairingToken) {
+    _verifyIsLoggedIn();
+
+    return _httpPost('/api/pairing-request/$pairingToken/start', null);
+  }
+
+  /// Used to accept or reject a pairing request.
+  Future<Map<String, dynamic>> respondToPairingRequest(
+    String pairingToken,
+    bool accept,
+  ) {
+    _verifyIsLoggedIn();
+
+    return _httpPut(
+      '/api/pairing-request/$pairingToken/decision',
+      body: jsonEncode({'decision': accept ? 'ACCEPT' : 'REJECT'}),
+    );
+  }
+
+  /// If the token has expired or if the pairing request was rejected, the call will fail.
+  /// If the pairing request is waiting for consent, the response will include the [state] (either REQUESTED or STARTED)
+  /// If the pairing request was accepted, the response will include the [userId], [token], [firebaseCustomToken], [email] and [phoneNumber].
+  Future<(String? state, Session? session)> pairDevice(
+    String pairingToken,
+  ) async {
+    final response =
+        await _httpPost('/api/pairing-request/$pairingToken/pair', null);
+    final state = response['state'] as String?;
+    final userId = response['userId'];
+    final token = response['token'];
+    final email = response['email'];
+    final phoneNumber = response['phoneNumber'];
+    final firebaseCustomToken = response['firebaseCustomToken'];
+
+    if (userId != null && token != null && firebaseCustomToken != null) {
+      _session = Session(
+        userId: userId,
+        token: token,
+        email: email,
+        phone: phoneNumber,
+        firebaseCustomToken: firebaseCustomToken,
+      );
+    }
+    return (state, _session);
+  }
+
   Future<Map<String, dynamic>> _httpSend(
     String method,
     String unencodedPath, {
