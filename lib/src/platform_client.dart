@@ -1337,38 +1337,33 @@ class PlatformClient {
     Map<String, String>? queryParameters,
     Object? body,
   }) async {
-    try {
-      Uri uri = Uri.https(platformHost, unencodedPath, queryParameters);
-      int traceId = nextTraceId();
-      Map<String, String> headers =
-          await getHeaders(traceId, additionalHeaders: additionalHeaders);
+    Uri uri = Uri.https(platformHost, unencodedPath, queryParameters);
+    int traceId = nextTraceId();
+    Map<String, String> headers =
+        await getHeaders(traceId, additionalHeaders: additionalHeaders);
 
-      _log.finest(
-        'trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}',
-      );
+    _log.finest(
+      'trace_id=$traceId method=$method uri=$uri${body != null ? ' body=$body' : ''}',
+    );
 
-      http.Response response;
-      switch (method) {
-        case 'DELETE':
-          response =
-              await _httpClient.delete(uri, headers: headers, body: body);
-          break;
-        case 'GET':
-          response = await _httpClient.get(uri, headers: headers);
-          break;
-        case 'POST':
-          response = await _httpClient.post(uri, headers: headers, body: body);
-          break;
-        case 'PUT':
-          response = await _httpClient.put(uri, headers: headers, body: body);
-          break;
-        default:
-          throw UnsupportedError(method);
-      }
-      return _parseResponse(response.statusCode, response.body);
-    } on SocketException catch (e) {
-      throw PlatformUnknownException(e.message);
+    http.Response response;
+    switch (method) {
+      case 'DELETE':
+        response = await _httpClient.delete(uri, headers: headers, body: body);
+        break;
+      case 'GET':
+        response = await _httpClient.get(uri, headers: headers);
+        break;
+      case 'POST':
+        response = await _httpClient.post(uri, headers: headers, body: body);
+        break;
+      case 'PUT':
+        response = await _httpClient.put(uri, headers: headers, body: body);
+        break;
+      default:
+        throw UnsupportedError(method);
     }
+    return _parseResponse(response.statusCode, response.body);
   }
 
   Future<Map<String, dynamic>> _httpDelete(
