@@ -1326,8 +1326,9 @@ class PlatformClient {
         phone: phoneNumber,
         firebaseCustomToken: firebaseCustomToken,
       );
+      return (state, _session);
     }
-    return (state, _session);
+    return (state, null);
   }
 
   Future<Map<String, dynamic>> _httpSend(
