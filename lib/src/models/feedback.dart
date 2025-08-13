@@ -2,12 +2,15 @@ enum Rating {
   excellent(2),
   positive(1),
   neutral(0),
-  negative(-1);
+  negative(-1),
+  disappointed(-2);
 
   final int _value;
+
   const Rating(this._value);
 
   int get value => _value;
+
   static Rating? fromValue(int? value) {
     if (null == value) {
       return null;
@@ -21,6 +24,8 @@ enum Rating {
         return neutral;
       case -1:
         return negative;
+      case -2:
+        return disappointed;
     }
     throw 'Unsupported Rating value: $value';
   }
