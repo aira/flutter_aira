@@ -54,11 +54,4 @@ class Feedback {
       'rating': rating?.value,
     };
   }
-
-  bool? toYesNo() {
-    if (rating == null) return null;
-    if (rating == Rating.excellent) return true;
-    if (rating == Rating.disappointed) return false;
-    return null;
-  }
 }
