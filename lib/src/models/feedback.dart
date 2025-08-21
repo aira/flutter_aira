@@ -3,7 +3,7 @@ enum Rating {
   positive(1),
   neutral(0),
   negative(-1),
-  disappointed(-2);
+  terrible(-2);
 
   final int _value;
 
@@ -25,7 +25,7 @@ enum Rating {
       case -1:
         return negative;
       case -2:
-        return disappointed;
+        return terrible;
     }
     throw 'Unsupported Rating value: $value';
   }
