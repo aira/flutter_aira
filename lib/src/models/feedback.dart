@@ -33,15 +33,15 @@ enum Rating {
   static Rating? fromStars(int? stars) {
     if (stars == null) return null;
     switch (stars) {
-      case 1:
+      case 0:
         return Rating.terrible; // Maps to -2 (most negative)
-      case 2:
+      case 1:
         return Rating.negative; // Maps to -1
-      case 3:
+      case 2:
         return Rating.neutral; // Maps to 0 (neutral)
-      case 4:
+      case 3:
         return Rating.positive; // Maps to +1 (positive)
-      case 5:
+      case 4:
         return Rating.excellent; // Maps to +2 (most positive)
       default:
         throw ArgumentError('Invalid star rating: $stars');
