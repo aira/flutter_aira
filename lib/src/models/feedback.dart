@@ -44,7 +44,7 @@ enum Rating {
       case 4:
         return Rating.excellent; // Maps to +2 (most positive)
       default:
-        throw ArgumentError('Invalid star rating: $stars');
+        throw ArgumentError('Invalid star rating: $starIndex');
     }
   }
 
