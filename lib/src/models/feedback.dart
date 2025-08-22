@@ -48,6 +48,10 @@ enum Rating {
     }
   }
 
+  int? toStarIndex() {
+    return value + 2;
+  }
+
   String get name => toString().split('.').last;
 }
 
