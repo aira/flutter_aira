@@ -30,9 +30,9 @@ enum Rating {
     throw 'Unsupported Rating value: $value';
   }
 
-  static Rating? fromStars(int? stars) {
-    if (stars == null) return null;
-    switch (stars) {
+  static Rating? fromStars(int? starIndex) {
+    if (starIndex == null) return null;
+    switch (starIndex) {
       case 0:
         return Rating.terrible; // Maps to -2 (most negative)
       case 1:
