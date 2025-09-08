@@ -25,6 +25,7 @@ class ServiceRequest {
   final bool motionSensorDataCollectionEnabled;
   final String? ringbackUrl;
   final LiveKit? livekit;
+  final bool? allowJoin;
 
   /// If iceService is not empty, it should be used instead of building the
   /// ice server list from stunServers and turnServers.
@@ -43,5 +44,6 @@ class ServiceRequest {
             json['motionSensorDataCollectionEnabled'] ?? false,
         ringbackUrl = json['ringbackUrl'],
         livekit =
-            json['livekit'] == null ? null : LiveKit.fromMap(json['livekit']);
+            json['livekit'] == null ? null : LiveKit.fromMap(json['livekit']),
+        allowJoin = json['allowJoin'] ?? false;
 }
