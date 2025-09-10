@@ -1,5 +1,5 @@
 export 'src/enum/user_property.dart' show UserProperty;
-export 'src/livekit.dart' show LiveKit;
+export 'src/livekit.dart' show LiveKit, LiveKitSettings;
 export 'src/models/access_offer.dart'
     show
         AccessOfferDetails,
