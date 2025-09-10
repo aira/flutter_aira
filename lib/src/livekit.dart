@@ -1,9 +1,20 @@
+import 'package:collection/collection.dart';
+
 class LiveKit {
   final String wsUrl;
   final String token;
   final LiveKitSettings settings;
 
-  LiveKit({required this.wsUrl, required this.token, required this.settings});
+  final Map<String, dynamic> _rawMap;
+
+  UnmodifiableMapView<String, dynamic> get rawMap => UnmodifiableMapView(_rawMap);
+
+  LiveKit({
+    required this.wsUrl,
+    required this.token,
+    required this.settings,
+    required Map<String, dynamic> rawMap,
+  }) : _rawMap = rawMap;
 
   Map<String, dynamic> toMap() {
     return {
@@ -13,11 +24,12 @@ class LiveKit {
     };
   }
 
-  factory LiveKit.fromMap(Map map) {
+  factory LiveKit.fromMap(Map<String, dynamic> map) {
     return LiveKit(
       wsUrl: map['wsUrl'],
       token: map['token'],
       settings: LiveKitSettings.fromMap(map['settings']),
+      rawMap: map,
     );
   }
 }
@@ -216,7 +228,7 @@ class LiveKitScreenSharePublishSettings {
   final String codec;
   final String degradationPreference;
   final LiveKitSimulcastSettings simulcast;
-  final dynamic svc;
+  final LiveKitSvcSettings? svc;
 
   LiveKitScreenSharePublishSettings({
     required this.maxBitrate,
@@ -234,7 +246,7 @@ class LiveKitScreenSharePublishSettings {
       'codec': codec,
       'degradationPreference': degradationPreference,
       'simulcast': simulcast.toMap(),
-      'svc': svc,
+      'svc': svc?.toMap(),
     };
   }
 
@@ -245,7 +257,7 @@ class LiveKitScreenSharePublishSettings {
       codec: map['codec'],
       degradationPreference: map['degradationPreference'],
       simulcast: LiveKitSimulcastSettings.fromMap(map['simulcast']),
-      svc: map['svc'],
+      svc: map['svc'] != null ? LiveKitSvcSettings.fromMap(map['svc']) : null,
     );
   }
 }
@@ -305,7 +317,7 @@ class LiveKitCameraPublishSettings {
   final String codec;
   final String degradationPreference;
   final LiveKitSimulcastSettings simulcast;
-  final dynamic svc;
+  final LiveKitSvcSettings? svc;
 
   LiveKitCameraPublishSettings({
     required this.maxBitrate,
@@ -323,7 +335,7 @@ class LiveKitCameraPublishSettings {
       'codec': codec,
       'degradationPreference': degradationPreference,
       'simulcast': simulcast.toMap(),
-      'svc': svc,
+      'svc': svc?.toMap(),
     };
   }
 
@@ -334,7 +346,55 @@ class LiveKitCameraPublishSettings {
       codec: map['codec'],
       degradationPreference: map['degradationPreference'],
       simulcast: LiveKitSimulcastSettings.fromMap(map['simulcast']),
-      svc: map['svc'],
+      svc: map['svc'] != null ? LiveKitSvcSettings.fromMap(map['svc']) : null,
+    );
+  }
+}
+
+class LiveKitSvcSettings {
+  final String scalabilityMode;
+  final LiveKitSvcBackupSettings? backup;
+
+  LiveKitSvcSettings({required this.scalabilityMode, this.backup});
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'scalabilityMode': scalabilityMode,
+    };
+    if (backup != null) {
+      map['backup'] = backup!.toMap();
+    }
+    return map;
+  }
+
+  factory LiveKitSvcSettings.fromMap(Map map) {
+    return LiveKitSvcSettings(
+      scalabilityMode: map['scalabilityMode'],
+      backup: map['backup'] != null
+          ? LiveKitSvcBackupSettings.fromMap(map['backup'])
+          : null,
+    );
+  }
+}
+
+class LiveKitSvcBackupSettings {
+  final String codec;
+  final bool simulcastWithMainCodec;
+
+  LiveKitSvcBackupSettings(
+      {required this.codec, required this.simulcastWithMainCodec});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'codec': codec,
+      'simulcastWithMainCodec': simulcastWithMainCodec,
+    };
+  }
+
+  factory LiveKitSvcBackupSettings.fromMap(Map map) {
+    return LiveKitSvcBackupSettings(
+      codec: map['codec'],
+      simulcastWithMainCodec: map['simulcastWithMainCodec'],
     );
   }
 }
