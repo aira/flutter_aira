@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `resetDurationUsed` field to `Profile` (FE-42)
 
+## [3.3.3] - 2025-09-10
+
+- Expose `livekit.settings` from `ServiceRequest` (#179)
+
 ## [3.3.2] - 2025-09-09
 
 - Expose `allowJoin` from `ServiceRequest` (#177)
