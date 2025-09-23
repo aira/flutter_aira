@@ -52,11 +52,15 @@ class Profile {
   /// Duration Used for this Account in minutes
   final int durationUsed;
 
+  /// Will duration be reset. Values: "NEVER" or "UTC_MONTH"
+  final String resetDurationUsed;
+
   Profile.fromJson(Map<String, dynamic> json)
       : account = Account.fromJson(json['account']),
         type = ProfileType.fromName(json['userType']),
         durationAllowed = _convertSecondsToMinutes(json['durationAllowed']),
-        durationUsed = _convertSecondsToMinutes(json['durationUsed']);
+        durationUsed = _convertSecondsToMinutes(json['durationUsed']),
+        resetDurationUsed = json['resetDurationUsed'] ?? 'NEVER';
 }
 
 int _convertSecondsToMinutes(int seconds) =>
