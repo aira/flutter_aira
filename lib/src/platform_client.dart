@@ -234,6 +234,7 @@ class PlatformClient {
     String? referralCode,
     String? firstName,
     String? lastName,
+    bool? optInForMarketing,
   }) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
@@ -246,6 +247,7 @@ class PlatformClient {
       'verificationCode': credentials.password,
       if (firstName != null && firstName.isNotEmpty) 'firstName': firstName,
       if (lastName != null && lastName.isNotEmpty) 'lastName': lastName,
+      'optInForMarketing': optInForMarketing == true,
     });
 
     await _httpPost('/api/order/guest/basic', body);
