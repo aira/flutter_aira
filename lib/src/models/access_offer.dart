@@ -30,7 +30,7 @@ class AccessOfferDetails {
         enabled = json['enabled'],
         expired = json['expired'],
         id = json['id'],
-        uuid =  json['uuid'],
+        uuid = json['uuid'],
         key = json['key'],
         message = json['message'],
         name = json['name'],
