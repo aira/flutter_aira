@@ -1333,6 +1333,11 @@ class PlatformClient {
     return (state, null);
   }
 
+  /// Sets the current session
+  void setSession(Session? session) {
+    _session = session;
+  }
+
   Future<Map<String, dynamic>> _httpSend(
     String method,
     String unencodedPath, {
