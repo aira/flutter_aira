@@ -30,6 +30,7 @@ class AccessOfferDetails {
         enabled = json['enabled'],
         expired = json['expired'],
         id = json['id'],
+        uuid = json['uuid'],
         key = json['key'],
         message = json['message'],
         name = json['name'],
@@ -58,6 +59,7 @@ class AccessOfferDetails {
   bool? enabled;
   bool? expired;
   int id;
+  String uuid;
   String? key;
   String? message;
   String name;
@@ -123,6 +125,7 @@ class AccountDetails {
       : acceptBusinessUsers = json['acceptBusinessUsers'],
         accountCode = json['accountCode'],
         accountId = json['accountId'],
+        uuid = json['uuid'],
         accountType = AccountType.fromName(json['accountType']),
         email = json['email'],
         firstname = json['firstname'],
@@ -132,6 +135,7 @@ class AccountDetails {
   bool? acceptBusinessUsers;
   String? accountCode;
   int? accountId;
+  String? uuid;
   AccountType? accountType;
   String? email;
   String? firstname;
@@ -147,6 +151,7 @@ class AccountDetails {
         'firstname': firstname,
         'name': name,
         'type': type,
+        'uuid': uuid,
       };
 }
 
