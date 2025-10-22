@@ -42,6 +42,8 @@ class PlatformClient {
 
   int get _userId => _session!.userId;
 
+  bool get _isAnonymous => _session!.isAnonymous;
+
   String get _token => _session!.token;
 
   String get clientId => _config.clientId;
@@ -588,7 +590,9 @@ class PlatformClient {
   Future<User> getUser() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
+    if (_isAnonymous) return User.anonymousFrom(_session!);
+
+    final response = await _httpGet('/api/user/$_userId');
 
     return User.fromJson(response);
   }
@@ -1331,6 +1335,10 @@ class PlatformClient {
       return (state, _session);
     }
     return (state, null);
+  }
+
+  void setSession(Session? session) {
+    _session = session;
   }
 
   Future<Map<String, dynamic>> _httpSend(

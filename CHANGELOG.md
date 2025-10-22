@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.6+2] - 2025-10-22
+
+- Add `setSession`
+- Handle anonymous user in `getUser`
+
 ## [3.3.6] - 2025-10-07
 
 - Remove duplicated `LiveKitSettings` object with the parsing issue which is already in `aira_call` (FE-81)
