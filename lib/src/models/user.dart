@@ -1,7 +1,5 @@
 import 'package:flutter_aira/flutter_aira.dart';
 
-import 'profile.dart';
-
 class User {
   final int id;
   final String uuid;
@@ -48,6 +46,29 @@ class User {
     this.showReferrerRewardSplash,
     this.hasMetaGlasses,
   });
+
+  User.anonymousFrom(Session session)
+      : id = session.userId,
+        uuid = session.uuid!,
+        email = session.email,
+        phoneNumber = session.phone,
+        firstName = '',
+        languages = [],
+        lastName = '',
+        linkedAccounts = [],
+        profiles = [],
+        referralLink = null,
+        tosAccepted = false,
+        aiDailyMessageLimit = 0,
+        aiLanguageLevel = AiLanguageLevel.preset,
+        aiVerbosity = AiVerbosity.preset,
+        isASL = false,
+        appleEmail = null,
+        googleEmail = null,
+        buildAiProgramJoined = null,
+        airaAiTosAccepted = null,
+        showReferrerRewardSplash = null,
+        hasMetaGlasses = null;
 
   User.fromJson(Map<String, dynamic> json)
       : id = json['id'],
