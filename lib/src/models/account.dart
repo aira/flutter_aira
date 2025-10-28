@@ -36,6 +36,7 @@ enum AccessAiRestriction {
 
 class Account {
   final int id;
+  final String uuid;
   final String name;
   final AccountType type;
 
@@ -44,6 +45,7 @@ class Account {
 
   Account.fromJson(Map<String, dynamic> json)
       : id = json['id'],
+        uuid = json['uuid'],
         name = json['name'],
         type = AccountType.fromName(json['accountType']),
         accessAI = AccessAiRestriction.fromValue(json['accessAi']);

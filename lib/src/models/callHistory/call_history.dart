@@ -10,13 +10,17 @@ import 'package:flutter_aira/src/models/feedback.dart';
 class SessionFeedback {
   SessionFeedback({
     required this.serviceId,
+    required this.serviceUuid,
     this.requestReview = false,
     this.appFeedback,
     this.agentFeedback,
     this.aiFeedback,
   });
 
-  factory SessionFeedback.fromJson(Map<String, dynamic> json) {
+  factory SessionFeedback.fromJson({
+    required Map<String, dynamic> json,
+    required String serviceUuid,
+  }) {
     String? commentRaw = json['comment'];
     Map<String, dynamic> commentJson;
     try {
@@ -32,6 +36,7 @@ class SessionFeedback {
     bool requestReview = commentJson['agent']?['requestReview'] ?? false;
     return SessionFeedback(
       serviceId: json['serviceId'],
+      serviceUuid: serviceUuid,
       requestReview: requestReview,
       appFeedback: Feedback.fromJson(commentJson['app']),
       agentFeedback: Feedback.fromJson(commentJson['agent']),
@@ -42,6 +47,7 @@ class SessionFeedback {
   Map<String, dynamic> toJson() {
     return {
       'serviceId': serviceId,
+      'serviceUuid': serviceUuid,
       'requestReview': requestReview,
       'app': appFeedback?.toJson(),
       'agent': agentFeedback?.toJson(),
@@ -50,7 +56,11 @@ class SessionFeedback {
   }
 
   /// Service request ID.
-  int serviceId;
+  /// Please check the [serviceUuid] if [serviceId] not exist.
+  int? serviceId;
+
+  /// please check the [serviceId] if [serviceUuid] not exist.
+  String? serviceUuid;
 
   /// True if the Explorer requested special attention to his review.
   bool requestReview;
@@ -82,14 +92,18 @@ class CallSession {
         endTimeStamp = (json['endTimeStamp'] as String?)?.dateTime,
         requestSource = json['requestSource'],
         requestTimeStamp = (json['requestTimeStamp'] as String?)?.dateTime,
-        serviceId = json['serviceid'],
+        serviceId = json['serviceid'] ?? json['serviceId'],
+        serviceUuid = json['serviceUuid'],
         startTimeStamp = (json['startTimeStamp'] as String?)?.dateTime,
         status = json['status'],
         userFirstname = json['firstname'],
         userId = json['userId'],
         userFeedback = null == json['userFeedback']
             ? null
-            : SessionFeedback.fromJson(json['userFeedback']),
+            : SessionFeedback.fromJson(
+                json: json['userFeedback'],
+                serviceUuid: json['serviceUuid'],
+              ),
         buildAi =
             json['buildAi'] != null ? BuildAi.fromJson(json['buildAi']) : null,
         userFeedbackForm = FeedbackForm.fromJson(json['userFeedbackForm']),
@@ -113,6 +127,8 @@ class CallSession {
 
   /// ID representing the Service Request.
   int serviceId;
+
+  String serviceUuid;
 
   /// Start time of the call.
   DateTime? startTimeStamp;
