@@ -42,6 +42,8 @@ class PlatformClient {
 
   int get _userId => _session!.userId;
 
+  bool get _isAnonymous => _session!.isAnonymous;
+
   String get _token => _session!.token;
 
   String get clientId => _config.clientId;
@@ -368,7 +370,7 @@ class PlatformClient {
   static Future<void> uploadSensorData({
     required String apiKey,
     required String airaToken,
-    required String serviceRequestId,
+    required String serviceRequestUuid,
     required String platformHost,
     required int batchNumber,
     required Map<String, dynamic> body,
@@ -376,7 +378,7 @@ class PlatformClient {
     // Send the request
     final uri = Uri.https(
       platformHost,
-      '/api/service-request/$serviceRequestId/sensors/$batchNumber',
+      '/api/service-request/$serviceRequestUuid/sensors/$batchNumber',
     );
 
     final headers = {
@@ -446,11 +448,11 @@ class PlatformClient {
 
   /// Update service request's Build AI Program allow sharing status.
   Future<void> updateSessionShareStatus(
-    int serviceId,
+    String callId,
     bool value,
   ) async {
     await _httpPut(
-      '/api/service-request/$serviceId/build-ai/allow-sharing',
+      '/api/service-request/$callId/build-ai/allow-sharing',
       body: jsonEncode(
         {'value': value},
       ),
@@ -527,7 +529,7 @@ class PlatformClient {
     Map<String, dynamic>? agentFeedback = feedback.agentFeedback?.toJson();
     agentFeedback?['requestReview'] = feedback.requestReview;
     String body = jsonEncode({
-      'serviceId': feedback.serviceId,
+      'serviceId': feedback.serviceUuid ?? feedback.serviceId,
       'comment': jsonEncode({
         'schemaVersion': 2,
         'agent': agentFeedback,
@@ -544,15 +546,15 @@ class PlatformClient {
   }
 
   /// Uploads a photo for a service request.
-  Future<void> uploadPhoto(int serviceRequestId, ByteBuffer photo) async {
+  Future<void> uploadPhoto(String callId, ByteBuffer photo) async {
     _verifyIsLoggedIn();
 
-    return uploadPhotoWithUint8List(serviceRequestId, photo.asUint8List());
+    return uploadPhotoWithUint8List(callId, photo.asUint8List());
   }
 
   /// Uploads a photo for a service request.
   Future<void> uploadPhotoWithUint8List(
-    int serviceRequestId,
+    String callId,
     Uint8List photo,
   ) async {
     _verifyIsLoggedIn();
@@ -565,7 +567,7 @@ class PlatformClient {
       'category': 'sr_trigger',
       'entityid': _userId.toString(),
       'entitytype': 'user',
-      'serviceid': serviceRequestId.toString(),
+      'serviceid': callId,
     };
     http.MultipartFile file = http.MultipartFile.fromBytes(
       'file',
@@ -588,7 +590,9 @@ class PlatformClient {
   Future<User> getUser() async {
     _verifyIsLoggedIn();
 
-    Map<String, dynamic> response = await _httpGet('/api/user/$_userId');
+    if (_isAnonymous) return User.anonymousFrom(_session!);
+
+    final response = await _httpGet('/api/user/$_userId');
 
     return User.fromJson(response);
   }
@@ -793,14 +797,14 @@ class PlatformClient {
   }
 
   /// This API returns the same data as on the call-history API, just for a single session.
-  Future<CallSession> getCallHistorySingleCall(int serviceRequestId) async {
+  Future<CallSession> getCallHistorySingleCall(String callId) async {
     _verifyIsLoggedIn();
 
     Map<String, dynamic> response = await _httpGet(
       '/api/user/service/history/bu',
       queryParameters: {
         'userId': _userId.toString(),
-        'serviceId': serviceRequestId.toString(),
+        'serviceId': callId,
       },
     );
 
@@ -1331,6 +1335,11 @@ class PlatformClient {
       return (state, _session);
     }
     return (state, null);
+  }
+
+  /// Sets the current session
+  void setSession(Session? session) {
+    _session = session;
   }
 
   Future<Map<String, dynamic>> _httpSend(

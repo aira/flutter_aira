@@ -1,10 +1,12 @@
 class Session {
   String token;
   int userId;
+  String? uuid;
   String? login;
   String? authProvider;
   String? email;
   String? phone;
+  bool isAnonymous;
   String firebaseCustomToken;
 
   Session({
@@ -15,6 +17,8 @@ class Session {
     this.login,
     this.email,
     this.phone,
+    this.isAnonymous = false,
+    this.uuid,
   });
 
   Session.fromJson(Map<String, dynamic> json)
@@ -24,5 +28,15 @@ class Session {
         email = json['email'],
         phone = json['phone'],
         authProvider = json['authProvider'],
-        firebaseCustomToken = json['firebaseCustomToken'];
+        firebaseCustomToken = json['firebaseCustomToken'],
+        isAnonymous = json['isAnonymous'] ?? false,
+        uuid = json['uuid'];
+
+  Session.anonymous({
+    required this.uuid,
+    required this.firebaseCustomToken,
+  })  : token = '',
+        userId = 0,
+        email = '',
+        isAnonymous = true;
 }
