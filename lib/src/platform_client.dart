@@ -1493,11 +1493,25 @@ class PlatformClient {
     } else {
       return {
         'id': (await _deviceId) ?? '',
-        'model': (await DeviceInfoPlugin().deviceInfo).data['model'],
+        'model': await _getDeviceModel(),
         'platform': Platform.operatingSystem.toString().split('.').last,
         'platformVersion': Platform.operatingSystemVersion,
       };
     }
+  }
+
+  Future<String>? _getDeviceModel() {
+    if (kIsWeb) return null;
+    if (Platform.isAndroid) {
+      return DeviceInfoPlugin()
+          .androidInfo
+          .then((deviceInfo) => deviceInfo.model);
+    } else if (Platform.isIOS) {
+      return DeviceInfoPlugin()
+          .iosInfo
+          .then((deviceInfo) => deviceInfo.utsname.machine); // e.g: iPhone18,3
+    }
+    return null;
   }
 
   Future<String?> get _deviceId async {
