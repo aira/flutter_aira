@@ -225,7 +225,12 @@ class PlatformClient {
 
   /// Logs out the user.
   Future<void> logout() async {
-    // TODO: Actually log out. For now, we're copying the legacy apps and just removing the token.
+    try {
+      final res = await _httpDelete('/api/user/login');
+      _log.finest('Logout response: $res');
+    } catch (e) {
+      _log.warning('Failed to logout: $e');
+    }
     _session = null;
   }
 
