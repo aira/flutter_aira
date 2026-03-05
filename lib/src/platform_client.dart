@@ -782,6 +782,14 @@ class PlatformClient {
     return Usage.fromJson(response);
   }
 
+  Future<AccessOfferDetails> getDefaultOffer() async {
+    _verifyIsLoggedIn();
+
+    Map<String, dynamic> response =
+        await _httpGet('/api/user/$_userId/access/default');
+    return AccessOfferDetails.fromJson(response);
+  }
+
   /// Get information about all calls in history. These [CallSession] comes in batch of 25 by page.
   Future<Paged<CallSession>> getCallHistory(int page) async {
     _verifyIsLoggedIn();
@@ -1589,9 +1597,7 @@ class PlatformClient {
         json['response']['errorMessage'],
       );
     } else {
-      throw PlatformUnknownException(
-        'Platform returned unexpected body: $body',
-      );
+      return json;
     }
   }
 }
