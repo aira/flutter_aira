@@ -6,11 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.7.0] - 2026-09-25
 
-- Add `optInBuildAI` parameter to `PlatformClient`
-
-## [3.6.0] - 2026-09-25
-
-- Loosen dependency constraints
+- Add `optInBuildAI` parameter to `PlatformClient.createAccount`
 
 ## [3.6.0] - 2026-09-25
 
