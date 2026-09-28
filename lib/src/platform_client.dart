@@ -242,7 +242,7 @@ class PlatformClient {
     String? firstName,
     String? lastName,
     bool? optInForMarketing,
-    bool? optInBuildAI,
+    bool? buildAiProgramJoined,
   }) async {
     String body = jsonEncode({
       'authProvider': credentials.provider,
@@ -256,7 +256,7 @@ class PlatformClient {
       if (firstName != null && firstName.isNotEmpty) 'firstName': firstName,
       if (lastName != null && lastName.isNotEmpty) 'lastName': lastName,
       'optInForMarketing': optInForMarketing == true,
-      'buildAiProgramJoined': optInBuildAI == true,
+      'buildAiProgramJoined': buildAiProgramJoined == true,
     });
 
     await _httpPost('/api/order/guest/basic', body);
